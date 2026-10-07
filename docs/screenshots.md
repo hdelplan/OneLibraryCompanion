@@ -1,6 +1,6 @@
 # Application screenshots
 
-Captured from the OLC production interface at 1280 × 800. These images simulate active use with fictional track names, generated waveforms, a populated USB library and recorded sessions. They illustrate the production interface; they are not evidence of a live hardware connection. The Menu is scrollable and is shown in several views. Network choices depend on the host.
+Captured from the OLC production interface at 1280 × 800. These images simulate active use with illustrative track metadata, realistic waveform analysis, a populated USB library and recorded sessions. They illustrate the production interface; they are not evidence of a live hardware connection. The Menu is scrollable and is shown in several views. Network choices depend on the host.
 
 ## CDJ Status
 
