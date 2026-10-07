@@ -1,6 +1,6 @@
 # Configuration
 
-Packaged OLC settings, LAN access and environment aliases are documented in [Distribution](distribution.md). The desktop default is now `0.0.0.0:8787`; desktop offline preview is in MENU. The iPad retains TEST and its existing settings keys.
+Packaged OLC settings, LAN access and environment aliases are documented in [Distribution](distribution.md). The desktop default is now `0.0.0.0:8787`; desktop offline preview is in MENU.
 
 ## Display preferences
 
@@ -29,13 +29,13 @@ Restore defaults resets display preferences. Preview files and scrub positions a
 | `PIONEER_COMPANION_INTERFACE` | None | Opt-in live monitoring on the named network interface |
 | `PIONEER_COMPANION_BIND` | `127.0.0.1:8787` | HTTP listen address; use `0.0.0.0:8787` for local-network access |
 
-Use absolute file paths. Offline waveform metadata uses the startup library and requires a host restart after changes. The LIBRARY browser rereads its catalog with **Refresh USB**; captures are read on demand. Open analysis file works without a configured capture. For an iPad on the same trusted network, set `PIONEER_COMPANION_BIND=0.0.0.0:8787`, then open `http://<Mac LAN IP>:8787` in Safari. The HTTP interface has no authentication.
+Use absolute file paths. Offline waveform metadata uses the startup library and requires a host restart after changes. The LIBRARY browser rereads its catalog with **Refresh USB**; captures are read on demand. Open analysis file works without a configured capture. For another device on the same network, set `PIONEER_COMPANION_BIND=0.0.0.0:8787`, then open `http://<Mac LAN IP>:8787` in Safari. The HTTP interface has no authentication.
 
 When live monitoring is enabled, the status screen uses live data by default. Loading an offline preview switches the display to offline; **Show live CDJs** switches back. This selection is session-only. Network monitoring continues while previewing offline data. An interface change requires a restart.
 
 ## Waveform motion and phrases
 
-Status changes are pushed over SSE to a display-frame clock. Backwards beat movement, search/scratch states and larger seeks re-anchor immediately. Position remains a beat-grid estimate on older CDJs; small sub-beat scratches cannot be reconstructed from unavailable data. See [latency research](research/latency-and-waveforms-2026-09-30.md).
+Status changes are pushed over SSE to a display-frame clock. Backwards beat movement, search/scratch states and larger seeks re-anchor immediately. Position remains a beat-grid estimate on older CDJs; small sub-beat scratches cannot be reconstructed from unavailable data.
 
 The overview is 168 logical pixels tall and uses additive native bands scaled consistently across the track. PSSI phrases are read from the USB/SD `.EXT` companion and aligned through the `.DAT` grid. Colors follow Rekordbox mood and phrase variants. Standalone offline waveform uploads do not include companion phrase data.
 

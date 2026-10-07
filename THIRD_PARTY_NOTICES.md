@@ -1,6 +1,6 @@
 # OneLibraryCompanion — third-party acknowledgments
 
-The app links to pinned Prolink networking, protocol and Rekordbox reader crates under `vendor/prolink` (GPL-3.0-only). See `vendor/prolink/PROVENANCE.md` in the source repository for the pinned upstream commit and all local modifications; a copy is shipped in `third-party-licenses/Prolink-PROVENANCE.md`. Original license notices are included. The separate local experimental checkout remains outside the app dependency graph.
+The app links to pinned Prolink networking, protocol and Rekordbox reader crates under `vendor/prolink` (GPL-3.0-only). See `vendor/prolink/PROVENANCE.md` in the source repository for the pinned upstream commit and all local modifications; a copy is shipped in `third-party-licenses/Prolink-PROVENANCE.md`. Original license notices are included.
 
 The UI geometry and summary rendering convention are adapted from NauticMixxx v1.0.0, commit `4a72826059d2b0041057c94e9d65bc82fd50c9fa`, copyright its listed contributors. Its repository includes a GPL v3 license; its upstream notice identifies the Mixxx 2.5.6 base as GPL-2.0-or-later and the original ntamas94/pioneered-by-ntamas skin as GPL v3. The original license and notices are reproduced in `third-party-licenses/NauticMixxx-LICENSE.txt` and `third-party-licenses/NauticMixxx-THIRD-PARTY-NOTICES.md`. OLC is distributed under GPL-3.0-only. See `third-party-licenses/SOURCE-CREDITS.md` for the exact source mapping. No logo, screenshot, skin artwork or proprietary font has been copied.
 
@@ -78,6 +78,6 @@ with the dependency sources and in third-party-licenses/.
 
 ## Native platform components and build tools
 
-The macOS shell uses Apple AppKit, WebKit and ServiceManagement; iPad uses SwiftUI, UIKit and WebKit. These frameworks are supplied by the operating system. The Linux desktop uses Python, PyGObject, GTK 3 and WebKitGTK 4.1, installed by Raspberry Pi OS/Debian packages with their own notices. Rust/Cargo, Swift/Xcode, Node.js/npm, cargo-zigbuild and Zig are build tools, not copied application source. See `third-party-licenses/SOURCE-CREDITS.md` for links and scope.
+The macOS shell uses Apple AppKit, WebKit and ServiceManagement. These frameworks are supplied by the operating system. The Linux desktop uses Python, PyGObject, GTK 3 and WebKitGTK 4.1, installed by Raspberry Pi OS/Debian packages with their own notices. Rust/Cargo, Swift/Xcode, Node.js/npm, cargo-zigbuild and Zig are build tools, not copied application source. See `third-party-licenses/SOURCE-CREDITS.md` for links and scope.
 
 The license inventory includes all resolved Cargo packages (including build and target-specific dependencies) and the installed npm production and development packages. Uninstalled optional npm build executables for other platforms are excluded; they are not bundled in the app. Native OpenSSL and SQLCipher notices are included separately. Regenerate dependency notices after lockfile updates with `python3 scripts/collect-third-party-notices.py`.

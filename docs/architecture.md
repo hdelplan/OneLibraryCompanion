@@ -1,6 +1,6 @@
 # Architecture
 
-For the current production/iPad build split, native desktop launchers, packaged data paths and LAN access, see [Distribution](distribution.md). Shared routing is in `source/host/src/lib.rs`; desktop startup is in `distribution.rs`. Older detail below describes the development baseline.
+For the current native desktop launchers, packaged data paths and LAN access, see [Distribution](distribution.md). Shared routing is in `source/host/src/lib.rs`; desktop startup is in `distribution.rs`.
 
 ## Boundaries
 
@@ -9,7 +9,7 @@ For the current production/iPad build split, native desktop launchers, packaged 
 - `source/ui/src/model.ts`: shared UI analysis, waveform, track and offline deck contracts.
 - `api.ts`: HTTP access. `main.tsx`: app state, navigation and offline preview selection.
 - `Configuration.tsx`, `StatusDisplay.tsx`, `TrackCard.tsx`: presentation. `Signal.tsx`: canvas lifecycle. `waveform.ts`: drawing and bass display tuning. `settings.ts`: validated local preferences.
-- `vendor/prolink`: pinned upstream reader subset, with provenance and license. It does not include the local My Tags experiments.
+- `vendor/prolink`: pinned upstream reader subset, with provenance and license.
 
 `source/host/src/live.rs` adapts Prolink discovery and status into live snapshots. `useLiveDecks.ts` polls status every 200 ms and fetches larger waveform assets separately. Offline scrubbing remains distinct from hardware seeking. Snapshot and asset keys include observer session, player, source slot, track ID and load epoch, so old asynchronous results cannot attach to a newly loaded track.
 

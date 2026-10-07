@@ -1,6 +1,6 @@
 # SET HISTORY
 
-Start a set explicitly and use **Finish & save** when done. **Cancel set** discards the active set without adding it to history. Empty sets cancel immediately; a set with any original recorded tracks asks for confirmation, even if its visible tracklist was cleared. Past sets cannot be canceled. The host records even when a different tab is open or the browser disconnects. The host must remain running; iPad background suspension is not certified. An interrupted active set remains in history and requires **Resume set** or **Finish & save** after restart.
+Start a set explicitly and use **Finish & save** when done. **Cancel set** discards the active set without adding it to history. Empty sets cancel immediately; a set with any original recorded tracks asks for confirmation, even if its visible tracklist was cleared. Past sets cannot be canceled. The host records even when a different tab is open or the browser disconnects. The host must remain running. An interrupted active set remains in history and requires **Resume set** or **Finish & save** after restart.
 
 ## Qualification and editing
 
@@ -15,7 +15,7 @@ Start a set explicitly and use **Finish & save** when done. **Cancel set** disca
 
 `set_history.rs` contains the versioned model, monotonic qualification state machine, commands and durable host store. The React screen uses `/api/sets`; it does not own recording or persist set data in browser storage. The existing native Rust service can reuse the same model and routes.
 
-Desktop/RPi defaults to `<project>/.local/app-data/`, or the directory specified by `PIONEER_COMPANION_DATA`. The embedded iPad service uses `HOME/Library/Application Support/PioneerCompanion`. Use a persistent writable directory on RPi, outside temporary filesystems. Only one host process should own a data directory.
+Desktop/RPi defaults to `<project>/.local/app-data/`, or the directory specified by `PIONEER_COMPANION_DATA`. Use a persistent writable directory on RPi, outside temporary filesystems. Only one host process should own a data directory.
 
 `history.json` contains schema version 1, active-set identity, copied track metadata, original events and edited order. Every change writes a temporary file, flushes it, renames it into place, then flushes the containing directory. A failed write remains in memory with an explicit error and retries while the host runs. Corrupt or unsupported data is preserved and blocks writes. Artwork is in the adjacent `artwork/` directory. There is no USB writing or USB sync.
 
@@ -24,8 +24,6 @@ Desktop/RPi defaults to `<project>/.local/app-data/`, or the directory specified
 **Import history** uses the existing catalog service without starting another CDJ monitor. It imports complete Rekordbox histories with an unambiguous `YYYY-MM-DD` date in their name on or after **2026-03-01**. Their time is displayed as unavailable. Undated `HISTORY 001` records are not assigned invented dates. The currently decoded history tables have names and ordered track IDs but no reliable timestamp field; other date formats and history synchronization data remain unsupported.
 
 If no usable dated histories exist, create three explicitly labelled sample sets from the `MAX4.0` playlist. Each contains 20–30 unique randomly selected tracks. Every adjacent pair uses the same Camelot key, a neighbouring number with the same letter (including 12/1), or the same number with opposite letters. Unknown keys are excluded. Fail explicitly if a valid sequence cannot be built. Sample dates/duration are illustrative. Re-importing does not duplicate existing sample/import identities or overwrite edits.
-
-The main saved export inspected on 2026-10-03 contained 2,160 tracks, zero history playlists and 77 MAX4.0 tracks. A second local review export contained three one-track histories named HISTORY 001–003, without usable dates. Three samples (23, 23 and 26 tracks) were created in the ignored local app data. These personal library records are not included in source control.
 
 Read-only inspection and local initialization:
 
@@ -40,7 +38,7 @@ The CLI initializes metadata only; importing through the UI also attempts to cac
 
 Export the selected set (including the current draft), last finished set or all past sets as UTF-8 text, CSV or PDF. Exports follow edited order. CSV quotes multiline fields and protects spreadsheet formula prefixes. PDF uses paginated high-resolution rendered Unicode text; it is printable but its text is not selectable. It contains sequence, title/artist, key and numeric star rating, plus set details.
 
-**Save file** downloads the export. **Share** invokes file sharing when supported, with a download fallback. **Email** downloads the file and opens a mail draft; text can be included in the body, while CSV/PDF attachments must be added by the user. No email is sent automatically. Actual native share-sheet/download integration in the iPad WKWebView remains a device-validation item.
+**Save file** downloads the export. **Share** invokes file sharing when supported, with a download fallback. **Email** downloads the file and opens a mail draft; text can be included in the body, while CSV/PDF attachments must be added by the user. No email is sent automatically.
 
 ## API
 
@@ -51,7 +49,7 @@ Export the selected set (including the current draft), last finished set or all 
 
 ## Validation
 
-Tests cover the strict duration boundary, pauses, track changes, observation gaps, replays, multiple decks, editable versus original order, recovery, invalid storage and exports. Browser checks cover navigation, editing, persistence, start/finish and file downloads. Live CDJ playback qualification, native iPad sharing and recording under iPad lifecycle changes still require hardware validation.
+Tests cover the strict duration boundary, pauses, track changes, observation gaps, replays, multiple decks, editable versus original order, recovery, invalid storage and exports. Browser checks cover navigation, editing, persistence, start/finish and file downloads. Live CDJ playback qualification still requires hardware validation.
 
 ## Library access and deletion
 

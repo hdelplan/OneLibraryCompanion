@@ -2,13 +2,13 @@
 
 A companion for Pioneer / AlphaTheta CDJs: shared live status and waveforms, USB library browsing and supported track loading, local OneLibrary browsing, and set history with text/CSV/PDF exports. Playback controls remain on the physical players.
 
-The Mac and Raspberry Pi distributions have standalone application windows and serve the same interface to devices on the local network. The fixed 1280 × 800 layout is retained. Desktop production builds exclude TEST and experimental features; the standalone iPad keeps TEST. Shared behaviour stays in `source/ui` and `source/host`.
+The Mac and Raspberry Pi distributions have standalone application windows and serve the same interface to devices on the local network. The fixed 1280 × 800 layout is retained. Shared behaviour stays in `source/ui` and `source/host`.
 
 ## Install and supported platforms
 
 See [distribution and installation](docs/distribution.md) for Mac DMG/ZIP, Raspberry Pi Debian packages, LAN connections, data locations and configuration.
 
-Initial targets are macOS 13+ on Apple Silicon and Intel, and Raspberry Pi OS Bookworm 64-bit or later. Physical Pi/Intel/older-OS testing is still required. Existing iPadOS 17.6.1 compatibility is preserved. Mac downloads are initially ad-hoc signed and non-notarized; paid Apple membership is not required.
+Initial targets are macOS 13+ on Apple Silicon and Intel, and Raspberry Pi OS Bookworm 64-bit or later. Physical Pi/Intel/older-OS testing is still required. Mac downloads are initially ad-hoc signed and non-notarized; paid Apple membership is not required.
 
 ## Develop
 
@@ -31,8 +31,6 @@ Use manual-IP connections in MENU, or select a CDJ-facing interface and restart.
 ./scripts/build-linux.sh
 ```
 
-For iPad, retain the existing Xcode project and bundle identity; [iPad setup](source/ipad/README.md). Its build script produces a separate `dist-ipad` interface so desktop production assets never replace iPad TEST assets.
-
 ## Documentation
 
 - [Distribution, configuration and validation](docs/distribution.md)
@@ -41,7 +39,7 @@ For iPad, retain the existing Xcode project and bundle identity; [iPad setup](so
 - [Display and library configuration](docs/configuration.md)
 - [Set history](docs/set-history.md)
 - [Third-party acknowledgments](THIRD_PARTY_NOTICES.md)
-- [Source credits and research references](third-party-licenses/SOURCE-CREDITS.md)
+- [Source credits](third-party-licenses/SOURCE-CREDITS.md)
 - [Pinned dependency inventory](third-party-licenses/dependency-inventory.json)
 
-Some older development/research documentation describes earlier versions; use current source and distribution documentation for packaging behaviour. The app remains GPL-3.0-only with pinned Prolink sources under `vendor/prolink`. Preserve third-party notices in source and binary distributions.
+The app remains GPL-3.0-only with pinned Prolink sources under `vendor/prolink`. Preserve third-party notices in source and binary distributions.

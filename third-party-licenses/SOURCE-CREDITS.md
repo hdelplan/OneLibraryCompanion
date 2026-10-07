@@ -1,4 +1,4 @@
-# Source credits and research references
+# Source credits and references
 
 OLC thanks the authors and contributors of the following projects. This records the sources documented in this workspace; inclusion as a research reference does not mean that its code or assets are bundled.
 
@@ -12,13 +12,13 @@ OLC thanks the authors and contributors of the following projects. This records 
 | [P2GR/DJM-Rec-for-Android](https://github.com/P2GR/DJM-Rec-for-Android/tree/68f3bb71cff30989ba757ed613a2c6b419b44b0f) | RgbWaveform.kt square-root band envelope and cached translated geometry adapted in source/ui/src/bandGeometry.ts | MIT; full copyright and license in the root THIRD_PARTY_NOTICES.md |
 | [chrisle/onelibrary-connect](https://github.com/chrisle/onelibrary-connect) | OneLibrary schema and format-key interoperability reference for the independent Rust reader | MIT; full copyright and license in the root THIRD_PARTY_NOTICES.md; not installed as a library |
 
-## Research and comparison
+## Technical references
 
 - **Deep Symmetry Beat Link**, commit ef0aaa1ea949f5c3b1e759973f784c488a12288a: TimeFinder, CdjStatus, WaveformDetail, WaveformPreview, Swing renderers, Util.phraseColor and protocol command references informed independently written transport, waveform and phrase code. Copyright Deep Symmetry LLC, EPL-2.0; no Java classes or library are included.
 - **Deep Symmetry crate-digger / DJ Link Ecosystem Analysis / Beat Link Trigger documentation**: ANLZ structures, Pro DJ Link timing, virtual CDJs, loading, sync and stagehand research. The corresponding documentation links are retained below.
 - **Mixxx 2.5.6**: filtered waveform renderer reference for per-band maxima, independent heights and drawing layers; its Qt/OpenGL renderer is not bundled.
 - **chrisle/alphatheta-connect**: absolute-position protocol and three-band waveform example comparisons; its waveform byte-order/scaling assumptions were not adopted wholesale.
-- **fiverecords/SuperTimecodeConverter**: ProDJLinkInput.h comparison in the position-signal audit; credited as a protocol research source, not a bundled dependency.
+- **fiverecords/SuperTimecodeConverter**: ProDJLinkInput.h protocol reference; credited as a protocol research source, not a bundled dependency.
 - **pyrekordbox documentation**: older ANLZ descriptions compared against newer crate-digger and observed data; conflicting PWV7 stride information was not adopted.
 - **Pioneer DJ / AlphaTheta / rekordbox**: device manuals, firmware history, OneLibrary information and phrase-analysis documentation used as interoperability references. Trademarks remain their owners' property; OLC is independent and is not endorsed by these companies.
 - **Apple developer documentation**: directory access, native application and platform framework guidance.
@@ -31,9 +31,9 @@ System components: [Python](https://www.python.org/), [PyGObject](https://pygobj
 
 Build tools: [Rust/Cargo](https://www.rust-lang.org/), [Swift](https://www.swift.org/), [Xcode](https://developer.apple.com/xcode/), [Node.js](https://nodejs.org/), [npm](https://www.npmjs.com/), [cargo-zigbuild](https://github.com/rust-cross/cargo-zigbuild) and [Zig](https://ziglang.org/). CI uses [actions/checkout](https://github.com/actions/checkout), [actions/setup-node](https://github.com/actions/setup-node), [actions/upload-artifact](https://github.com/actions/upload-artifact), [actions/download-artifact](https://github.com/actions/download-artifact), and the [GitHub CLI](https://cli.github.com/). Build services and tools are not shipped as app code.
 
-## Recorded research URLs
+## Reference URLs
 
-These links preserve the cited evidence without distributing private capture logs, database fixtures or internal research transcripts. Some unpinned upstream links can change over time.
+These links identify the technical sources credited above. Some unpinned upstream links can change over time.
 
 - https://alphatheta.com/en/onelibrary/
 - https://alphatheta.com/en/product/player/cdj-1500x/black/
