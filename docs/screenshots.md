@@ -4,7 +4,7 @@ Captured from the OLC production interface at 1280 × 800. These images simulate
 
 ## CDJ Status
 
-Two playing decks with three-band waveforms, phrase sections, timing and track information.
+This is the main OLC screen, showing two playing decks with three-band waveforms, phrase sections, timing and track information.
 
 ![CDJ Status](screenshots/cdj-status.png)
 
@@ -16,25 +16,25 @@ This screen enables library navigation, filtering using genre, color, star ratin
 
 ## Set History
 
-An active 12-track recording with session details and a saved past set.
+This screen enables recording of the current set, then saving the set into the local OLC library. This is independent from the OneLibrary history. Tracklists from past sets can be used in the Browse screen as a playlist.
 
 ![Set History](screenshots/set-history.png)
 
 ## Menu — connections
 
-Configured Ethernet discovery, a LAN address and offline preview controls.
+Configuration screen 1
 
 ![Menu — connections](screenshots/menu-connections.png)
 
 ## Menu — display
 
-Waveform, track information and library filter preferences.
+Configuration screen 2
 
 ![Menu — display](screenshots/menu-display.png)
 
 ## Menu — additional library filters
 
-Library filter ordering and an automatically discovered My Tag category.
+Configuration screen 3
 
 ![Menu — additional library filters](screenshots/menu-library-filters.png)
 
