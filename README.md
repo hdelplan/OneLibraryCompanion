@@ -31,6 +31,12 @@ Use manual-IP connections in MENU, or select a CDJ-facing interface and restart.
 ./scripts/build-linux.sh
 ```
 
+## Screenshots
+
+[View all application screens](docs/screenshots.md).
+
+![OLC Browse](docs/screenshots/browse.png)
+
 ## Documentation
 
 - [Distribution, configuration and validation](docs/distribution.md)
