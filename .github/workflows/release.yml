@@ -1,6 +1,15 @@
 name: Distribution builds
 on:
   workflow_dispatch:
+    inputs:
+      publish:
+        description: Publish the verified installers as a prerelease
+        type: boolean
+        default: false
+      release_tag:
+        description: Version tag matching source/host/Cargo.toml
+        type: string
+        default: v0.1.0
   push:
     tags: ['v*']
 permissions:
@@ -61,8 +70,8 @@ jobs:
           name: raspberry-pi-arm64
           path: builds/releases/*
           if-no-files-found: error
-  draft-release:
-    if: startsWith(github.ref, 'refs/tags/v')
+  release:
+    if: startsWith(github.ref, 'refs/tags/v') || inputs.publish
     needs: [mac, raspberry-pi]
     runs-on: ubuntu-latest
     permissions:
@@ -73,7 +82,31 @@ jobs:
         with:
           path: artifacts
           merge-multiple: true
-      - name: Draft prerelease
+      - name: Package source and checksums
+        env:
+          RELEASE_TAG: ${{ inputs.release_tag || github.ref_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          version=$(python3 -c 'import tomllib; print(tomllib.load(open("source/host/Cargo.toml", "rb"))["package"]["version"])')
+          test "$RELEASE_TAG" = "v$version"
+          git archive --format=zip --prefix=OneLibraryCompanion/ --output="artifacts/OneLibraryCompanion-$version-source.zip" HEAD
+          for arch in arm64 x86_64; do
+            test -s "artifacts/OneLibraryCompanion-$version-macos-$arch.dmg"
+            test -s "artifacts/OneLibraryCompanion-$version-macos-$arch.zip"
+          done
+          test -s "artifacts/onelibrarycompanion-host_${version}_arm64.deb"
+          test -s "artifacts/onelibrarycompanion_${version}_arm64.deb"
+          (cd artifacts && sha256sum *.dmg *.zip *.deb > SHA256SUMS.txt)
+      - name: Create prerelease
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" artifacts/* --draft --prerelease --verify-tag --title "OneLibraryCompanion $GITHUB_REF_NAME" --notes-file docs/release-notes.md
+          RELEASE_TAG: ${{ inputs.release_tag || github.ref_name }}
+          PUBLISH: ${{ inputs.publish }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh release create "$RELEASE_TAG" artifacts/* --draft --prerelease --target "$GITHUB_SHA" --title "OneLibraryCompanion $RELEASE_TAG — preview" --notes-file docs/release-notes.md
+          if [[ "$PUBLISH" == true ]]; then
+            gh release edit "$RELEASE_TAG" --draft=false --prerelease
+          fi

@@ -20,6 +20,6 @@ This is a distribution preview, not a certification across all supported hardwar
 - Physical Intel Mac and macOS 13 validation; compilation alone does not certify runtime compatibility.
 - Run the new iPad build on the existing iPad, and check Safari LAN access from a separate iPad/iPhone.
 - Login-startup behaviour after installing to the final system location, plus installation/Gatekeeper behaviour on another Mac.
-- The private GitHub repository https://github.com/hdelplan/OneLibraryCompanion has been created. Source upload and hosted workflow runs remain pending authenticated repository access.
+- The private GitHub repository https://github.com/hdelplan/OneLibraryCompanion has been created. The full source snapshot, acknowledgments and workflows are uploaded; the remote Git tree was verified to match the local snapshot. Hosted checks and distribution jobs are tracked under GitHub Actions.
 
 The pre-existing development host and its data were not stopped or migrated. Native verification used a separate port and temporary history directory. No new CDJ load or playback commands were sent for distribution testing.
