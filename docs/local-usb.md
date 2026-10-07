@@ -18,6 +18,13 @@ The Pi host package grants its executable `CAP_NET_BIND_SERVICE` during installa
 
 The file is streamed from the USB without transcoding. Exported metadata, artwork, waveform analysis, beats and cues accompany it. Each requested track has an independent serving identity, so loading another track on the other deck does not replace the first deck's audio source.
 
+## Unresolved loading issues
+
+- **First load:** the initial local USB request may not load the track while the CDJ has not discovered OLC’s source. The LINK step above may help, but is a workaround rather than a fix. Check the physical player before sending a new request.
+- **Incorrect start position:** a loaded track can land at an unexpected position, including a saved cue, instead of the intended start. Check and set the cue position on the CDJ before playback; OLC does not reliably establish that position.
+
+Both issues remain unresolved.
+
 ## Operating limits
 
 - Automatic-discovery mode supports local browsing; local track loading requires Manual IP connections.

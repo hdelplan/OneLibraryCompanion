@@ -27,6 +27,8 @@ Mac packages are ad-hoc signed and not notarized. Physical Pi, Intel Mac and min
 ## Current limitations
 
 - **Paused non-master waveform coupling:** when a player is paused and is not the tempo master, OLC cannot reliably follow fine jog-wheel movements or scratching. Its waveform may move in coarse steps or remain still during small movements, so it should not be used for precise cue positioning in this state. Use the player’s own display and audio for cueing.
+- **First local USB load:** the first request may fail to load the track while the CDJ has not discovered OLC’s local source. Pressing LINK and waiting for OLC LOCAL USB to appear before making a new request may help; this issue remains unresolved.
+- **Incorrect start position after loading:** a track can load at an unexpected position, including a saved cue, instead of the intended start. Check and set the cue position on the CDJ before playback. This issue remains unresolved.
 - **Mac local USB playback:** Mac-attached libraries can be browsed, but serving their audio to CDJs requires a privileged networking helper that is not included. Loading from CDJ-mounted USBs remains available.
 - **Hardware coverage:** physical Raspberry Pi, Intel Mac and minimum-OS validation is incomplete.
 
