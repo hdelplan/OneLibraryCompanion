@@ -19,8 +19,8 @@ Mac packages are ad-hoc signed and not notarized. Physical Pi, Intel Mac and min
 ## Start using OLC
 
 1. Put the OLC host and your CDJs on the same network. In **MENU**, use **Manual IP connections** to connect players 1 and 2; subnet search helps locate their addresses. Automatic discovery on a selected network interface is also available.
-2. Choose a library in **BROWSE**. Use a CDJ-mounted USB, or attach a OneLibrary USB to the Mac/Pi and wait for it to appear. Local USB loading requires Manual IP connections.
-3. Find a track, stop the destination player and press **CDJ1** or **CDJ2** beside the track. For a host-attached USB, keep OLC running and the drive connected throughout playback.
+2. Choose a library in **BROWSE**. Use a CDJ-mounted USB, or attach a OneLibrary USB to the Mac/Pi and wait for it to appear. Local USB loading is available on Pi with Manual IP connections; the Mac package supports local browsing only.
+3. Find a track, stop the destination player and press **CDJ1** or **CDJ2** beside the track. For a Pi-hosted USB, keep OLC running and the drive connected throughout playback.
 4. Use **CDJ STATUS** to follow playback. In **SET HISTORY**, start a set to record qualifying tracks, then **Finish & save** when finished.
 5. For web access, open a LAN address shown in **MENU** on another device. The host must remain running.
 
@@ -42,7 +42,7 @@ Mac packages are ad-hoc signed and not notarized. Physical Pi, Intel Mac and min
 - **Personal filter layout and presets:** choose visible filters, their order and BPM menu bounds in MENU. Save named filter combinations for a particular USB export and recall them in BROWSE.
 - **Mixing context:** key highlighting helps find harmonically related tracks; tracks recorded in the active set are marked as played. Known player-format incompatibilities are flagged before loading.
 - **Protected track loading:** request a track on CDJ1 or CDJ2 without leaving the library. OLC checks the source, connection and stopped-player state before sending one load request. Playing, looping, busy or stale targets are blocked; uncertain requests are never retried automatically.
-- **Host-attached USB playback:** OLC serves the selected original audio file and its exported metadata, artwork and analysis to a directly connected CDJ, without transcoding. Different tracks from different local libraries can remain available to both players. See [local USB usage](docs/local-usb.md) for setup and limits.
+- **Pi-hosted USB playback:** OLC serves the selected original audio file and its exported metadata, artwork and analysis to a directly connected CDJ, without transcoding. Different tracks from different local libraries can remain available to both players. See [local USB usage](docs/local-usb.md) for setup and limits. Mac-hosted playback requires a privileged networking helper and is unavailable in this package.
 
 ### Keep and reuse set lists
 

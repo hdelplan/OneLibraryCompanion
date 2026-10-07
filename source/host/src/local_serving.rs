@@ -638,8 +638,16 @@ mod tests {
                 .as_array()
                 .unwrap()
                 .iter()
-                .all(|s| s["loadable"] == true)
+                .all(|s| s["loadable"] == !cfg!(target_os = "macos"))
         );
+        if cfg!(target_os = "macos") {
+            assert!(
+                library::sources(&catalogs)["sources"][0]["loadUnavailableReason"]
+                    .as_str()
+                    .unwrap()
+                    .contains("privileged networking helper")
+            );
+        }
     }
     #[tokio::test]
     async fn a_new_serving_session_does_not_reuse_track_or_file_identity() {

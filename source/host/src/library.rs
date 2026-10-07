@@ -316,7 +316,17 @@ pub fn load_source(
 }
 pub fn sources(shared: &Shared) -> Value {
     let state = shared.lock().unwrap();
-    json!({"sources":state.sources.iter().map(|(id,s)|json!({"id":id,"label":s.label,"available":s.available,"loadable":matches!(s.location, Location::Remote(_, Slot::USB)) || (state.interface.is_none() && id.starts_with("local-usb:") && matches!(s.location, Location::Local(_))),"direct":matches!(s.location, Location::Direct(_)),"generation":s.generation,"state":s.state,"error":s.error,"count":s.catalog.as_ref().map(|c|c.library.tracks.len())})).collect::<Vec<_>>()})
+    json!({"sources":state.sources.iter().map(|(id,s)| {
+        let local = id.starts_with("local-usb:") && matches!(s.location, Location::Local(_));
+        let load_unavailable = if local && cfg!(target_os = "macos") {
+            Some("Local USB playback is unavailable in this Mac package: a privileged networking helper is required. Browse here or load from a USB attached to a CDJ.")
+        } else if local && state.interface.is_some() {
+            Some("Local USB loading requires Manual IP connections in MENU.")
+        } else {
+            None
+        };
+        json!({"id":id,"label":s.label,"available":s.available,"loadable":matches!(s.location, Location::Remote(_, Slot::USB)) || (local && load_unavailable.is_none()),"loadUnavailableReason":load_unavailable,"direct":matches!(s.location, Location::Direct(_)),"generation":s.generation,"state":s.state,"error":s.error,"count":s.catalog.as_ref().map(|c|c.library.tracks.len())})
+    }).collect::<Vec<_>>()})
 }
 pub fn refresh(shared: &Shared, id: &str) -> Result<(), String> {
     let (location, generation, interface) = {

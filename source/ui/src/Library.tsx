@@ -951,7 +951,8 @@ function LibraryView({
       </div>
       {source?.id.startsWith("local-usb:") && !source.loadable && (
         <p className="library-load-message" role="status">
-          Local USB loading requires Manual IP connections in MENU.
+          {source.loadUnavailableReason ??
+            "Local USB loading is unavailable in this connection mode."}
         </p>
       )}
       <div className="library-details">

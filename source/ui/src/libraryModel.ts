@@ -4,6 +4,7 @@ export type LibrarySource = {
   label: string;
   available: boolean;
   loadable: boolean;
+  loadUnavailableReason?: string | null;
   generation: number;
   state: string;
   error: string | null;

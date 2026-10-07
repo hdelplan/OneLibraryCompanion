@@ -101,8 +101,10 @@ def main():
             units = root / 'usr/lib/systemd/user'
             units.mkdir(parents=True)
             shutil.copy2('packaging/olc-host.service', units / 'olc-host.service')
-            deps = 'libc6 (>= 2.36), libgcc-s1'
-        (root / 'DEBIAN/control').write_text(f'Package: {name}\nVersion: {version}\nArchitecture: {args.arch}\nMaintainer: OLC maintainers <noreply@onelibrarycompanion.local>\nSection: sound\nPriority: optional\nDepends: {deps}\nDescription: OneLibraryCompanion CDJ companion\n Shared production UI and service. Experiments are disabled.\n')
+            shutil.copy2('packaging/olc-host.postinst', root / 'DEBIAN/postinst')
+            (root / 'DEBIAN/postinst').chmod(0o755)
+            deps = 'libc6 (>= 2.36), libgcc-s1, libcap2-bin'
+        (root / 'DEBIAN/control').write_text(f'Package: {name}\nVersion: {version}\nArchitecture: {args.arch}\nMaintainer: OLC maintainers <noreply@onelibrarycompanion.local>\nSection: sound\nPriority: optional\nDepends: {deps}\nDescription: OneLibraryCompanion CDJ companion\n Native and LAN interfaces for CDJ libraries, status and set history.\n')
         output = releases / f'{name}_{version}_{args.arch}.deb'
         if shutil.which('dpkg-deb'):
             subprocess.run(['dpkg-deb', '--build', '--root-owner-group', str(root), str(output)], check=True)

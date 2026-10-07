@@ -9,7 +9,7 @@ ROOT = Path(__file__).resolve().parent.parent
 FILES = ['Cargo.toml', 'Cargo.lock', 'LICENSE', 'THIRD_PARTY_NOTICES.md', 'README.md', '.gitignore', 'AGENTS.md']
 TREES = ['source', 'vendor/prolink', 'third-party-licenses', 'packaging', 'scripts', '.github']
 DOCS = ['distribution.md', 'release-notes.md', 'architecture.md', 'configuration.md', 'set-history.md', 'development.md', 'hardware-testing.md', 'compatibility.md', 'local-usb.md', 'screenshots.md']
-OMITTED = {'source/ipad/README.md', 'vendor/prolink/Cargo.lock'}
+OMITTED = {'source/ipad/README.md', 'vendor/prolink/Cargo.lock', 'scripts/benchmark-transcoding.py'}
 PUBLIC_AGENTS = '''# Project requirements
 
 - Keep UI and feature improvements shared across Mac and Raspberry Pi. Implement shared behavior in source/ui and source/host.

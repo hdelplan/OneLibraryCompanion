@@ -28,6 +28,8 @@ Format application packages with `cargo fmt -p pioneer-companion-core -p pioneer
 
 Mac apps are written under `builds/macos-<arch>`; DMGs, ZIPs, Debian packages and checksums go under `builds/releases`. `NODE` can select a compatible Node executable. `OLC_SKIP_DMG=1` skips disk-image creation while retaining the app and ZIP.
 
+The Pi package grants only `CAP_NET_BIND_SERVICE` to the installed host executable for CDJ portmapper access on UDP 111. Its install hook and capability are checked by CI. Mac local serving requires a privileged networking helper outside the current package.
+
 The GitHub distribution workflow builds both Mac architectures and ARM64 Debian packages, runs application checks and host smoke checks, and packages source and checksums. A version tag creates a draft prerelease. A manual run with **publish** selected publishes the completed prerelease. The chosen tag must match `source/host/Cargo.toml`; retain that version in the Mac bundle and release guide as well.
 
 Linux release builds use a Debian Bookworm container. This establishes the glibc baseline; packages built on a newer Linux host must not be assumed Bookworm-compatible.

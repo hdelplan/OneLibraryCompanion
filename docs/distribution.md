@@ -20,7 +20,7 @@ sudo apt install ./onelibrarycompanion-host_0.1.2_arm64.deb ./onelibrarycompanio
 
 Open OneLibraryCompanion from the applications menu or run `olc`. The native window uses GTK and WebKit; it does not open the local browser. Its menu includes **Full Screen**, **Open at Login** and **Quit**. Closing the window leaves OLC running; opening OLC again restores it.
 
-Use an OS-supported touchscreen and the desktop's on-screen keyboard for text fields. Mount USBs through the operating system so they are readable by your user. OLC does not mount block devices or need root privileges to run.
+Use an OS-supported touchscreen and the desktop's on-screen keyboard for text fields. Mount USBs through the operating system so they are readable by your user. OLC does not mount block devices or run as root. The host package uses `libcap2-bin` to grant its executable `CAP_NET_BIND_SERVICE`, permitting the UDP port 111 required by CDJs. Installation fails explicitly if the filesystem cannot retain this capability.
 
 ## Raspberry Pi headless
 
@@ -45,7 +45,9 @@ OLC listens on `0.0.0.0:8787` by default. MENU lists LAN URLs such as `http://19
 
 The host and CDJs need working local-network connectivity; firewalls, VPN routing and Wi-Fi client isolation can prevent it. Keep the service on a trusted LAN and do not forward its port to the internet. The host must remain awake while recording a set or serving music.
 
-For local USB loading, use **Manual IP connections** and physical players 1 and 2. Automatic discovery on a selected adapter is available for linked-CDJ operation. Connection-mode changes require saving and restarting OLC. See [connections and preferences](configuration.md) and [local USB usage](local-usb.md).
+For Pi local USB loading, use **Manual IP connections** and physical players 1 and 2. Automatic discovery on a selected adapter is available for linked-CDJ operation. Connection-mode changes require saving and restarting OLC. See [connections and preferences](configuration.md) and [local USB usage](local-usb.md).
+
+Mac-hosted local audio is unavailable in this package because a privileged networking helper is required for port 111. Local browsing and loading from CDJ-mounted USBs remain available.
 
 ## Data and backups
 

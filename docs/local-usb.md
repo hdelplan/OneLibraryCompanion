@@ -2,7 +2,13 @@
 
 OLC reads up to three OneLibrary USBs attached to the Mac or Raspberry Pi host. Each drive must be mounted and readable by the logged-in user, with its original `PIONEER/rekordbox/exportLibrary.db`, music and analysis directory structure intact. OLC checks mounted removable drives every five seconds and adds valid libraries to the BROWSE source selector. It reads the export without modifying it.
 
-## Browse and load
+## Platform availability
+
+Local browsing works on both platforms. **Local playback is available in the Pi package; it is unavailable in the Mac package.** macOS protects UDP port 111, which CDJs require for source discovery. A privileged networking helper is required for Mac-hosted playback and is not included. Mac users can load music from USBs attached to the CDJs.
+
+The Pi host package grants its executable `CAP_NET_BIND_SERVICE` during installation so it can bind port 111 while running as the logged-in user. It does not change the system-wide privileged-port range. Another RPC/NFS service using port 111 prevents OLC from serving local music.
+
+## Browse and load on Pi
 
 1. In MENU, select **Manual IP connections**, save the connection mode and restart OLC if changing modes. Connect physical CDJs numbered **1** and **2** by their IP addresses. Both must use the same host network interface. Leave player number **4** unused: OLC uses it as the local music source.
 2. Attach the USB to the host. On Pi, mount it through the operating system first. Open **LOCAL USB** in BROWSE to check discovery or validation errors, then select the library in the USB selector.

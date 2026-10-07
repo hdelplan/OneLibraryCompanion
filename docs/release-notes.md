@@ -1,6 +1,6 @@
 # OneLibraryCompanion 0.1.2
 
-OLC provides two-deck live status with three-band waveforms, library browsing and filtering, protected track loading, host-attached OneLibrary USB playback, and persistent set history with text, CSV and PDF exports. Mac and Raspberry Pi desktop windows and LAN browsers share the same host.
+OLC provides two-deck live status with three-band waveforms, library browsing and filtering, protected track loading, Pi-hosted OneLibrary USB playback, and persistent set history with text, CSV and PDF exports. Mac and Raspberry Pi desktop windows and LAN browsers share the same host.
 
 ## Installers
 
@@ -12,6 +12,8 @@ OLC provides two-deck live status with three-band waveforms, library browsing an
 Mac ZIP alternatives, matching source and `SHA256SUMS.txt` accompany the installers. Mac requires macOS 13+; Pi requires 64-bit Raspberry Pi OS Bookworm or later. Mac packages are ad-hoc signed and not notarized. Physical Pi, Intel and minimum-OS validation remains incomplete.
 
 ## Local USB operation
+
+Local browsing is available on Mac and Pi. Local playback is available on Pi, whose installer grants the host executable the port-binding capability needed for UDP 111. Mac-hosted playback is unavailable without a privileged networking helper, which this package does not include.
 
 Use Manual IP connections to physical players 1 and 2, leaving player number 4 free for OLC. Up to three mounted OneLibrary USBs are available. OLC serves original audio and exported metadata/analysis, keeps independent tracks available to both decks, and returns complete audio reads within the network payload limit.
 
