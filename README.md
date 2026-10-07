@@ -24,6 +24,14 @@ Mac packages are ad-hoc signed and not notarized. Physical Pi, Intel Mac and min
 4. Use **CDJ STATUS** to follow playback. In **SET HISTORY**, start a set to record qualifying tracks, then **Finish & save** when finished.
 5. For web access, open a LAN address shown in **MENU** on another device. The host must remain running.
 
+## Current limitations
+
+- **Paused non-master waveform coupling:** when a player is paused and is not the tempo master, OLC cannot reliably follow fine jog-wheel movements or scratching. Its waveform may move in coarse steps or remain still during small movements, so it should not be used for precise cue positioning in this state. Use the player’s own display and audio for cueing.
+- **Mac local USB playback:** Mac-attached libraries can be browsed, but serving their audio to CDJs requires a privileged networking helper that is not included. Loading from CDJ-mounted USBs remains available.
+- **Hardware coverage:** physical Raspberry Pi, Intel Mac and minimum-OS validation is incomplete.
+
+See [compatibility and operating limits](docs/compatibility.md) for player, media, network and platform details.
+
 ## Features
 
 ### Follow a mix

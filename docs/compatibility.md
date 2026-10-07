@@ -1,5 +1,11 @@
 # Compatibility and operating limits
 
+## Main limitation: paused non-master waveform coupling
+
+When a player is paused and is not the tempo master, OLC cannot reliably couple its scrolling waveform to fine jog-wheel movements or scratching. The available position data can remain unchanged within a beat, leaving only a coarse beat-position estimate. Small movements and changes of direction may therefore be missing from the display, or appear as steps.
+
+Do not rely on OLC’s waveform for precise cue positioning in this state; use the player’s own display and audio. This limitation concerns visual tracking, not the player’s ability to cue or play audio. Smoother tracking during normal playback or on the master player does not imply the same precision on a paused non-master player. Changing the jog-smoothing setting cannot restore position data that is unavailable.
+
 ## Platforms
 
 | Platform | Package baseline | Validation status |
