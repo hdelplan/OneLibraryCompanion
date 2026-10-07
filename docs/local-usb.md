@@ -4,7 +4,7 @@ OLC reads up to three OneLibrary USBs attached to the Mac or Raspberry Pi host. 
 
 ## Platform availability
 
-Local browsing works on both platforms. **Local playback is available in the Pi package; it is unavailable in the Mac package.** macOS protects UDP port 111, which CDJs require for source discovery. A privileged networking helper is required for Mac-hosted playback and is not included. Mac users can load music from USBs attached to the CDJs.
+Local browsing works on both platforms. **Local playback is available in the Pi package; it is unavailable in the Mac package.** macOS protects UDP port 111, which CDJs require for source discovery. The Mac package does not have access to this port for local audio serving. Mac users can load music from USBs attached to the CDJs.
 
 The Pi host package grants its executable `CAP_NET_BIND_SERVICE` during installation so it can bind port 111 while running as the logged-in user. It does not change the system-wide privileged-port range. Another RPC/NFS service using port 111 prevents OLC from serving local music.
 

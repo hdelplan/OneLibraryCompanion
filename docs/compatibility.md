@@ -17,7 +17,7 @@ Do not rely on OLC’s waveform for precise cue positioning in this state; use t
 | --- | --- | --- |
 | Apple Silicon Mac | macOS 13+, ARM64 | Application startup, native window and host smoke checks exercised on a development Mac; minimum-OS coverage incomplete |
 | Intel Mac | macOS 13+, x86-64 | Native CI build and host smoke checks; physical Intel/minimum-OS coverage incomplete |
-| Raspberry Pi 4 / 5 | Raspberry Pi OS Bookworm 64-bit; Desktop for native UI, Lite for host-only use | ARM64 Bookworm build and host smoke checks; physical Pi runtime and touchscreen validation pending |
+| Raspberry Pi 4 / 5 | Raspberry Pi OS Bookworm 64-bit; Desktop for native UI, Lite for host-only use | ARM64 Bookworm build and host smoke checks; physical Pi runtime and touchscreen operation are unverified |
 | LAN clients | A current Safari, Chrome, Firefox or Edge browser | Fixed 1280 × 800 layout scales to fit; browser/device coverage incomplete |
 
 A successful build does not certify USB discovery, network operation, touch performance or sustained playback on every device. The release workflow runs application checks and host smoke tests before publishing installers; its logs are available in [GitHub Actions](https://github.com/hdelplan/OneLibraryCompanion/actions).
@@ -30,7 +30,7 @@ OLC displays two decks and exposes load controls for players numbered 1 and 2. T
 
 Three-band waveforms require the corresponding exported analysis. Missing analysis is shown as unavailable. Beat-grid time and some loop positions are estimates, particularly on older players; precise sub-beat scratching is not guaranteed. Phrase sections and cues require those records in the export.
 
-Linked CDJ libraries read legacy Rekordbox exports. Host-attached libraries read OneLibrary databases. The Pi package supports local USB loading using Manual IP connections and virtual source number 4. The Mac package supports local browsing but cannot serve local audio without a privileged networking helper, which is not included; see [local USB usage](local-usb.md). First-load discovery and incorrect starting positions remain unresolved, as described above.
+Linked CDJ libraries read legacy Rekordbox exports. Host-attached libraries read OneLibrary databases. The Pi package supports local USB loading using Manual IP connections and virtual source number 4. The Mac package supports local browsing but cannot serve local audio; see [local USB usage](local-usb.md). First-load discovery and incorrect starting positions remain unresolved, as described above.
 
 Loading requires fresh telemetry and a stopped target. Playing, looping, busy, stale and disconnected states block requests. A load confirmation reflects the player's reported selection, not proof of audible playback. There is no automatic retry or remote play command.
 

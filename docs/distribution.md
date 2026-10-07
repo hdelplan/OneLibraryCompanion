@@ -47,7 +47,7 @@ The host and CDJs need working local-network connectivity; firewalls, VPN routin
 
 For Pi local USB loading, use **Manual IP connections** and physical players 1 and 2. Automatic discovery on a selected adapter is available for linked-CDJ operation. Connection-mode changes require saving and restarting OLC. See [connections and preferences](configuration.md) and [local USB usage](local-usb.md).
 
-Mac-hosted local audio is unavailable in this package because a privileged networking helper is required for port 111. Local browsing and loading from CDJ-mounted USBs remain available.
+Mac-hosted local audio is unavailable in this package because it does not have the required access to UDP port 111. Local browsing and loading from CDJ-mounted USBs remain available.
 
 ## Data and backups
 

@@ -29,7 +29,7 @@ Mac packages are ad-hoc signed and not notarized. Physical Pi, Intel Mac and min
 - **Paused non-master waveform coupling:** when a player is paused and is not the tempo master, OLC cannot reliably follow fine jog-wheel movements or scratching. Its waveform may move in coarse steps or remain still during small movements, so it should not be used for precise cue positioning in this state. Use the player’s own display and audio for cueing.
 - **First local USB load:** the first request may fail to load the track while the CDJ has not discovered OLC’s local source. Pressing LINK and waiting for OLC LOCAL USB to appear before making a new request may help; this issue remains unresolved.
 - **Incorrect start position after loading:** a track can load at an unexpected position, including a saved cue, instead of the intended start. Check and set the cue position on the CDJ before playback. This issue remains unresolved.
-- **Mac local USB playback:** Mac-attached libraries can be browsed, but serving their audio to CDJs requires a privileged networking helper that is not included. Loading from CDJ-mounted USBs remains available.
+- **Mac local USB playback:** Mac-attached libraries can be browsed, but this package cannot serve their audio to CDJs. Loading from CDJ-mounted USBs remains available.
 - **Hardware coverage:** physical Raspberry Pi, Intel Mac and minimum-OS validation is incomplete.
 
 See [compatibility and operating limits](docs/compatibility.md) for player, media, network and platform details.
@@ -52,7 +52,7 @@ See [compatibility and operating limits](docs/compatibility.md) for player, medi
 - **Personal filter layout and presets:** choose visible filters, their order and BPM menu bounds in MENU. Save named filter combinations for a particular USB export and recall them in BROWSE.
 - **Mixing context:** key highlighting helps find harmonically related tracks; tracks recorded in the active set are marked as played. Known player-format incompatibilities are flagged before loading.
 - **Protected track loading:** request a track on CDJ1 or CDJ2 without leaving the library. OLC checks the source, connection and stopped-player state before sending one load request. Playing, looping, busy or stale targets are blocked; uncertain requests are never retried automatically.
-- **Pi-hosted USB playback:** OLC serves the selected original audio file and its exported metadata, artwork and analysis to a directly connected CDJ, without transcoding. Different tracks from different local libraries can remain available to both players. See [local USB usage](docs/local-usb.md) for setup and limits. Mac-hosted playback requires a privileged networking helper and is unavailable in this package.
+- **Pi-hosted USB playback:** OLC serves the selected original audio file and its exported metadata, artwork and analysis to a directly connected CDJ, without transcoding. Different tracks from different local libraries can remain available to both players. See [local USB usage](docs/local-usb.md) for setup and limits. Mac-hosted playback is unavailable in this package.
 
 ### Keep and reuse set lists
 

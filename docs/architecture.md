@@ -35,7 +35,7 @@ For a host-attached USB, `local_serving.rs` prepares the original file and expor
 
 Requested tracks receive independent, session-specific wire identities across local libraries. Their original files remain available while another track is selected. Paths are confined to the USB root, and file/analysis sizes are bounded. NFS returns original bytes, including full hardware-sized audio reads within the UDP payload limit, with a dedicated send buffer. There is no transcoding or remote play command.
 
-Platform policy exposes local playback only where the desktop package supplies port-111 access. The Pi installer grants a file capability to the host executable. The Mac package reports local sources as browse-only because it does not include a privileged helper.
+Platform policy exposes local playback only where the desktop package supplies port-111 access. The Pi installer grants a file capability to the host executable. The Mac package reports local sources as browse-only because it lacks the required access to UDP port 111.
 
 ## HTTP interfaces
 

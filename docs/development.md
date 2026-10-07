@@ -28,7 +28,7 @@ Format application packages with `cargo fmt -p pioneer-companion-core -p pioneer
 
 Mac apps are written under `builds/macos-<arch>`; DMGs, ZIPs, Debian packages and checksums go under `builds/releases`. `NODE` can select a compatible Node executable. `OLC_SKIP_DMG=1` skips disk-image creation while retaining the app and ZIP.
 
-The Pi package grants only `CAP_NET_BIND_SERVICE` to the installed host executable for CDJ portmapper access on UDP 111. Its install hook and capability are checked by CI. Mac local serving requires a privileged networking helper outside the current package.
+The Pi package grants only `CAP_NET_BIND_SERVICE` to the installed host executable for CDJ portmapper access on UDP 111. Its install hook and capability are checked by CI. Mac local audio serving is unavailable: the package lacks the required access to UDP port 111.
 
 The GitHub distribution workflow builds both Mac architectures and ARM64 Debian packages, runs application checks and host smoke checks, and packages source and checksums. A version tag creates a draft prerelease. A manual run with **publish** selected publishes the completed prerelease. The chosen tag must match `source/host/Cargo.toml`; retain that version in the Mac bundle and release guide as well.
 
@@ -63,7 +63,7 @@ Use absolute paths. The corresponding `PIONEER_COMPANION_*` variables are compat
 
 `scripts/prepare-distribution.py <new-directory>` creates an allowlisted source snapshot and `SOURCE-MANIFEST.sha256`. It excludes private exports, captures, credentials, dependencies and generated build output. Publication documentation is explicitly selected, including the screenshot gallery. It refuses to overwrite an existing destination.
 
-Keep shared changes in `source/ui`, `source/host` and the native launchers. Review the snapshot and manifest before publishing. Read the remote branch before updating it so edits made on GitHub are retained. Documentation describes current behaviour: feature explanations belong in README and user guides; implementation contracts belong in architecture. Do not add development diaries, superseded plans or completed-work checklists.
+Keep shared changes in `source/ui`, `source/host` and the native launchers. Review the snapshot and manifest before publishing. Read the remote branch before updating it so edits made on GitHub are retained. Documentation describes current behaviour: feature explanations belong in README and user guides; implementation contracts belong in architecture. Document only implemented features, current behaviour and known limitations. Do not include future plans, proposed features, roadmaps, development diaries or completed-work checklists.
 
 The root license, source credits and dependency notices must accompany source and binaries. After dependency changes, install the locked dependencies, populate the Cargo cache with `cargo metadata --locked`, then run `python3 scripts/collect-third-party-notices.py`. The collector fails when notices are missing. Review manually maintained source credits when adapting new code or protocol references.
 

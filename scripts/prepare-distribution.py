@@ -14,7 +14,7 @@ PUBLIC_AGENTS = '''# Project requirements
 
 - Keep UI and feature improvements shared across Mac and Raspberry Pi. Implement shared behavior in source/ui and source/host.
 - Keep the UI in English. Preserve existing workspace changes.
-- Keep distribution documentation focused on supported Mac and Raspberry Pi functionality and current behavior.
+- Keep distribution documentation focused on supported Mac and Raspberry Pi functionality and current behavior. Document only implemented features and known limitations; exclude future plans, proposed features and roadmaps.
 '''
 EXCLUDED = {'.git', 'target', 'builds', 'dist', 'dist-ipad', 'node_modules', 'DerivedData', 'xcuserdata', 'com.apple.DeveloperTools', '__pycache__', '.DS_Store'}
 BANNED = {'.p12', '.mobileprovision', '.cer', '.pem', '.key', '.db', '.pdb', '.wav', '.mp3', '.aiff', '.flac', '.log', '.pyc', '.xcuserstate'}

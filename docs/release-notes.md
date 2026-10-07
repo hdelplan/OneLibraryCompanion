@@ -13,7 +13,7 @@ Mac ZIP alternatives, matching source and `SHA256SUMS.txt` accompany the install
 
 ## Local USB operation
 
-Local browsing is available on Mac and Pi. Local playback is available on Pi, whose installer grants the host executable the port-binding capability needed for UDP 111. Mac-hosted playback is unavailable without a privileged networking helper, which this package does not include.
+Local browsing is available on Mac and Pi. Local playback is available on Pi, whose installer grants the host executable the port-binding capability needed for UDP 111. Mac-hosted playback is unavailable because the package lacks the required access to UDP 111.
 
 Use Manual IP connections to physical players 1 and 2, leaving player number 4 free for OLC. Up to three mounted OneLibrary USBs are available. OLC serves original audio and exported metadata/analysis, keeps independent tracks available to both decks, and returns complete audio reads within the network payload limit.
 
