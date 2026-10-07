@@ -28,7 +28,7 @@ Data lives under `~/Library/Application Support/OneLibraryCompanion`; `host.log`
 Use 64-bit Raspberry Pi OS. Install both downloaded packages on Desktop:
 
 ```sh
-sudo apt install ./onelibrarycompanion-host_0.1.0_arm64.deb ./onelibrarycompanion_0.1.0_arm64.deb
+sudo apt install ./onelibrarycompanion-host_0.1.1_arm64.deb ./onelibrarycompanion_0.1.1_arm64.deb
 ```
 
 Open OneLibraryCompanion from the applications menu or run `olc`. The OLC menu contains Full Screen, Open at Login, and Quit. Closing the window keeps the process alive; launching OLC again reopens it. Use the desktop's on-screen keyboard for search and metadata fields. USBs must be mounted by the OS and readable by the logged-in user; the host discovers mounted removable volumes, it does not mount disks or run as root.

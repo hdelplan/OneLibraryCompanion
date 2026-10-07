@@ -9,7 +9,7 @@ on:
       release_tag:
         description: Version tag matching source/host/Cargo.toml
         type: string
-        default: v0.1.0
+        default: v0.1.1
   push:
     tags: ['v*']
 permissions:

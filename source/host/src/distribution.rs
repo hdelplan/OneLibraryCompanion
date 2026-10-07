@@ -105,43 +105,49 @@ fn data_directory(root: &Path, packaged: bool) -> PathBuf {
     }
 }
 fn bind_listener(address: SocketAddr) -> std::io::Result<tokio::net::TcpListener> {
-    // SO_REUSEADDR is needed to restart while old clients are in TIME_WAIT.
-    // Darwin also permits wildcard/specific overlap, so check local listeners
-    // first. Only connect to this machine's addresses; send no application data.
+    // Probe ownership with bind/listen, never outbound connections: network
+    // filters can accept connect() on unused ports and cause false conflicts.
+    // Darwin permits wildcard/specific overlap with SO_REUSEADDR, so check
+    // each local address as well. Reuse permits immediate TIME_WAIT restart.
+    #[cfg(target_os = "macos")]
     if address.port() != 0 {
-        let ips: Vec<std::net::IpAddr> = if address.ip().is_unspecified() {
-            let loopback = if address.is_ipv4() {
-                std::net::IpAddr::V4(std::net::Ipv4Addr::LOCALHOST)
+        let mut ips = vec![std::net::IpAddr::V4(std::net::Ipv4Addr::LOCALHOST)];
+        ips.push(std::net::IpAddr::V6(std::net::Ipv6Addr::LOCALHOST));
+        ips.extend(
+            NetworkInterface::show()
+                .unwrap_or_default()
+                .into_iter()
+                .flat_map(|n| n.addr.into_iter().map(|a| a.ip())),
+        );
+        ips.push(address.ip());
+        ips.sort();
+        ips.dedup();
+        for ip in ips
+            .into_iter()
+            .filter(|ip| ip.is_ipv4() == address.is_ipv4())
+        {
+            let probe = if ip.is_ipv4() {
+                tokio::net::TcpSocket::new_v4()?
             } else {
-                std::net::IpAddr::V6(std::net::Ipv6Addr::LOCALHOST)
+                tokio::net::TcpSocket::new_v6()?
             };
-            std::iter::once(loopback)
-                .chain(
-                    NetworkInterface::show()
-                        .unwrap_or_default()
-                        .into_iter()
-                        .flat_map(|n| n.addr.into_iter().map(|a| a.ip())),
-                )
-                .filter(|ip| !address.is_ipv4() || ip.is_ipv4())
-                .collect()
-        } else {
-            vec![address.ip()]
-        };
-        for ip in ips {
-            if std::net::TcpStream::connect_timeout(
-                &SocketAddr::new(ip, address.port()),
-                std::time::Duration::from_millis(50),
-            )
-            .is_ok()
+            probe.set_reuseaddr(true)?;
+            let result = probe
+                .bind(SocketAddr::new(ip, address.port()))
+                .and_then(|()| probe.listen(1));
+            if let Err(error) = result
+                && error.kind() == std::io::ErrorKind::AddrInUse
             {
                 return Err(std::io::Error::new(
-                    std::io::ErrorKind::AddrInUse,
+                    error.kind(),
                     format!(
-                        "Another service is already listening on {ip}:{}",
+                        "Cannot reserve local port {} on {ip}: {error}",
                         address.port()
                     ),
                 ));
             }
+            // Some enumerated virtual/link-local addresses cannot be bound.
+            // The requested address is always validated by the real bind below.
         }
     }
     let socket = if address.is_ipv4() {
@@ -222,6 +228,24 @@ mod tests {
         let local = bind_listener("127.0.0.1:0".parse().unwrap()).unwrap();
         let port = local.local_addr().unwrap().port();
         assert!(bind_listener(format!("0.0.0.0:{port}").parse().unwrap()).is_err());
+        // A port check must not create a connection to the existing service.
+        assert!(
+            tokio::time::timeout(std::time::Duration::from_millis(30), local.accept())
+                .await
+                .is_err()
+        );
+    }
+    #[tokio::test]
+    async fn restarts_after_an_accepted_connection() {
+        let listener = bind_listener("127.0.0.1:0".parse().unwrap()).unwrap();
+        let address = listener.local_addr().unwrap();
+        let client = tokio::net::TcpStream::connect(address).await.unwrap();
+        let (server, _) = listener.accept().await.unwrap();
+        drop(server);
+        drop(client);
+        drop(listener);
+        let restarted = bind_listener(address).unwrap();
+        assert_eq!(restarted.local_addr().unwrap(), address);
     }
     #[test]
     fn network_selection_accepts_direct_mode_and_rejects_unknown_interfaces() {

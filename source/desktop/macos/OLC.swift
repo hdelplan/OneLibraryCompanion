@@ -107,7 +107,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
                 DispatchQueue.main.async {
                     guard let self, !self.quitting else { return }
                     self.timer?.invalidate()
-                    self.fail("The OLC service stopped. Another service may already be using port \(port). Quit that service or set OLC_BIND to a different port, then reopen OLC.\n\nDetails: \(logURL.path)")
+                    let detail = (try? String(contentsOf: logURL, encoding: .utf8))?.trimmingCharacters(in: .whitespacesAndNewlines)
+                    let reason = detail.flatMap { $0.isEmpty ? nil : String($0.suffix(2000)) } ?? "No additional details were recorded."
+                    self.fail("The OneLibraryCompanion service stopped.\n\n\(reason)\n\nLog: \(logURL.path)")
                 }
             }
             try child.run()
@@ -147,7 +149,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
         NSApp.terminate(nil)
     }
     @objc private func about() {
-        NSApp.orderFrontStandardAboutPanel(options: [.applicationName: "OneLibraryCompanion", .applicationVersion: "0.1.0", .credits: NSAttributedString(string: "OLC · Shared CDJ companion\nGPL-3.0-only")])
+        NSApp.orderFrontStandardAboutPanel(options: [.applicationName: "OneLibraryCompanion", .applicationVersion: "0.1.1", .credits: NSAttributedString(string: "OLC · Shared CDJ companion\nGPL-3.0-only")])
     }
     @objc func showWindow() { window?.makeKeyAndOrderFront(nil); NSApp.activate(ignoringOtherApps: true) }
     @objc private func reload() { if !starting { web.load(URLRequest(url: origin, cachePolicy: .reloadIgnoringLocalCacheData)) } }
