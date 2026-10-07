@@ -10,7 +10,7 @@ Two playing decks with three-band waveforms, phrase sections, timing and track i
 
 ## Browse
 
-A populated 16-track USB library with playlists, ratings, musical keys and tempo.
+This screen enables library navigation, filtering using genre, color, star rating, key, etc.. User can select playlists or previous sets to pick tracks from. Tracks can be sorted according to all columns. Tracks can be loaded to all connected players (when they are not already playing). Tracks previously played are highlighted. Tracks with compatible keys are highlighted.
 
 ![Browse](screenshots/browse.png)
 
