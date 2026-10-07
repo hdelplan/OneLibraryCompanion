@@ -417,8 +417,8 @@ export function SetHistory({ active }: { active: boolean }) {
           <div>
             <strong>Import from Rekordbox</strong>
             <p>
-              Histories dated 1 March 2026 onward. If dates or histories are
-              unavailable, create three labelled MAX4.0 sample sets.
+              Import complete histories whose names contain a date in YYYY-MM-DD
+              format. Undated or incomplete histories are skipped.
             </p>
           </div>
           <select
@@ -439,7 +439,7 @@ export function SetHistory({ active }: { active: boolean }) {
             disabled={busy || !source}
             onClick={() => void importHistory()}
           >
-            {busy ? "Reading…" : "Import / create samples"}
+            {busy ? "Reading…" : "Import history"}
           </button>
           <button disabled={busy} onClick={() => setImportOpen(false)}>
             Cancel
@@ -545,7 +545,7 @@ export function SetHistory({ active }: { active: boolean }) {
                   TRACKLIST{" "}
                   <small>
                     {set.origin === "sample"
-                      ? "Harmonic sequence · MAX4.0"
+                      ? "Sample tracklist"
                       : set.origin === "imported"
                         ? "Original Rekordbox order"
                         : "Qualifies after more than 45 seconds of continuous playback"}

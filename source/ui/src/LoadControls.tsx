@@ -34,7 +34,12 @@ export function useTrackLoader(
           target,
         }),
       });
-      if (!response.ok) throw new Error(await response.text());
+      if (!response.ok) {
+        const detail = await response.text();
+        if (currentKey.current === requestKey)
+          setMessage(detail || `Load request rejected (${response.status})`);
+        return;
+      }
       const result = (await response.json()) as {
         message: string;
         outcome: string;
@@ -88,7 +93,9 @@ export function LoadControls({
               loader.busy !== null
             }
             title={
-              unsupported ??
+              (!source?.loadable
+                ? "This library supports browsing only; CDJ loading is not yet available"
+                : unsupported) ??
               (track.available === false
                 ? "Track is missing or ambiguous on the selected USB"
                 : blocked

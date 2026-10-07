@@ -1,58 +1,45 @@
-# Configuration
+# Connections and preferences
 
-Packaged OLC settings, LAN access and environment aliases are documented in [Distribution](distribution.md). The desktop default is now `0.0.0.0:8787`; desktop offline preview is in MENU.
+Open MENU to configure the host connection and the display. Host settings are shared by every client; display and library preferences are saved separately in each browser or native window.
 
-## Display preferences
+## CDJ connections
 
-Configuration is saved in browser local storage under `pioneercompanion.display.v1`. Corrupt or invalid fields fall back to defaults. Retired renderer settings are ignored; remaining preferences are retained.
+**Manual IP connections** lets you connect players 1 and 2 by address. Subnet search helps find players on the chosen local subnet. Use this mode when loading from a host-attached OneLibrary USB.
 
-| Option | Default | Choices |
+**CDJ discovery interface** selects a network adapter for automatic discovery. Save the mode and quit/reopen OLC to apply it. A configured `OLC_INTERFACE` takes precedence over this saved choice. Use the adapter connected to the CDJ network.
+
+MENU lists the host's LAN URLs. Any device that can reach one can use OLC without a login or pairing. Connected clients share player access, libraries and set history. See [installation and networking](distribution.md).
+
+## Display
+
+| Setting | Purpose | Default |
 | --- | --- | --- |
-| Playhead position | One third from left | One third, center |
-| Playhead color | Red | Red, white |
-| Visible window | 8 seconds | 2, 4, 8, 16, 32 seconds |
-| Three-band rendering | Slight bass lift | Native balance, native with 15% bass lift |
-| Primary time | Remaining | Remaining, elapsed |
-| Overview | On | On, off |
-| Phrase analysis | On | On, off |
-| Additional details | On | On, off |
+| Jog smoothing | Trade immediate motion updates for a smoother display: off, 20, 50 or 100 ms | Off |
+| Playhead position | Place the current position one third across or in the center | One third |
+| Playhead color | White or red marker | White |
+| Visible time window | Show 2–32 seconds in two-second increments | 8 seconds |
+| Three-band rendering | Balanced bands or additional low-frequency emphasis | Bass emphasis |
+| Primary time | Remaining or elapsed time | Remaining |
+| Overview waveform | Show whole-track context | On |
+| Phrase analysis | Show exported track sections | On |
+| Additional track details | Show supporting track metadata | On |
 
-Restore defaults resets display preferences. Preview files and scrub positions are session-only. Preferences belong to this browser origin, so a different browser, port or device has separate settings.
+The CDJ STATUS zoom buttons also change the visible window. Tapping a track's time changes the primary time mode. **Restore defaults** resets display and library-filter preferences; it does not delete history or change the USB.
 
-## Host environment
+## Library filters and track size
 
-| Variable | Default | Purpose |
-| --- | --- | --- |
-| `PIONEER_COMPANION_ROOT` | Current directory | Root containing `source/ui/dist` |
-| `PIONEER_COMPANION_CAPTURE` | None | File opened by Open saved capture |
-| `PIONEER_COMPANION_LIBRARY` | None | Optional Rekordbox `export.pdb` for metadata and LIBRARY browsing |
-| `PIONEER_COMPANION_INTERFACE` | None | Opt-in live monitoring on the named network interface |
-| `PIONEER_COMPANION_BIND` | `127.0.0.1:8787` | HTTP listen address; use `0.0.0.0:8787` for local-network access |
+Choose visible filters and their order under **Library filters**. Available filters cover star rating, BPM, color, key, genre, artist, record label, format, My Tags and date/year/duration ranges. Set minimum and maximum BPM menu options here; selecting Any in BROWSE leaves that search bound unset.
 
-Use absolute file paths. Offline waveform metadata uses the startup library and requires a host restart after changes. The LIBRARY browser rereads its catalog with **Refresh USB**; captures are read on demand. Open analysis file works without a configured capture. For another device on the same network, set `PIONEER_COMPANION_BIND=0.0.0.0:8787`, then open `http://<Mac LAN IP>:8787` in Safari. The HTTP interface has no authentication.
+Enable automatic My Tag categories to use names and values from the selected export, or choose individual categories. ANY matches at least one selected tag, ALL requires every selected tag and NONE excludes them. Different categories combine with AND. Filters hidden from the toolbar can still be active; remove their chips or use **Clear filters** to clear them.
 
-When live monitoring is enabled, the status screen uses live data by default. Loading an offline preview switches the display to offline; **Show live CDJs** switches back. This selection is session-only. Network monitoring continues while previewing offline data. An interface change requires a restart.
+In BROWSE, select small, medium or large rows for 16, 12 or 8 visible track rows. Clicking a sortable column heading switches ascending/descending order across the complete filtered list. Named presets retain the selected filters and playlist for a particular export. When that export changes, recreate the preset so it cannot use unrelated playlist or tag IDs.
 
-## Waveform motion and phrases
+## Offline preview
 
-Status changes are pushed over SSE to a display-frame clock. Backwards beat movement, search/scratch states and larger seeks re-anchor immediately. Position remains a beat-grid estimate on older CDJs; small sub-beat scratches cannot be reconstructed from unavailable data.
+Open an exported analysis file from MENU, or use a configured saved analysis capture. Previewing switches the displayed deck to saved data; it does not seek, load or play a physical CDJ. **Show live CDJs** returns to live monitoring. Monitoring continues while previewing.
 
-The overview is 168 logical pixels tall and uses additive native bands scaled consistently across the track. PSSI phrases are read from the USB/SD `.EXT` companion and aligned through the `.DAT` grid. Colors follow Rekordbox mood and phrase variants. Standalone offline waveform uploads do not include companion phrase data.
+## Preference storage
 
+Display settings, filter presets and row size belong to the client. A different browser, host IP or port has separate storage; a native window also has its own storage. History and host connection settings reside in the [host data directory](distribution.md#data-and-backups). Invalid preference values fall back to defaults.
 
-## Library browser
-
-LIBRARY lists freshly observed mounted USB/SD sources without requiring a loaded track. It reads legacy `export.pdb` and, independently, `exportExt.pdb` for My Tag categories and assignments. The configured local database appears as LOCAL EXPORT and its extension is read from the same directory. Newer OneLibrary databases are not supported.
-
-Choose a source, navigate playlist folders, and combine filters. Color uses the exported label (including custom names); an empty label appears as No color. Rating supports minimum stars or Unrated; an exact rating is available through Advanced metadata rules. My Tags supports ANY, ALL and NONE, and unavailable tags are never treated as an empty tag set. Facet counts describe the whole USB; the results count reflects all active filters.
-
-Advanced rules combine with AND and cover all scalar metadata exposed by the browser, including comments, composer, dates, play count and technical fields. Date comparisons expect YYYY-MM-DD, duration uses seconds and file size uses bytes. Track selection shows exported metadata. Loading requires a separate **Load to CDJ1** or **Load to CDJ2** click.
-
-Named filter presets are saved in this browser's local storage, scoped to source and export fingerprint, including tag/playlist selections. An export change requires recreating the preset rather than reusing potentially different IDs. Switching between app screens retains browser filters and position; replacing or refreshing media clears tag/playlist selection. Each database is capped at 64 MiB, an overall read times out after 60 seconds, and optional extension reads have a 15-second timeout. Use Refresh USB to retry a failed read. Target CDJ media lifecycle and My Tag correspondence remain hardware validation items.
-
-
-Configuration → Library filters controls which filters are shown and their order. Album is omitted from the filter bar; album metadata remains in details and search. Advanced rules are hidden from the main screen. With automatic My Tag categories enabled, the browser uses the USB's actual category names and values. Alternatively, select individual category filters and move them with the up/down buttons. Values within one category support ANY/ALL/NONE; different category filters combine with AND. Hidden active filters remain visible as removable chips. Click a column heading once for ascending order, again for descending; sorting applies to all matching tracks across the complete scrollable result list. BPM menus contain integer options bounded by Configuration → Library filters (default 115–130); Any leaves that bound unset. Clicking outside an open filter closes it.
-
-The load buttons require a selected track from a live CDJ-mounted USB and a connected target. A playing/active target produces a protection dialog with Cancel focused. **Load anyway** authorizes replacement; the server rechecks current status and source identity. Loading may start playback according to hardware settings. A reported selection is not proof of decoding success; inspect the physical CDJ, especially after an unknown result. No automatic retries are sent. Live load integration and multi-player behavior still need hardware validation.
-
-Artwork appears between Color and Title as a small thumbnail, and at the upper left of the selected track's details. Covers load on demand from the USB. Missing covers use a music-note placeholder. A standalone copied export.pdb has no local artwork; local covers require the exported volume's original PIONEER directory structure.
+Environment configuration and precedence are documented in the [development guide](development.md#host-configuration).

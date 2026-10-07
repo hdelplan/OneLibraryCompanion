@@ -7,11 +7,13 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		CEFD17D609904E39AA17C601 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = CEFD17D609904E39AA17C602 /* Assets.xcassets */; };
 		8999CB8E81E97A17E9BF54F0 /* ../ui/dist-ipad in Resources */ = {isa = PBXBuildFile; fileRef = 4B5E57F6EB2F42B9039B3D1E /* ../ui/dist-ipad */; };
 		CD1BA1C9604B794D71CD3CB4 /* PioneerCompanionApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A33603BF79F74B056172D43B /* PioneerCompanionApp.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		CEFD17D609904E39AA17C602 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		06271BAF49532C879AA3C58B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		17F29B073143D8CD97B5BBE4 /* Bridge.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Bridge.h; sourceTree = "<group>"; };
 		4B5E57F6EB2F42B9039B3D1E /* ../ui/dist-ipad */ = {isa = PBXFileReference; lastKnownFileType = folder; path = ../ui/dist-ipad; sourceTree = SOURCE_ROOT; };
@@ -53,6 +55,7 @@
 				A33603BF79F74B056172D43B /* PioneerCompanionApp.swift */,
 				17F29B073143D8CD97B5BBE4 /* Bridge.h */,
 				06271BAF49532C879AA3C58B /* Info.plist */,
+				CEFD17D609904E39AA17C602 /* Assets.xcassets */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -111,6 +114,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				8999CB8E81E97A17E9BF54F0 /* ../ui/dist-ipad in Resources */,
+				CEFD17D609904E39AA17C601 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -159,6 +163,7 @@
 		6C7EFF6369083C8E1F2B1994 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = ZK38W2935Y;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
@@ -203,6 +208,7 @@
 		DD75E2CB1C510A828AC72D96 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = ZK38W2935Y;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;

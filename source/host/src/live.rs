@@ -60,11 +60,12 @@ fn publish(state: &LiveState) {
         .updates
         .send_replace(json!({"enabled":state.enabled,"error":state.error,"decks":state.decks,"directPeers":state.direct_peers}));
 }
-struct Asset {
-    artwork: Option<(&'static str, Vec<u8>)>,
-    analysis: Value,
-    beats: Vec<f64>,
-    warning: Option<String>,
+#[derive(Clone)]
+pub(crate) struct Asset {
+    pub(crate) artwork: Option<(&'static str, Vec<u8>)>,
+    pub(crate) analysis: Value,
+    pub(crate) beats: Vec<f64>,
+    pub(crate) warning: Option<String>,
 }
 pub type Shared = Arc<Mutex<LiveState>>;
 
@@ -90,6 +91,16 @@ pub fn start(interface: Option<String>, catalogs: crate::library::Shared) -> Sha
     shared
 }
 pub async fn load(shared: &Shared, body: Value) -> Value {
+    // A local first load includes file preparation and source discovery before
+    // the normal 12-second CDJ confirmation window even starts.
+    let wait = if body["source"]
+        .as_str()
+        .is_some_and(|s| s.starts_with("local-usb:"))
+    {
+        Duration::from_secs(40)
+    } else {
+        Duration::from_secs(16)
+    };
     let sender = shared.lock().unwrap().loader.clone();
     let Some(sender) = sender else {
         return json!({"outcome":"error","message":"Live CDJ connection is not active"});
@@ -101,7 +112,7 @@ pub async fn load(shared: &Shared, body: Value) -> Value {
     {
         return json!({"outcome":"error","message":"Load queue unavailable or busy"});
     }
-    match tokio::time::timeout(Duration::from_secs(16), receiver).await {
+    match tokio::time::timeout(wait, receiver).await {
         Ok(Ok(result)) => result,
         _ => {
             json!({"outcome":"unknown","message":"Load outcome unknown. Check the CDJ before trying again; no automatic retry was sent."})
@@ -598,6 +609,28 @@ async fn fetch_asset(
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[tokio::test]
+    async fn first_local_load_can_finish_after_old_request_deadline() {
+        let (sender, mut commands) = crate::loading::channel();
+        let shared = Arc::new(Mutex::new(LiveState {
+            loader: Some(sender),
+            ..Default::default()
+        }));
+        let worker = tokio::spawn(async move {
+            let command = commands.recv().await.unwrap();
+            // A cold USB preparation plus discovery can outlast the former
+            // 16-second HTTP waiter before confirmation finishes.
+            tokio::time::sleep(Duration::from_secs(17)).await;
+            command
+                .reply
+                .send(json!({"outcome":"confirmed","message":"test"}))
+                .unwrap();
+        });
+        let result = load(&shared, json!({"source":"local-usb:test"})).await;
+        worker.await.unwrap();
+        assert_eq!(result["outcome"], "confirmed");
+    }
+
     #[tokio::test]
     async fn pushed_snapshots_deliver_latest_state_without_queueing_old_positions() {
         let shared = Arc::new(Mutex::new(LiveState::default()));

@@ -1,6 +1,7 @@
 //! HTTP serves the companion UI, never a CDJ protocol service.
 pub const EXPERIMENTS: bool = cfg!(any(target_os = "ios", feature = "experiments"));
 mod artwork;
+mod audio_header;
 mod bar_position;
 pub mod beat_position;
 mod bridge_probe;
@@ -18,6 +19,7 @@ mod library_preview;
 mod live;
 mod loading;
 mod local_media;
+mod local_serving;
 pub mod local_usb_probe;
 mod loop_region;
 mod musical_key;
@@ -97,6 +99,9 @@ async fn usb_probe_command(State(app): State<Arc<App>>, Json(body): Json<Value>)
             .as_u64()
             .and_then(|n| u8::try_from(n).ok())
             .unwrap_or(0);
+        live::direct::release_idle_transport(&app.live)
+            .await
+            .map_err(|e| (StatusCode::CONFLICT, e))?;
         local_usb_probe::start(ip, number, body["isolated"] == true)
             .map_err(|e| (StatusCode::BAD_REQUEST, e))?;
     }

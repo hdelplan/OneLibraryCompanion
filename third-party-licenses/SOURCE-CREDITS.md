@@ -1,6 +1,6 @@
 # Source credits and references
 
-OLC thanks the authors and contributors of the following projects. This records the sources documented in this workspace; inclusion as a research reference does not mean that its code or assets are bundled.
+OLC thanks the authors and contributors of the following projects. The tables distinguish incorporated work from technical references.
 
 ## Incorporated or adapted work
 
@@ -14,13 +14,14 @@ OLC thanks the authors and contributors of the following projects. This records 
 
 ## Technical references
 
-- **Deep Symmetry Beat Link**, commit ef0aaa1ea949f5c3b1e759973f784c488a12288a: TimeFinder, CdjStatus, WaveformDetail, WaveformPreview, Swing renderers, Util.phraseColor and protocol command references informed independently written transport, waveform and phrase code. Copyright Deep Symmetry LLC, EPL-2.0; no Java classes or library are included.
+- **Deep Symmetry Beat Link**, commit ef0aaa1ea949f5c3b1e759973f784c488a12288a: TimeFinder, CdjStatus, WaveformDetail, WaveformPreview, Swing renderers, Util.phraseColor CueList encoding, and protocol command references informed independently written transport, waveform and phrase code. Copyright Deep Symmetry LLC, EPL-2.0; no Java classes or library are included.
 - **Deep Symmetry crate-digger / DJ Link Ecosystem Analysis / Beat Link Trigger documentation**: ANLZ structures, Pro DJ Link timing, virtual CDJs, loading, sync and stagehand research. The corresponding documentation links are retained below.
 - **Mixxx 2.5.6**: filtered waveform renderer reference for per-band maxima, independent heights and drawing layers; its Qt/OpenGL renderer is not bundled.
 - **chrisle/alphatheta-connect**: absolute-position protocol and three-band waveform example comparisons; its waveform byte-order/scaling assumptions were not adopted wholesale.
 - **fiverecords/SuperTimecodeConverter**: ProDJLinkInput.h protocol reference; credited as a protocol research source, not a bundled dependency.
 - **pyrekordbox documentation**: older ANLZ descriptions compared against newer crate-digger and observed data; conflicting PWV7 stride information was not adopted.
 - **Pioneer DJ / AlphaTheta / rekordbox**: device manuals, firmware history, OneLibrary information and phrase-analysis documentation used as interoperability references. Trademarks remain their owners' property; OLC is independent and is not endorsed by these companies.
+- **vynulldev/vynull**: audio container/decoder identifiers in GET_TRACK_INFO; a protocol reference, with no code bundled.
 - **Apple developer documentation**: directory access, native application and platform framework guidance.
 
 ## Platform and tooling
@@ -76,3 +77,7 @@ These links identify the technical sources credited above. Some unpinned upstrea
 - https://www.pioneerdj.com/en-us/support/software/player/cdj-2000nxs2/
 - https://www.pioneerdj.com/en/news/2020/cdj-3000-professional-dj-multi-player/
 - https://www.pioneerdj.com/ja/news/2016/meet-the-new-cdj-2000nxs2-and-djm-900nxs2/
+
+- https://github.com/vynulldev/vynull#track-info-title-id-audio-decoder-selection
+- https://djl-analysis.deepsymmetry.org/djl-analysis/track_metadata.html
+- https://github.com/Deep-Symmetry/beat-link/blob/main/src/main/java/org/deepsymmetry/beatlink/data/CueList.java

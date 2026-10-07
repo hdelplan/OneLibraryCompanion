@@ -12,11 +12,13 @@ const MAX_USB: usize = 3;
 static ROOTS: LazyLock<Mutex<BTreeMap<String, PathBuf>>> =
     LazyLock::new(|| Mutex::new(BTreeMap::new()));
 static STATUS: Mutex<Value> = Mutex::new(Value::Null);
+static NAMES: LazyLock<Mutex<BTreeMap<String, String>>> =
+    LazyLock::new(|| Mutex::new(BTreeMap::new()));
 pub fn status() -> Value {
     STATUS.lock().unwrap().clone()
 }
 #[cfg(target_os = "ios")]
-pub fn register(id: &str, path: &Path) -> Result<(), String> {
+pub fn register(id: &str, path: &Path, label: &str) -> Result<(), String> {
     if id.is_empty() || !id.bytes().all(|c| c.is_ascii_alphanumeric() || c == b'-') {
         return Err("Invalid USB identity".into());
     }
@@ -36,14 +38,20 @@ pub fn register(id: &str, path: &Path) -> Result<(), String> {
         );
     }
     roots.insert(id.into(), path);
+    NAMES
+        .lock()
+        .unwrap()
+        .insert(id.into(), label.trim().to_owned());
     Ok(())
 }
 #[cfg(target_os = "ios")]
 pub fn forget(id: &str) {
     ROOTS.lock().unwrap().remove(id);
+    NAMES.lock().unwrap().remove(id);
 }
 pub fn reset() {
     ROOTS.lock().unwrap().clear();
+    NAMES.lock().unwrap().clear();
     *STATUS.lock().unwrap() = Value::Null;
 }
 #[derive(Clone, PartialEq, Eq)]
@@ -90,11 +98,18 @@ impl Scanner {
             if !seen.insert(id.clone()) {
                 continue;
             }
-            let label = root
-                .file_name()
-                .unwrap_or_default()
-                .to_string_lossy()
-                .into_owned();
+            let label = NAMES
+                .lock()
+                .unwrap()
+                .get(&id)
+                .filter(|name| !name.is_empty())
+                .cloned()
+                .unwrap_or_else(|| {
+                    root.file_name()
+                        .unwrap_or_default()
+                        .to_string_lossy()
+                        .into_owned()
+                });
             let database = root.join(onelibrary::DATABASE);
             let Some(current) = stamp(&database) else {
                 self.cache.remove(&id);

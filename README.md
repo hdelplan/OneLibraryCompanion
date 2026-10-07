@@ -1,51 +1,75 @@
 # OneLibraryCompanion (OLC)
 
-A companion for Pioneer / AlphaTheta CDJs: shared live status and waveforms, USB library browsing and supported track loading, local OneLibrary browsing, and set history with text/CSV/PDF exports. Playback controls remain on the physical players.
+OneLibraryCompanion connects your music libraries and Pioneer / AlphaTheta CDJs in one workspace. Browse and filter tracks, load a stopped player, follow both decks with three-band waveforms, and record a reusable set history. Playback, cueing and mixing stay on the physical players.
 
-The Mac and Raspberry Pi distributions have standalone application windows and serve the same interface to devices on the local network. The fixed 1280 × 800 layout is retained. Shared behaviour stays in `source/ui` and `source/host`.
+OLC runs as a standalone application on Mac or Raspberry Pi. Other devices on the same network can open its web interface and use the same connected players, USB libraries and saved sets. No account or pairing is required. The interface uses a fixed 1280 × 800 layout that scales to fit the display and supports mouse, keyboard and touch input.
 
-## Install and supported platforms
+## Download and install
 
-See [distribution and installation](docs/distribution.md) for Mac DMG/ZIP, Raspberry Pi Debian packages, LAN connections, data locations and configuration.
+[Download installers](https://github.com/hdelplan/OneLibraryCompanion/releases) · [Installation guide](docs/distribution.md)
 
-Initial targets are macOS 13+ on Apple Silicon and Intel, and Raspberry Pi OS Bookworm 64-bit or later. Physical Pi/Intel/older-OS testing is still required. Mac downloads are initially ad-hoc signed and non-notarized; paid Apple membership is not required.
+| Platform | Package | Minimum OS |
+| --- | --- | --- |
+| Apple Silicon Mac | `macos-arm64.dmg` or `.zip` | macOS 13 |
+| Intel Mac | `macos-x86_64.dmg` or `.zip` | macOS 13 |
+| Raspberry Pi 4 / 5 | Both ARM64 `.deb` packages for the desktop app; host package only for headless use | Raspberry Pi OS Bookworm (Debian 12), 64-bit |
 
-## Develop
+Mac packages are ad-hoc signed and not notarized. Physical Pi, Intel Mac and minimum-OS validation is incomplete; see [compatibility and operating limits](docs/compatibility.md). Repository access is required to download these private releases.
 
-Requirements: Rust 1.88 or newer (CI pins the validated toolchain), Node 20.19+ in the 20.x line or 22.12+, npm; C toolchain and Perl for bundled SQLCipher/OpenSSL.
+## Start using OLC
 
-```sh
-./scripts/setup.sh
-./scripts/check-app.sh
-cargo run --locked -p pioneer-companion-host
-```
+1. Put the OLC host and your CDJs on the same network. In **MENU**, use **Manual IP connections** to connect players 1 and 2; subnet search helps locate their addresses. Automatic discovery on a selected network interface is also available.
+2. Choose a library in **BROWSE**. Use a CDJ-mounted USB, or attach a OneLibrary USB to the Mac/Pi and wait for it to appear. Local USB loading requires Manual IP connections.
+3. Find a track, stop the destination player and press **CDJ1** or **CDJ2** beside the track. For a host-attached USB, keep OLC running and the drive connected throughout playback.
+4. Use **CDJ STATUS** to follow playback. In **SET HISTORY**, start a set to record qualifying tracks, then **Finish & save** when finished.
+5. For web access, open a LAN address shown in **MENU** on another device. The host must remain running.
 
-Open http://127.0.0.1:8787. MENU contains network settings and offline preview. The desktop host listens on the local network by default; every reachable device can access it without pairing. Use `OLC_BIND=127.0.0.1:8787` for a local-only development session. Do not run competing Pro DJ Link services.
+## Features
 
-Use manual-IP connections in MENU, or select a CDJ-facing interface and restart. `OLC_INTERFACE` overrides that selection. `OLC_LIBRARY`, `OLC_CAPTURE`, and `OLC_DATA` configure optional export/capture/data paths; the older `PIONEER_COMPANION_*` settings remain aliases. No music, USB database or capture is needed for a clean build.
+### Follow a mix
 
-```sh
-./scripts/build-macos.sh arm64
-./scripts/build-macos.sh x86_64
-# On 64-bit Debian Bookworm (ARM64 for Pi):
-./scripts/build-linux.sh
-```
+- **Two-deck live status:** see each player's track, source, key, playback state, BPM, pitch, master and sync status together. Missing or stale telemetry is identified rather than presented as current playback.
+- **Three-band waveforms:** scrolling detail separates low, mid and high frequency content. Whole-track overviews help locate sections. OLC reads exported analysis; it does not re-analyse the audio.
+- **Beat, cue and loop guidance:** beat/bar markers, saved cues, available loop regions and a bars-and-beats countdown to the next hot cue help judge transitions. Phrase sections show the track's structure when the export includes phrase analysis.
+- **Timing and sync feedback:** switch between elapsed and remaining time, zoom the waveform with buttons or a two-finger pinch, and see sync phase warnings when reliable beat data is available. Positions on older players remain estimates.
+- **Track information:** open the information button for artwork, album, genre, mood, rating, color, My Tags, comments and audio format details supplied by the library.
 
-## Screenshots
+### Find and load music
 
-[View all application screens](docs/screenshots.md), illustrated with simulated active-session data.
+- **USB libraries and playlists:** browse nested playlist folders from linked CDJ exports, and up to three OneLibrary USBs attached to the host. Mounted local drives are checked every five seconds; library contents are read-only.
+- **Search and sorting:** search metadata and sort the matching track list by its column headings. Three row sizes let you choose between more tracks and larger touch targets.
+- **Combined filters:** narrow tracks by rating, BPM, color, musical key, genre, artist, label, format, date, year, duration and exported My Tags. My Tag selections support ANY, ALL or NONE matching. Active filter chips show what is restricting the results.
+- **Personal filter layout and presets:** choose visible filters, their order and BPM menu bounds in MENU. Save named filter combinations for a particular USB export and recall them in BROWSE.
+- **Mixing context:** key highlighting helps find harmonically related tracks; tracks recorded in the active set are marked as played. Known player-format incompatibilities are flagged before loading.
+- **Protected track loading:** request a track on CDJ1 or CDJ2 without leaving the library. OLC checks the source, connection and stopped-player state before sending one load request. Playing, looping, busy or stale targets are blocked; uncertain requests are never retried automatically.
+- **Host-attached USB playback:** OLC serves the selected original audio file and its exported metadata, artwork and analysis to a directly connected CDJ, without transcoding. Different tracks from different local libraries can remain available to both players. See [local USB usage](docs/local-usb.md) for setup and limits.
 
-![OLC Browse](docs/screenshots/browse.png)
+### Keep and reuse set lists
 
-## Documentation
+- **Set recording:** start a set explicitly; a track qualifies after more than 45 seconds of uninterrupted normal playback or active looping. Recording continues on the host while another screen is open or a web client disconnects.
+- **Set editing:** name the set, add a location and comment, reorder or remove entries, and restore the original order. Saved metadata stays available after the USB is removed.
+- **Recovery and management:** resume or finish an interrupted set after restarting OLC. Cancel an active set or delete a saved set with confirmation.
+- **History import:** import complete Rekordbox histories with an unambiguous date in their names. Duplicate imports are ignored; undated or incomplete histories are skipped.
+- **Browse past sets as playlists:** select SET HISTORY inside BROWSE to find tracks from a previous performance. OLC matches them against the selected USB; unavailable or ambiguous matches remain visible but cannot be loaded.
+- **Export and sharing:** save the selected, last finished or all past sets as text, CSV or PDF. Share through a supported browser or prepare an email draft. Set history belongs to OLC and does not modify the USB's history.
 
-- [Distribution, configuration and validation](docs/distribution.md)
-- [Release notes](docs/release-notes.md)
-- [Shared architecture](docs/architecture.md)
-- [Display and library configuration](docs/configuration.md)
+### Use OLC your way
+
+- **Display preferences:** adjust waveform zoom, playhead position/color, jog smoothing, band emphasis, time display, overviews, phrase analysis and additional details. Preferences are saved separately on each client.
+- **Offline analysis preview:** open an exported analysis file in MENU to inspect its waveform without a connected CDJ. Preview scrubbing changes the display only.
+- **Native and web access:** Mac and Pi desktop windows share one host with LAN browsers. Closing the window keeps the host running; Quit stops it. Optional login startup and a Pi headless user service are available.
+
+## Guides
+
+- [How to use each screen, with screenshots](docs/screenshots.md)
+- [Connections, display and filter settings](docs/configuration.md)
+- [Local USB libraries and loading](docs/local-usb.md)
 - [Set history](docs/set-history.md)
-- [Third-party acknowledgments](THIRD_PARTY_NOTICES.md)
-- [Source credits](third-party-licenses/SOURCE-CREDITS.md)
-- [Pinned dependency inventory](third-party-licenses/dependency-inventory.json)
+- [Compatibility and operating limits](docs/compatibility.md)
+- [Build and development guide](docs/development.md) · [Architecture](docs/architecture.md)
 
-The app remains GPL-3.0-only with pinned Prolink sources under `vendor/prolink`. Preserve third-party notices in source and binary distributions.
+![Browse music in OLC](docs/screenshots/browse.png)
+
+## License and acknowledgments
+
+OLC is GPL-3.0-only. See [third-party acknowledgments](THIRD_PARTY_NOTICES.md), [source credits](third-party-licenses/SOURCE-CREDITS.md) and the [dependency inventory](third-party-licenses/dependency-inventory.json). Source and application packages include the applicable license texts. OLC is independent of Pioneer DJ, AlphaTheta and rekordbox.

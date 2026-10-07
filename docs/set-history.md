@@ -1,60 +1,47 @@
-# SET HISTORY
+# Set history
 
-Start a set explicitly and use **Finish & save** when done. **Cancel set** discards the active set without adding it to history. Empty sets cancel immediately; a set with any original recorded tracks asks for confirmation, even if its visible tracklist was cleared. Past sets cannot be canceled. The host records even when a different tab is open or the browser disconnects. The host must remain running. An interrupted active set remains in history and requires **Resume set** or **Finish & save** after restart.
+OLC keeps its own archive of performances on the host. It does not write to the USB's history. Open SET HISTORY to record, edit, export or delete sets; use the SET HISTORY selection inside BROWSE to reuse a past tracklist as a playlist.
 
-## Qualification and editing
+## Record a performance
 
-- A fresh CDJ status must report normal playing or actively looping continuously for **more than 45 seconds**. Exactly 45 seconds does not qualify. Cue audition and offline previews do not qualify.
-- Pausing, changing tracks, stale/disconnected status or a recorder observation gap exceeding two seconds starts a fresh timer. Timing uses a monotonic clock, independent of wall-clock corrections. Capture starts when the host observes playback while the set is active; it cannot recover playback before monitoring began.
-- Each qualifying uninterrupted run is recorded once. A later qualifying replay is a separate entry, including playback on a different deck. Concurrent decks qualify independently, with ordering by observed start order (deck number breaks ties).
-- This records CDJ playback, not confirmed mixer audibility. Track timestamps are deliberately absent. Set start/end date and time are retained.
-- Set name, location and comment save on leaving the field; Enter also saves the set name. New recordings start as `Live set` until renamed. The session label is automatic: `CURRENT SESSION` for an active set, `SAMPLE SESSION` for generated demo sets, and `SAVED SESSION` for finished or imported real sets. Export is disabled while these edits are unsaved. Up/down and remove edit a separate list of event IDs; **Restore original** restores the original event order and removed entries.
-- Metadata is copied into history. Missing metadata is shown as `Track #ID` and can be filled if it arrives during that playback run. Artwork is copied when available; unavailable artwork has a placeholder. Metadata remains available after removing the USB.
+Choose **Start set**, give the set a name, and perform on the connected CDJs. A track is added after **more than 45 seconds** of uninterrupted normal playback or active looping. Exactly 45 seconds does not qualify. Pauses, cue audition, changing tracks and stale status interrupt qualification; offline previews are excluded. A later qualifying replay becomes another entry, and the two decks qualify independently.
 
-## Storage and reuse
+OLC records reported CDJ playback rather than mixer audibility. The host must remain running, but you can change screens or close a remote browser without stopping recording. Playback before starting the set cannot be recovered.
 
-`set_history.rs` contains the versioned model, monotonic qualification state machine, commands and durable host store. The React screen uses `/api/sets`; it does not own recording or persist set data in browser storage. The existing native Rust service can reuse the same model and routes.
+Choose **Finish & save** to retain the set, or **Cancel set** to discard it. A nonempty cancellation asks for confirmation. After an interrupted host session, use **Resume set** or **Finish & save** to handle the recovered recording.
 
-Desktop/RPi defaults to `<project>/.local/app-data/`, or the directory specified by `PIONEER_COMPANION_DATA`. Use a persistent writable directory on RPi, outside temporary filesystems. Only one host process should own a data directory.
+## Edit and manage sets
 
-`history.json` contains schema version 1, active-set identity, copied track metadata, original events and edited order. Every change writes a temporary file, flushes it, renames it into place, then flushes the containing directory. A failed write remains in memory with an explicit error and retries while the host runs. Corrupt or unsupported data is preserved and blocks writes. Artwork is in the adjacent `artwork/` directory. There is no USB writing or USB sync.
+Name, location and comment save when you leave a field; Enter also saves the name. **Edit tracklist** provides reordering and removal. **Restore original** returns the original recorded order and entries. Exports use the edited order. Changes do not modify the USB or its metadata.
 
-## Import and samples
+The archive retains track metadata and available artwork after the USB is removed. Missing metadata uses a track-ID placeholder. Set dates and times are stored; individual track timestamps are not displayed.
 
-**Import history** uses the existing catalog service without starting another CDJ monitor. It imports complete Rekordbox histories with an unambiguous `YYYY-MM-DD` date in their name on or after **2026-03-01**. Their time is displayed as unavailable. Undated `HISTORY 001` records are not assigned invented dates. The currently decoded history tables have names and ordered track IDs but no reliable timestamp field; other date formats and history synchronization data remain unsupported.
+Swipe a set right-to-left to reveal DELETE, or use its keyboard-accessible delete control. Confirm the named set to remove it. Deleting a past set does not stop another active recording. Existing saved sample-labelled sets remain readable as sample data.
 
-If no usable dated histories exist, create three explicitly labelled sample sets from the `MAX4.0` playlist. Each contains 20–30 unique randomly selected tracks. Every adjacent pair uses the same Camelot key, a neighbouring number with the same letter (including 12/1), or the same number with opposite letters. Unknown keys are excluded. Fail explicitly if a valid sequence cannot be built. Sample dates/duration are illustrative. Re-importing does not duplicate existing sample/import identities or overwrite edits.
+## Import Rekordbox history
 
-Read-only inspection and local initialization:
+Choose **Import history** and a library source. OLC imports complete histories whose names contain an unambiguous `YYYY-MM-DD` date. History entries keep their original order and repeated tracks. Imports with the same identity are not duplicated or used to overwrite your edits.
 
-```sh
-cargo run -p pioneer-companion-host --example inspect_history -- /path/export.pdb
-cargo run -p pioneer-companion-host --example import_set_history -- /path/export.pdb /path/app-data
-```
+Undated names such as `HISTORY 001`, invalid dates, empty histories and histories with missing tracks are skipped. If none can be imported, OLC reports the reason. Imported sets have a date but no invented start/end time. This importer uses the legacy Rekordbox history tables; local OneLibrary histories are not decoded.
 
-The CLI initializes metadata only; importing through the UI also attempts to cache artwork while the source is available.
+## Use a past set in Browse
 
-## Export and sharing
+Select **SET HISTORY** in BROWSE, choose a saved set and select the USB you want to use. OLC resolves saved tracks against that source using path, title and artist, with an unambiguous metadata match for older records. It does not trust row IDs across different exports.
 
-Export the selected set (including the current draft), last finished set or all past sets as UTF-8 text, CSV or PDF. Exports follow edited order. CSV quotes multiline fields and protects spreadsheet formula prefixes. PDF uses paginated high-resolution rendered Unicode text; it is printable but its text is not selectable. It contains sequence, title/artist, key and numeric star rating, plus set details.
+The table retains the set order and repeated tracks; you can search, filter and sort it as usual. Missing or ambiguous tracks stay visible with load buttons disabled. Selecting a set restores its saved order. Player-state and source checks apply to every load request.
 
-**Save file** downloads the export. **Share** invokes file sharing when supported, with a download fallback. **Email** downloads the file and opens a mail draft; text can be included in the body, while CSV/PDF attachments must be added by the user. No email is sent automatically.
+## Export and share
 
-## API
+Export the selected set, the last finished set or all past sets as:
 
-- `GET /api/sets`: archive, recording state, pending qualification timers and persistence error.
-- `POST /api/sets`: `start`, `resume`, `finish`, `cancel`, `metadata`, `move`, `remove`, `restore`. Mutations are serialized in the host and acknowledge durable persistence or return an error.
-- `POST /api/sets/import`: `{source, generation}` from the catalog service; validates the source generation and imports or creates samples. Artwork caching continues afterward.
-- `GET /api/sets/artwork/{name}`: locally retained raster artwork.
+- **Text:** a portable UTF-8 tracklist.
+- **CSV:** spreadsheet-ready metadata with quoted fields and spreadsheet-formula protection.
+- **PDF:** a paginated, printable tracklist with set details, title/artist, key and rating. Its text is rendered and is not selectable.
 
-## Validation
+**Save file** opens a native save dialog or browser download. **Share** uses supported browser file sharing with a download fallback. **Email** downloads the export and prepares a mail draft; attach CSV/PDF files yourself. OLC does not send email automatically. Finish pending metadata edits before exporting.
 
-Tests cover the strict duration boundary, pauses, track changes, observation gaps, replays, multiple decks, editable versus original order, recovery, invalid storage and exports. Browser checks cover navigation, editing, persistence, start/finish and file downloads. Live CDJ playback qualification still requires hardware validation.
+## Storage and backup
 
-## Library access and deletion
+Sets and copied artwork are stored in the [host data directory](distribution.md#data-and-backups), shared by all clients. Only one host should use a directory at a time. Quit OLC before backing up or moving the complete directory.
 
-The Library toolbar defaults to playlists. Its `PLAYLISTS / SET HISTORY` toggle lists locally saved past sets as playlist-style entries with track counts. Selecting a set reuses the Library table, search, metadata/My Tag filters, sorting, artwork and CDJ load controls. Set order (including repeats) is the default; selecting a set restores that order after sorting. The dedicated SET HISTORY screen remains responsible for recording, editing, export and deletion. Nested playlist folders continue to use child navigation, a parent-folder button and a breadcrumb path.
-
-For playback, saved tracks are resolved against the selected USB using file path, title and artist when available. Older histories use an unambiguous title/artist match. Saved rekordbox row IDs alone are never trusted across USB exports. Missing or ambiguous tracks remain visible with disabled load buttons. The standard source-generation and player-state checks still govern loading. Newly recorded/imported tracks persist their file path; older archives remain readable.
-
-Swipe a current or past set right-to-left to reveal red DELETE. Completing the swipe opens a shared HTML confirmation dialog with the set name; Cancel/Escape preserves it. Partial or vertical gestures do not delete anything. Keyboard users can focus the entry and press Delete, or focus its delete button. The backend requires explicit confirmation, persists the removal before cleaning up artwork, and preserves an unrelated active recording when a past set is deleted.
+The host writes history atomically. A persistence error is shown explicitly and retried while running; corrupt or unsupported history files are preserved rather than overwritten.

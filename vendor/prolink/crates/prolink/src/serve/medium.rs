@@ -181,6 +181,20 @@ impl Medium {
         }
     }
 
+    /// Preload assets for a synthetic catalog backed by separately authorized
+    /// local files. The caller supplies already parsed analysis, never audio.
+    pub fn seed_assets(
+        &self,
+        analysis: BTreeMap<u32, std::sync::Arc<Analysis>>,
+        artwork: BTreeMap<u32, Vec<u8>>,
+    ) {
+        *self.analysis.lock().unwrap() = analysis;
+        *self.artwork.lock().unwrap() = artwork
+            .into_iter()
+            .map(|(id, bytes)| (id, std::sync::Arc::new(bytes)))
+            .collect();
+    }
+
     /// Which slot this medium is in.
     pub fn slot(&self) -> ServedSlot {
         self.slot

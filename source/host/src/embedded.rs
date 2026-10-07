@@ -178,6 +178,7 @@ mod ffi {
     pub unsafe extern "C" fn pc_local_usb(
         id: *const c_char,
         path: *const c_char,
+        label: *const c_char,
         error: *mut c_char,
         capacity: usize,
     ) -> i32 {
@@ -195,7 +196,14 @@ mod ffi {
             let path = unsafe { CStr::from_ptr(path) }
                 .to_str()
                 .map_err(|e| e.to_string())?;
-            crate::local_media::register(id, std::path::Path::new(path))
+            let label = if label.is_null() {
+                "USB"
+            } else {
+                unsafe { CStr::from_ptr(label) }
+                    .to_str()
+                    .map_err(|e| e.to_string())?
+            };
+            crate::local_media::register(id, std::path::Path::new(path), label)
         })();
         if let Err(message) = result {
             if !error.is_null() && capacity > 0 {

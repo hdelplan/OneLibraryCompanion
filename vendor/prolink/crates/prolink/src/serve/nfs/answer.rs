@@ -95,35 +95,15 @@ use crate::serve::vfs::{Node, Vfs};
 
 use super::Ports;
 
-/// The most payload one reply may carry, for a `READ` or a `READDIR`.
-///
-/// A reply of this size is 8292 bytes on the wire — the payload plus the RPC
-/// header, the status word, the `fattr` and the payload's own length prefix.
-///
-/// RFC 1094's ceiling, and **hardware exceeds it in both directions**: deck to
-/// deck the modal request is 9408 bytes and a file's first read can be 28584,
-/// answered in full as one datagram in about twenty IP fragments. Answering
-/// like that is nonetheless not portable — **macOS refuses to send a UDP
-/// datagram larger than 9216 bytes** (`net.inet.udp.maxdgram`, its default),
-/// so a reply of 9508 fails with `EMSGSIZE` and is never sent at all. A stall
-/// is much worse than a short read: a short read is ordinary and the client
-/// asks for the rest, where a reply that cannot be sent leaves the deck
-/// retransmitting for ever.
-///
-/// So the cap is the specification's, which every platform can send, which
-/// both reference implementations used while a CDJ-2000NXS loaded and played
-/// from them (F39), and which is what every read a deck has ever sent *us* asks
-/// for — 160, 2048 and 8192 across the serve sessions. Larger requests are
-/// answered short.
-///
-/// **A short answer is not a guess about what hardware tolerates.** Replaying
-/// the corpus through this server measured it: a real Pioneer server answered
-/// short of the request **1372 times mid-file**, and the reading device's next
-/// read of that file resumed at exactly the shortfall **1296** of those times.
-/// A deck asking us for 9408 and getting 8192 therefore asks for the remaining
-/// 1216, which is what it does to its own kind routinely.
-/// This is [`nfs2::MAX_DATA`] as a `u32`, which the two are tested to agree on.
-const MAX_READ: u32 = 8192;
+/// Largest audio payload fitting one IPv4 UDP datagram, including our
+/// 100-byte RPC/NFS reply overhead and four-byte XDR alignment.
+/// CDJs request PCM blocks larger than the RFC's 8192-byte size (9408,
+/// 14112 and initial reads up to 28584). Preserve those requests in full.
+/// Short-read tolerance in metadata/MP3 captures does not establish PCM
+/// playback behavior. The NFS socket reserves a larger send buffer so Apple
+/// platforms can send these datagrams without changing system settings.
+const MAX_READ: u32 = (65_507 - 100) & !3;
+const MAX_READDIR: u32 = 8192;
 
 /// Bytes a `READDIR` reply spends before its first entry and after its last:
 /// the RPC header, the status word, the end-of-list marker and the eof flag.
@@ -577,7 +557,7 @@ fn listing(vfs: &Vfs, args: ReadDirArgs) -> NfsResult<Listing> {
     let path = vfs.path_of(args.handle).ok_or(ErrorStatus::STALE)?;
     let children = vfs.read_dir(args.handle).ok_or(ErrorStatus::NOTDIR)?;
     let first = usize::try_from(u32::from_be_bytes(args.cookie.0)).unwrap_or(usize::MAX);
-    let budget = usize::try_from(args.count.min(MAX_READ)).unwrap_or(0);
+    let budget = usize::try_from(args.count.min(MAX_READDIR)).unwrap_or(0);
 
     let mut entries = Vec::new();
     let mut used = READDIR_OVERHEAD;
@@ -1443,16 +1423,16 @@ mod tests {
     }
 
     #[test]
-    fn a_read_is_capped_at_a_reply_every_platform_can_send() {
-        // A client may ask for anything, including the 9408 and 28584 a deck
-        // asks another deck for. macOS will not send a datagram past 9216
-        // bytes, and a reply that cannot be sent is a stall where a short read
-        // is an ordinary "ask for the rest".
-        assert_eq!(usize::try_from(MAX_READ), Ok(nfs2::MAX_DATA));
-        let dispatcher = served();
-        for count in [9408u32, 28_584, u32::MAX] {
-            let args =
-                ReadArgs::at(handle("/C/Contents/GESAFFELSTEIN/track.mp3"), 0, count).unwrap();
+    fn pcm_reads_are_not_truncated_to_the_rfc_mp3_read_size() {
+        let mut vfs = Vfs::new();
+        let audio: Vec<u8> = (0..100_000)
+            .map(|i| ((i * 17 + i / 251) % 256) as u8)
+            .collect();
+        vfs.add_file("/C/audio.wav", audio.clone());
+        let dispatcher = Dispatcher::new(Arc::new(RwLock::new(vfs)), PORTS);
+        for count in [8192u32, 9408, 14112, 28_584, u32::MAX] {
+            let offset = 37;
+            let args = ReadArgs::at(handle("/C/audio.wav"), offset, count).unwrap();
             let reply = dispatcher
                 .answer(
                     Service::Nfs,
@@ -1464,12 +1444,21 @@ mod tests {
                     PEER,
                 )
                 .unwrap();
-            assert!(
-                reply.len() <= 9216,
-                "a {count}-byte read produced {} bytes, which macOS will not send",
-                reply.len(),
+            let payload = results(&reply);
+            let nfs2::Response::Read(Ok(data)) =
+                nfs2::Response::parse(nfs2::Proc::READ, &payload).unwrap()
+            else {
+                panic!("expected audio");
+            };
+            let expected = count.min(MAX_READ) as usize;
+            assert_eq!(data.data.len(), expected);
+            assert_eq!(
+                data.data,
+                &audio[offset as usize..offset as usize + expected]
             );
         }
+        assert_eq!(MAX_READ % 4, 0);
+        assert!(MAX_READ + 100 <= 65_507);
     }
 
     #[test]

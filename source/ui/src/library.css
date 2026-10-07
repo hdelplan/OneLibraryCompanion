@@ -417,50 +417,6 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.library-advanced {
-  font-size: 11px;
-  margin-top: 8px;
-}
-.library-advanced > summary {
-  cursor: pointer;
-  color: #9eb6c9;
-}
-.library-rule-editor {
-  padding: 8px;
-  background: #20262b;
-  max-height: 200px;
-  overflow: auto;
-}
-.library-rule-editor p {
-  margin: 0 0 8px;
-  color: #acbac4;
-}
-.library-rule {
-  display: flex;
-  gap: 6px;
-  margin-bottom: 5px;
-}
-.library-rule select,
-.library-rule input {
-  font-size: 11px;
-  padding: 6px;
-  min-width: 0;
-}
-.library-rule input {
-  flex: 1;
-}
-.library-rule button {
-  padding: 5px 10px;
-}
-.library-rule-actions {
-  display: flex;
-  gap: 6px;
-}
-.library-rule-actions button {
-  font-size: 11px;
-  padding: 6px 10px;
-}
-
 .library-sidebar {
   display: flex;
   flex-direction: column;
@@ -724,6 +680,7 @@
   cursor: not-allowed;
 }
 .library-load-message {
+  flex-shrink: 0;
   margin: 0;
   padding: 8px 20px;
   font-size: 12px;
@@ -966,7 +923,10 @@
 .library-search > button {
   width: var(--library-actions-width);
   flex-shrink: 0;
-  padding: 3px 8px;
+  padding: 3px 5px;
+  font-size: 13px;
+  line-height: 1.2;
+  white-space: nowrap;
 }
 .library-filters {
   padding: 3px 0;

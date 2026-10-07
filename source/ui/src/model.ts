@@ -7,6 +7,17 @@ export type Wave = {
   normalization: number;
 };
 export type TrackInfo = {
+  format?: string;
+  sampleDepth?: number;
+  databaseFormat?: string;
+  audioHeader?: {
+    encoding: number;
+    channels: number;
+    sampleRate: number;
+    sampleDepth: number;
+    dataOffset: number;
+    blockAlign: number;
+  } | null;
   id: number;
   title: string;
   artist: string;

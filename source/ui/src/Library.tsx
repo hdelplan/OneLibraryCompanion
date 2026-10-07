@@ -520,6 +520,11 @@ function LibraryView({
           </div>,
           toolbarTarget,
         )}
+      {loader.message && (
+        <p className="library-load-message" role="status">
+          {loader.message}
+        </p>
+      )}
       <div className="library-body">
         <aside className="library-sidebar">
           <div className="library-section-title">COLLECTION</div>
@@ -905,7 +910,9 @@ function LibraryView({
                               track={track}
                               source={{ ...source, loadable: true }}
                               players={players.filter(
-                                (p) => p.sourceLabel === "Direct IP · USB",
+                                (p) =>
+                                  p.sourceLabel === "Direct IP · USB" ||
+                                  p.sourceLabel === "Local USB",
                               )}
                               loader={loader}
                             />
@@ -942,9 +949,9 @@ function LibraryView({
           </div>
         </div>
       </div>
-      {loader.message && (
+      {source?.id.startsWith("local-usb:") && !source.loadable && (
         <p className="library-load-message" role="status">
-          {loader.message}
+          Local USB loading requires Manual IP connections in MENU.
         </p>
       )}
       <div className="library-details">

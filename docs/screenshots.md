@@ -1,40 +1,45 @@
-# Application screenshots
+# Using OLC
 
-Captured from the OLC production interface at 1280 × 800. These images simulate active use with illustrative track metadata, realistic waveform analysis, a populated USB library and recorded sessions. They illustrate the production interface; they are not evidence of a live hardware connection. The Menu is scrollable and is shown in several views. Network choices depend on the host.
+OLC combines live monitoring, music selection and set recording. The screenshots show illustrative active sessions at 1280 × 800; track and connection data are simulated.
 
-## CDJ Status
+## CDJ Status — follow the mix
 
-This is the main OLC screen, showing two playing decks with three-band waveforms, phrase sections, timing and track information.
+Use CDJ STATUS while performing to compare the two decks' timing and track structure. Scrolling three-band waveforms show approaching beats and cues; the whole-track overview and phrase sections help plan a transition. The next-hot-cue countdown expresses the distance in bars and beats. BPM, pitch, master and sync status reflect the connected players.
+
+Use the zoom controls or a two-finger pinch to change the visible time window, tap the time display to switch elapsed/remaining time, and open the information button for fuller track metadata. OLC follows the players; transport and cue controls remain on the CDJs. Waveforms and phrase sections require the corresponding exported analysis.
 
 ![CDJ Status](screenshots/cdj-status.png)
 
-## Browse
+## Browse — choose the next track
 
-This screen enables library navigation, filtering using genre, color, star rating, key, etc.. User can select playlists or previous sets to pick tracks from. Tracks can be sorted according to all columns. Tracks can be loaded to all connected players (when they are not already playing). Tracks previously played are highlighted. Tracks with compatible keys are highlighted.
+Choose a USB source, then explore playlists or select a past set using the PLAYLISTS / SET HISTORY toggle. Search and combine genre, color, rating, key, BPM and My Tag filters to narrow your choices. Column headings sort the results. Save useful combinations as named filters for that export.
+
+Key highlighting helps identify compatible choices, while played-track highlighting shows tracks already recorded in the active set. Select a track to inspect its details; press CDJ1 or CDJ2 to load a stopped connected player. A disabled load button means the player, source or format does not meet the loading requirements. [Local USB loading](local-usb.md) also requires OLC to keep serving the drive during playback.
 
 ![Browse](screenshots/browse.png)
 
-## Set History
+## Set History — keep a record and reuse it
 
-This screen enables recording of the current set, then saving the set into the local OLC library. This is independent from the OneLibrary history. Tracklists from past sets can be used in the Browse screen as a playlist.
+Start a set before performing. OLC adds each track after more than 45 seconds of continuous qualifying playback, then saves the set when you choose Finish & save. Add a name, location and comment; edit the track order or remove entries before exporting a tracklist as text, CSV or PDF.
+
+This archive is independent of the USB's history. Past sets can be selected inside BROWSE as playlists and matched against your connected library. Recording runs on the host even while another screen is open. [Set history guide](set-history.md).
 
 ![Set History](screenshots/set-history.png)
 
-## Menu — connections
+## Menu — connect players and other devices
 
-Configuration screen 1
+Choose Manual IP connections for explicit player addresses and local USB loading, or select a network interface for automatic discovery. Use the LAN addresses to open the same OLC host from another device. Offline preview lets you inspect an exported analysis file without loading a player.
 
-![Menu — connections](screenshots/menu-connections.png)
+![Menu connections](screenshots/menu-connections.png)
 
-## Menu — display
+## Menu — tailor the performance display
 
-Configuration screen 2
+Choose the waveform window, playhead placement and color, motion smoothing and band emphasis to suit your viewing position. Select your preferred time display and show or hide the overview, phrase sections and additional details. Preferences are saved on the device where you change them.
 
-![Menu — display](screenshots/menu-display.png)
+![Menu display preferences](screenshots/menu-display.png)
 
-## Menu — additional library filters
+## Menu — tailor music selection
 
-Configuration screen 3
+Choose which filters appear in BROWSE and arrange them in the order you use them. Set the BPM options and include custom My Tag categories from the selected export. These choices affect how you find music; they do not change the USB or rekordbox library.
 
-![Menu — additional library filters](screenshots/menu-library-filters.png)
-
+![Menu library filters](screenshots/menu-library-filters.png)

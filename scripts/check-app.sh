@@ -2,6 +2,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 NODE="${NODE:-node}"
+python3 scripts/check-docs.py
 # Format application packages only, never local or vendored experiments.
 cargo fmt -p pioneer-companion-core -p pioneer-companion-host -- --check
 cargo test --workspace --locked

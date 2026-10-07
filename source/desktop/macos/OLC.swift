@@ -149,7 +149,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
         NSApp.terminate(nil)
     }
     @objc private func about() {
-        NSApp.orderFrontStandardAboutPanel(options: [.applicationName: "OneLibraryCompanion", .applicationVersion: "0.1.1", .credits: NSAttributedString(string: "OLC · Shared CDJ companion\nGPL-3.0-only")])
+        NSApp.orderFrontStandardAboutPanel(options: [.applicationName: "OneLibraryCompanion", .applicationVersion: "0.1.2", .credits: NSAttributedString(string: "OLC · Shared CDJ companion\nGPL-3.0-only")])
     }
     @objc func showWindow() { window?.makeKeyAndOrderFront(nil); NSApp.activate(ignoringOtherApps: true) }
     @objc private func reload() { if !starting { web.load(URLRequest(url: origin, cachePolicy: .reloadIgnoringLocalCacheData)) } }

@@ -226,7 +226,15 @@ fn entry_width(medium: &Medium, track_id: u32) -> u32 {
 /// times]` — fixed-size cue records, then one `(time, loop time)` pair each.
 /// Cues go out sorted by time, not in the order the file stores them.
 fn cue_points(transaction: u32, medium: Option<&Medium>, track_id: u32) -> Message {
-    let blobs = analysis::cue_points(&cues(medium, track_id));
+    cue_reply(transaction, &cues(medium, track_id))
+}
+
+fn cue_reply(transaction: u32, cues: &[Cue]) -> Message {
+    let blobs = analysis::cue_points(cues);
+    let hot_count =
+        u32::try_from(cues.iter().filter(|c| c.hot_cue != 0).count()).unwrap_or(u32::MAX);
+    let memory_count =
+        u32::try_from(cues.iter().filter(|c| c.hot_cue == 0).count()).unwrap_or(u32::MAX);
     let record_bytes = u32::try_from(blobs.records.len()).unwrap_or(u32::MAX);
     let time_bytes = u32::try_from(blobs.times.len()).unwrap_or(u32::MAX);
     let entry_size = u32::try_from(analysis::CUE_ENTRY_LEN).unwrap_or(u32::MAX);
@@ -239,8 +247,8 @@ fn cue_points(transaction: u32, medium: Option<&Medium>, track_id: u32) -> Messa
             Field::U32(record_bytes),
             Field::Blob(blobs.records),
             Field::U32(entry_size),
-            Field::U32(blobs.count),
-            Field::U32(0),
+            Field::U32(hot_count),
+            Field::U32(memory_count),
             Field::U32(time_bytes),
             Field::Blob(blobs.times),
         ]),
@@ -249,10 +257,9 @@ fn cue_points(transaction: u32, medium: Option<&Medium>, track_id: u32) -> Messa
 
 /// A track's memory points and hot cues, from both `PCOB` lists.
 ///
-/// The order field is the one part of a cue record nobody has decoded. A real
-/// deck wrote `00 01` there for all three cues of the reference load, which is
-/// the entry's `cue_type` byte and the zero beside it read as a big-endian
-/// pair; that is reproduced rather than explained *(unknown)*.
+/// The first two wire bytes are loop/cue flags, not the ANLZ sort order.
+/// A point is [0, 1]; a loop is [1, 1].
+/// See Deep Symmetry's CueList.parseNexusEntries and track_metadata reference.
 ///
 /// The loop time travels exactly as the file records it, which for a cue that
 /// is not a loop is `0xffffffff` and not zero.
@@ -267,8 +274,9 @@ fn cues(medium: Option<&Medium>, track_id: u32) -> Vec<Cue> {
         .into_iter()
         .flat_map(prolink_rekordbox::AnlzFile::cue_lists)
         .flat_map(|list| list.cues.iter())
+        .filter(|cue| matches!(cue.cue_type.0, 1 | 2))
         .map(|cue| Cue {
-            order: u16::from(cue.cue_type.0).saturating_mul(0x100),
+            order: if cue.cue_type.0 == 2 { 0x0101 } else { 0x0100 },
             hot_cue: u16::try_from(cue.hot_cue).unwrap_or(u16::MAX),
             time_ms: cue.time,
             loop_time_ms: cue.loop_time,
@@ -291,11 +299,46 @@ fn cues(medium: Option<&Medium>, track_id: u32) -> Vec<Cue> {
         .into_iter()
         .flat_map(prolink_rekordbox::AnlzFile::extended_cue_lists)
         .flat_map(|list| list.cues.iter())
+        .filter(|cue| matches!(cue.cue_type.0, 1 | 2))
         .map(|cue| Cue {
-            order: u16::from(cue.cue_type.0).saturating_mul(0x100),
+            order: if cue.cue_type.0 == 2 { 0x0101 } else { 0x0100 },
             hot_cue: u16::try_from(cue.hot_cue).unwrap_or(u16::MAX),
             time_ms: cue.time,
             loop_time_ms: cue.loop_time,
         })
         .collect()
+}
+
+#[cfg(test)]
+mod cue_reply_tests {
+    use super::*;
+    #[test]
+    fn memory_and_hot_cues_have_separate_counts() {
+        let cues = [
+            Cue {
+                order: 0x100,
+                hot_cue: 0,
+                time_ms: 1000,
+                loop_time_ms: u32::MAX,
+            },
+            Cue {
+                order: 0x100,
+                hot_cue: 1,
+                time_ms: 2000,
+                loop_time_ms: u32::MAX,
+            },
+            Cue {
+                order: 0x101,
+                hot_cue: 3,
+                time_ms: 3000,
+                loop_time_ms: 5000,
+            },
+        ];
+        let reply = cue_reply(1, &cues);
+        assert_eq!(reply.number(5), Some(2));
+        assert_eq!(reply.number(6), Some(1));
+        let empty = cue_reply(2, &[]);
+        assert_eq!(empty.number(5), Some(0));
+        assert_eq!(empty.number(6), Some(0));
+    }
 }

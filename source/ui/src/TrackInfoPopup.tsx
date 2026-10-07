@@ -40,6 +40,31 @@ export function TrackInfoPopup({
     ["BPM", track?.bpm ? track.bpm.toFixed(2) : "—"],
     ["Key", track?.key],
     ["Duration", time],
+    [
+      "Audio format",
+      [
+        track?.format?.toUpperCase(),
+        track?.sampleRate ? `${track.sampleRate / 1000} kHz` : "",
+        track?.sampleDepth ? `${track.sampleDepth}-bit` : "",
+      ]
+        .filter(Boolean)
+        .join(" · "),
+    ],
+    ...(track?.databaseFormat ? [["Library", track.databaseFormat]] : []),
+    ...(track?.audioHeader
+      ? [
+          [
+            "WAV file header",
+            `${track.audioHeader.encoding === 1 ? "PCM" : `Encoding ${track.audioHeader.encoding}`} · ${track.audioHeader.sampleRate / 1000} kHz · ${track.audioHeader.sampleDepth}-bit · ${track.audioHeader.channels} channels`,
+            "wide",
+          ],
+          [
+            "WAV layout",
+            `Audio offset ${track.audioHeader.dataOffset} bytes · frame size ${track.audioHeader.blockAlign} bytes`,
+            "wide",
+          ],
+        ]
+      : []),
     ["Date added", track?.dateAdded],
     ["Genre", track?.genre],
     ["Mood", deck?.analysis.phraseMood ?? "Unavailable"],

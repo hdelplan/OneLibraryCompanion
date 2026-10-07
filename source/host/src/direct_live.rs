@@ -16,6 +16,26 @@ pub struct Control {
     reply: oneshot::Sender<Result<(), String>>,
 }
 
+/// Release the idle observer's sockets before an exclusive USB serving test.
+/// Disconnecting individual peers leaves the observer alive for reconnection.
+pub async fn release_idle_transport(shared: &Shared) -> Result<(), String> {
+    let task = {
+        let mut state = shared.lock().unwrap();
+        if state.enabled || !state.direct_peers.is_empty() {
+            return Err("Disconnect live mode before starting the USB playback test".into());
+        }
+        state.direct_controls = None;
+        state.loader = None;
+        state.direct_task.take()
+    };
+    if let Some(task) = task {
+        task.abort();
+        // Abort is asynchronous: await destruction before attempting to bind.
+        let _ = task.await;
+    }
+    Ok(())
+}
+
 pub fn stop(shared: &Shared, catalogs: &crate::library::Shared) -> Result<(), String> {
     if crate::cue_window::occupied() {
         return Err(
@@ -23,6 +43,13 @@ pub fn stop(shared: &Shared, catalogs: &crate::library::Shared) -> Result<(), St
         );
     }
     let mut state = shared.lock().unwrap();
+    if state
+        .decks
+        .iter()
+        .any(|d| d["sourceLabel"] == "Local USB" && d["loadProtected"] != false)
+    {
+        return Err("Stop both CDJs playing from the local USB before disconnecting".into());
+    }
     if state.enabled && state.direct_task.is_none() {
         return Err("Desktop live session is active".into());
     }
@@ -390,12 +417,31 @@ async fn observe_direct(
         tokio::task::JoinSet::new();
     let mut requested = std::collections::BTreeSet::new();
     let mut asset_tasks = BTreeMap::new();
+    let mut local_server: Option<crate::local_serving::Server> = None;
+    let mut local_prepares: tokio::task::JoinSet<(
+        u8,
+        crate::loading::Command,
+        Result<crate::local_serving::Prepared, String>,
+    )> = tokio::task::JoinSet::new();
+    let mut local_busy = std::collections::BTreeSet::new();
+    let mut local_queue: BTreeMap<
+        u8,
+        (
+            crate::loading::Command,
+            crate::local_serving::Key,
+            u32,
+            Ipv4Addr,
+            Instant,
+        ),
+    > = BTreeMap::new();
     loop {
         let mut wake_ms = None;
         tokio::select! {
             Some(control) = controls.recv() => {
                 let result = async {
                     if crate::cue_window::occupied() {return Err("Disable cue windows in TEST before changing connections or captures".into());}
+                    if local_server.is_some() && peers.values().any(|p|p.observed.as_ref().is_some_and(|(s,at)|s.source_player().map(|n|n.get())==Some(crate::local_serving::NUMBER) && validate_load(s,at.elapsed()).is_err())) {return Err("Stop playback from the local USB before changing connections or starting diagnostics".into());}
+                    if !local_busy.is_empty() {return Err("Wait for the pending local USB load before changing connections".into());}
                     if control.reply.is_closed() {return Err("Request cancelled".into());}
                     if bridge.is_some() { return Err("Stop the bridge capture before changing connections or starting another test".into()); }
                     if crate::jog_trace::guided_active() {return Err("Stop the guided capture before changing connections or starting another test".into());}
@@ -450,6 +496,9 @@ async fn observe_direct(
             }
             result = discovery.recv_from(&mut discovery_buffer) => {
                 let (n,from) = result.map_err(|e|e.to_string())?;
+                if local_server.as_ref().is_some_and(|server|server.collision(&discovery_buffer[..n],from.ip())) {
+                    return Err("Local USB source number 4 conflicts with another player; stop playback and choose a free player number before reconnecting".into());
+                }
                 if peers.values().any(|p|from.ip() == std::net::IpAddr::V4(p.ip)) {
                     crate::jog_trace::packet(50000,from,&discovery_buffer[..n]);
                 }
@@ -463,6 +512,16 @@ async fn observe_direct(
             result = socket.recv_from(&mut status_buffer) => {
                 let received_at = Instant::now();
                 let (n,from) = result.map_err(|e|e.to_string())?;
+                if let Some(server) = &mut local_server {
+                    if let Ok(status::Packet::CdjStatus(packet)) = status::decode(&status_buffer[..n])
+                        && packet.sender().map(|n| n.get()) == Some(crate::local_serving::NUMBER)
+                        && from.ip() != server.local {
+                        return Err("Local USB source number 4 is already in use".into());
+                    }
+                    if let Some(peer) = peers.values().find(|p|from.ip()==std::net::IpAddr::V4(p.ip)) {
+                        server.respond(&status_buffer[..n],peer.ip,&socket);
+                    }
+                }
                 // Hardware replies may use an ephemeral source port; dispatch by IP only.
                 if let Some((&number,peer)) = peers.iter_mut().find(|(_,p)| from.ip() == std::net::IpAddr::V4(p.ip) && p.error.is_none()) {
                     crate::jog_trace::packet(50002,from,&status_buffer[..n]);
@@ -482,11 +541,53 @@ async fn observe_direct(
             result = diagnostic_receive(&extra_socket,&mut extra_buffer) => {
                 record_diagnostic(result,50004,&extra_buffer,&peers,&mut extra_socket,&mut extra_state);
             }
+            Some(Ok((target, command, result))) = local_prepares.join_next(), if !local_prepares.is_empty() => {
+                let result = async {
+                    let prepared = result?;
+                    if command.reply.is_closed() {return Err("Load request cancelled".to_owned());}
+                    let peer=peers.get(&target).ok_or("Target disconnected")?;
+                    let ip=peer.ip;
+                    if local_server.is_none() {local_server=Some(crate::local_serving::Server::start(peer.local).await?);}
+                    let key=prepared.key.clone();
+                    let id=local_server.as_mut().unwrap().add(prepared)?;
+                    Ok((key,id,ip))
+                }.await;
+                match result {
+                    Ok((key,id,ip))=>{local_queue.insert(target,(command,key,id,ip,Instant::now()));},
+                    Err(message)=>{local_busy.remove(&target);let _=command.reply.send(json!({"outcome":"error","message":message}));}
+                }
+            }
             Some(command) = commands.recv() => {
+                if command.body["source"].as_str().is_some_and(|s|s.starts_with("local-usb:")) {
+                    let validation = (|| {
+                        if bridge.is_some() || crate::jog_trace::guided_active() {return Err("Stop diagnostic captures before loading a local track".to_owned());}
+                        let target=command.body["target"].as_u64().and_then(|v|u8::try_from(v).ok()).ok_or("Invalid target")?;
+                        let peer=peers.get(&target).ok_or("Target is not connected")?;
+                        if local_busy.contains(&target) || peer.pending.is_some() {return Err("A load is already pending on this CDJ".into());}
+                        let observed=peer.observed.as_ref().ok_or("Waiting for target status")?;
+                        validate_load(peer.fresh().ok_or("Waiting for fresh target status")?,observed.1.elapsed())?;
+                        Ok((target,crate::local_serving::key(&command.body)?))
+                    })();
+                    match validation {
+                        Ok((target,key))=>{
+                            local_busy.insert(target);
+                            let catalogs=catalogs.clone();
+                            local_prepares.spawn(async move {
+                                let result=tokio::time::timeout(Duration::from_secs(12), tokio::task::spawn_blocking(move ||crate::local_serving::prepare(&catalogs,key)))
+                                    .await.map_err(|_| "Local USB preparation timed out; no load command was sent".to_owned())
+                                    .and_then(|r|r.map_err(|e|e.to_string())).and_then(|r|r);
+                                (target,command,result)
+                            });
+                        },
+                        Err(message)=>{let _=command.reply.send(json!({"outcome":"error","message":message}));}
+                    }
+                    continue;
+                }
                 let result = (|| -> Result<(u8, u8, Ipv4Addr, u32), String> {
                     if bridge.is_some() || crate::jog_trace::guided_active() {return Err("Track loading is disabled during the diagnostic capture".into());}
                     if command.reply.is_closed() {return Err("Request cancelled".into());}
                     let (target,source_number,source_ip,track) = load_selection(&command.body,&peers,&catalogs)?;
+                    if local_busy.contains(&target) {return Err("A local load is already pending on this CDJ".into());}
                     let packet = crate::cdj_usb_load::LoadUsbTrack {sender:15,source:source_number,target,track_id:track}.encode().map_err(str::to_owned)?;
                     socket.try_send_to(&packet,(peers[&target].ip,50002).into()).map_err(|e|e.to_string())?;
                     Ok((target,source_number,source_ip,track))
@@ -506,6 +607,84 @@ async fn observe_direct(
             scheduled = tick.tick() => { wake_ms = Some(scheduled.elapsed().as_secs_f64()*1000.0); }
         }
         let work_started = Instant::now();
+        if let Some(server) = &mut local_server {
+            let destinations: Vec<_> = peers
+                .values()
+                .filter(|p| p.error.is_none())
+                .map(|p| (p.ip, p.local))
+                .collect();
+            server.tick(&destinations, &discovery, &socket)?;
+            let ready: Vec<_> = local_queue
+                .iter()
+                .filter(|(_, (_, _, _, ip, at))| {
+                    server.ready(*ip) || at.elapsed() > Duration::from_secs(8)
+                })
+                .map(|(target, _)| *target)
+                .collect();
+            for target in ready {
+                let (command, key, track, ip, _) = local_queue.remove(&target).unwrap();
+                local_busy.remove(&target);
+                let result = (|| {
+                    if command.reply.is_closed() {
+                        return Err("Load request cancelled".to_owned());
+                    }
+                    let peer = peers
+                        .get(&target)
+                        .filter(|p| p.ip == ip)
+                        .ok_or("Target changed or disconnected")?;
+                    if !server.ready(ip) {
+                        return Err(format!(
+                            "CDJ {target} has not discovered the local USB yet. Press LINK on CDJ {target}, wait for OLC LOCAL USB to appear, then load again. No load command was sent."
+                        ));
+                    }
+                    if !crate::local_serving::current(&catalogs, &key) {
+                        return Err("USB changed or disconnected; no load sent".into());
+                    }
+                    let s = peer.fresh().ok_or("Target status is stale; no load sent")?;
+                    validate_load(s, peer.observed.as_ref().unwrap().1.elapsed())?;
+                    crate::local_serving::compatible(
+                        server.track(track).ok_or("Served track disappeared")?,
+                        &s.name().as_str(),
+                    )?;
+                    if s.track_id() == track
+                        && s.source_player().map(|n| n.get()) == Some(crate::local_serving::NUMBER)
+                    {
+                        return Err("Track already loaded; no command sent".into());
+                    }
+                    let packet = crate::cdj_usb_load::LoadUsbTrack {
+                        sender: 15,
+                        source: crate::local_serving::NUMBER,
+                        target,
+                        track_id: track,
+                    }
+                    .encode()
+                    .map_err(str::to_owned)?;
+                    socket
+                        .try_send_to(&packet, (ip, 50002).into())
+                        .map_err(|e| e.to_string())?;
+                    Ok(())
+                })();
+                match result {
+                    Ok(()) => {
+                        peers.get_mut(&target).unwrap().pending = Some(Pending {
+                            source: key.source,
+                            generation: key.generation,
+                            source_number: crate::local_serving::NUMBER,
+                            source_ip: server.local,
+                            track,
+                            sent: Instant::now(),
+                            matched: None,
+                            reply: command.reply,
+                        })
+                    }
+                    Err(message) => {
+                        let _ = command
+                            .reply
+                            .send(json!({"outcome":"error","message":message}));
+                    }
+                }
+            }
+        }
         let cue_decks = [1, 2].map(|n| {
             peers.get(&n).and_then(|p| {
                 p.observed.as_ref().map(|(s, at)| crate::cue_window::Deck {
@@ -645,12 +824,22 @@ async fn observe_direct(
         let mut keys = std::collections::BTreeSet::new();
         for (&number, peer) in &mut peers {
             if let Some(p) = &mut peer.pending {
-                let source_valid = fresh_sources.contains(&p.source_number)
-                    && sources
-                        .get(&p.source_number)
-                        .is_some_and(|(ip, _)| *ip == p.source_ip)
-                    && crate::library::artwork_location(&catalogs, &p.source, p.generation)
-                        .is_some_and(|(l, _)| l == crate::library::Location::Direct(p.source_ip));
+                let source_valid = if p.source.starts_with("local-usb:") {
+                    local_server.is_some()
+                        && matches!(
+                            crate::library::artwork_location(&catalogs, &p.source, p.generation),
+                            Some((crate::library::Location::Local(_), _))
+                        )
+                } else {
+                    fresh_sources.contains(&p.source_number)
+                        && sources
+                            .get(&p.source_number)
+                            .is_some_and(|(ip, _)| *ip == p.source_ip)
+                        && crate::library::artwork_location(&catalogs, &p.source, p.generation)
+                            .is_some_and(|(l, _)| {
+                                l == crate::library::Location::Direct(p.source_ip)
+                            })
+                };
                 let matches = source_valid
                     && peer.observed.as_ref().is_some_and(|(s, at)| {
                         at.elapsed() < Duration::from_secs(1)
@@ -682,15 +871,33 @@ async fn observe_direct(
             };
             let source = s.source_player().and_then(|n| sources.get(&n.get()));
             let supported = s.track_id() > 0 && s.source_slot() == Slot::USB && s.track_type() == 1;
-            let key = source
+            let mut key = source
                 .filter(|_| supported)
                 .map(|(ip, epoch)| format!("direct:{session}:{ip}:{epoch}:{}", s.track_id()));
+            if supported
+                && s.source_player().map(|n| n.get()) == Some(crate::local_serving::NUMBER)
+                && let Some(server) = &local_server
+            {
+                let local_key = format!("local:{session}:{}", s.track_id());
+                if !shared.lock().unwrap().assets.contains_key(&local_key)
+                    && let Some(asset) = server.asset(s.track_id())
+                {
+                    shared
+                        .lock()
+                        .unwrap()
+                        .assets
+                        .insert(local_key.clone(), asset);
+                }
+                key = Some(local_key);
+            }
             if let Some(key) = &key {
                 keys.insert(key.clone());
-                if requested.insert(key.clone()) {
+                if let Some((ip, _)) = source
+                    && requested.insert(key.clone())
+                {
                     let key = key.clone();
                     let catalogs = catalogs.clone();
-                    let ip = source.unwrap().0;
+                    let ip = *ip;
                     let track = LoadedTrack {
                         id: s.track_id(),
                         source_player: s.source_player().unwrap(),
@@ -807,7 +1014,7 @@ fn render_peer(
         });
     let playing = decoded.is_playing;
     let play_state = play_state_label(decoded);
-    json!({"number":number,"name":s.name().as_str(),"ip":peer.ip.to_string(),"connection":if at.elapsed()<Duration::from_secs(1) {"connected"} else {"stale"},"statusAgeMs":at.elapsed().as_secs_f64()*1000.0,"observationId":format!("{session}:{}:{}:{}",peer.epoch,at.duration_since(peer.started).as_nanos(),tracked.map_or(0,|p|p.at.duration_since(peer.started).as_nanos())),"positionAgeMs":tracked.map(|p|p.at).or_else(||fine_position.and_then(|_|peer.bar.observed_at())).map(|at|at.elapsed().as_secs_f64()*1000.0),"motionRate":tracked.map(|p|p.rate),"beatAnchorNumber":tracked.map(|p|p.beat_number),"beatCorrectionMs":tracked.map(|p|p.correction_seconds*1000.0),"beatArrivalResidualMs":tracked.map(|p|p.arrival_residual_seconds*1000.0),"observationTimeMs":at.duration_since(peer.started).as_secs_f64()*1000.0,"packetCounter":s.packet_counter(),"playState":play_state,"playing":playing,"loadProtected":validate_load(s,at.elapsed()).is_err(),"bpm":s.effective_bpm(),"pitch":s.pitch().map(|p|(p.multiplier()-1.0)*100.0),"master":s.flags().map(|f|f.is_tempo_master()),"sync":s.flags().map(|f|f.is_synced()),"trackId":s.track_id(),"trackKey":key,"assetReady":asset.is_some(),"beatNumber":s.beat_number(),"loop":peer.current_loop,"currentCue":if decoded.play_state.0 == 6 {fine_position.map(|p|p.seconds).or(saved_cue)} else {None},"position":position,"positionSource":if tracked.is_some() {"beat-motion"} else if fine_position.is_some() {"bar-phase"} else if saved_cue.is_some() {"saved-cue-estimate"} else {"status-beat-estimate"},"positionQuality":if tracked.is_some() {"beat"} else {fine_position.map_or(if position.is_some() {"coarse"} else {"unavailable"},|p|p.quality())},"manualMotion":tracked.is_none() && decoded.position_requires_direct_updates(),"reverse":decoded.reverse,"sourceLabel":"Direct IP · USB","qualifyingPlayback":at.elapsed() < Duration::from_secs(2) && qualifies_for_set(decoded),"warning":asset.and_then(|a|a.warning.clone()).unwrap_or_else(||if tracked.is_some() {"Direct IP: beat and motion-speed tracking; loop boundaries estimated".into()} else {"Direct IP: status-based position; waiting for fresh forward beat events".into()})})
+    json!({"number":number,"name":s.name().as_str(),"ip":peer.ip.to_string(),"connection":if at.elapsed()<Duration::from_secs(1) {"connected"} else {"stale"},"statusAgeMs":at.elapsed().as_secs_f64()*1000.0,"observationId":format!("{session}:{}:{}:{}",peer.epoch,at.duration_since(peer.started).as_nanos(),tracked.map_or(0,|p|p.at.duration_since(peer.started).as_nanos())),"positionAgeMs":tracked.map(|p|p.at).or_else(||fine_position.and_then(|_|peer.bar.observed_at())).map(|at|at.elapsed().as_secs_f64()*1000.0),"motionRate":tracked.map(|p|p.rate),"beatAnchorNumber":tracked.map(|p|p.beat_number),"beatCorrectionMs":tracked.map(|p|p.correction_seconds*1000.0),"beatArrivalResidualMs":tracked.map(|p|p.arrival_residual_seconds*1000.0),"observationTimeMs":at.duration_since(peer.started).as_secs_f64()*1000.0,"packetCounter":s.packet_counter(),"playState":play_state,"playing":playing,"loadProtected":validate_load(s,at.elapsed()).is_err(),"bpm":s.effective_bpm(),"pitch":s.pitch().map(|p|(p.multiplier()-1.0)*100.0),"master":s.flags().map(|f|f.is_tempo_master()),"sync":s.flags().map(|f|f.is_synced()),"trackId":s.track_id(),"trackKey":key,"assetReady":asset.is_some(),"beatNumber":s.beat_number(),"loop":peer.current_loop,"currentCue":if decoded.play_state.0 == 6 {fine_position.map(|p|p.seconds).or(saved_cue)} else {None},"position":position,"positionSource":if tracked.is_some() {"beat-motion"} else if fine_position.is_some() {"bar-phase"} else if saved_cue.is_some() {"saved-cue-estimate"} else {"status-beat-estimate"},"positionQuality":if tracked.is_some() {"beat"} else {fine_position.map_or(if position.is_some() {"coarse"} else {"unavailable"},|p|p.quality())},"manualMotion":tracked.is_none() && decoded.position_requires_direct_updates(),"reverse":decoded.reverse,"sourceLabel":if s.source_player().map(|n|n.get())==Some(crate::local_serving::NUMBER) {"Local USB"} else {"Direct IP · USB"},"qualifyingPlayback":at.elapsed() < Duration::from_secs(2) && qualifies_for_set(decoded),"warning":asset.and_then(|a|a.warning.clone()).unwrap_or_else(||if tracked.is_some() {"Direct IP: beat and motion-speed tracking; loop boundaries estimated".into()} else {"Direct IP: status-based position; waiting for fresh forward beat events".into()})})
 }
 
 #[cfg(test)]
@@ -1312,6 +1519,23 @@ mod tests {
         .unwrap();
         assert!(!shared.lock().unwrap().enabled);
         stop(&shared, &catalogs).unwrap();
+    }
+    #[tokio::test]
+    async fn usb_handover_releases_idle_socket_and_preserves_active_session() {
+        let shared = Arc::new(Mutex::new(LiveState::default()));
+        let socket = UdpSocket::bind("127.0.0.1:0").await.unwrap();
+        let address = socket.local_addr().unwrap();
+        shared.lock().unwrap().direct_task = Some(tokio::spawn(async move {
+            let _socket = socket;
+            std::future::pending::<()>().await;
+        }));
+        shared.lock().unwrap().enabled = true;
+        assert!(release_idle_transport(&shared).await.is_err());
+        assert!(UdpSocket::bind(address).await.is_err());
+        shared.lock().unwrap().enabled = false;
+        release_idle_transport(&shared).await.unwrap();
+        assert!(UdpSocket::bind(address).await.is_ok());
+        assert!(shared.lock().unwrap().direct_task.is_none());
     }
     #[tokio::test]
     async fn disconnect_clears_live_state_and_assets() {

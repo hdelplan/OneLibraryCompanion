@@ -1,20 +1,20 @@
-OneLibraryCompanion 0.1.1 distribution preview.
+# OneLibraryCompanion 0.1.2
 
-- Fix false port-conflict errors on Macs with network filtering: startup now checks local socket ownership without connecting to network interfaces.
-- Startup failures show the actual service log error.
-- Use the full OneLibraryCompanion name in the application header.
+OLC provides two-deck live status with three-band waveforms, library browsing and filtering, protected track loading, host-attached OneLibrary USB playback, and persistent set history with text, CSV and PDF exports. Mac and Raspberry Pi desktop windows and LAN browsers share the same host.
 
-- Shared 1280 × 800 interface and Rust service, with standalone Mac and Raspberry Pi windows and unauthenticated LAN access.
-- Mac supports close-to-background, Dock reopening, Quit, file exports and optional login startup. Pi packages include desktop and optional headless modes.
+## Installers
 
-Targets: macOS 13+ (Apple Silicon/Intel); Raspberry Pi OS Bookworm 64-bit or later. Physical Intel/older macOS/Pi touchscreen and network testing remains required. Initial Mac packages are ad-hoc signed and not notarized. See docs/distribution.md for installation, data migration and known limitations.
+- Apple Silicon: `OneLibraryCompanion-0.1.2-macos-arm64.dmg`.
+- Intel Mac: `OneLibraryCompanion-0.1.2-macos-x86_64.dmg`.
+- Raspberry Pi Desktop: install both `onelibrarycompanion-host_0.1.2_arm64.deb` and `onelibrarycompanion_0.1.2_arm64.deb`.
+- Pi headless: install the host package and enable its user service.
 
-Downloads:
-- Apple Silicon Mac: `OneLibraryCompanion-0.1.1-macos-arm64.dmg`.
-- Intel Mac: `OneLibraryCompanion-0.1.1-macos-x86_64.dmg`.
-- Raspberry Pi desktop: download BOTH `onelibrarycompanion-host_0.1.1_arm64.deb` and `onelibrarycompanion_0.1.1_arm64.deb`, then install them together with `sudo apt install ./onelibrarycompanion-host_0.1.1_arm64.deb ./onelibrarycompanion_0.1.1_arm64.deb`.
-- Mac ZIP alternatives, a source archive and `SHA256SUMS.txt` are also provided.
+Mac ZIP alternatives, matching source and `SHA256SUMS.txt` accompany the installers. Mac requires macOS 13+; Pi requires 64-bit Raspberry Pi OS Bookworm or later. Mac packages are ad-hoc signed and not notarized. Physical Pi, Intel and minimum-OS validation remains incomplete.
 
-These release assets are built and smoke-tested by GitHub Actions from the tagged source. They are preview builds pending the hardware checks above.
+## Local USB operation
 
-Full source credits and dependency license texts are included in the source and application bundles. The repository and release downloads remain private.
+Use Manual IP connections to physical players 1 and 2, leaving player number 4 free for OLC. Up to three mounted OneLibrary USBs are available. OLC serves original audio and exported metadata/analysis, keeps independent tracks available to both decks, and returns complete audio reads within the network payload limit.
+
+Keep the host awake, OLC running and the USB connected during playback. First-load discovery may require LINK on the target player. Check the displayed load result and physical cue position; OLC does not force a start position or retry an uncertain load automatically.
+
+See the README for features and `docs/distribution.md`, `docs/local-usb.md` and `docs/compatibility.md` for usage and limits. License notices and source credits are included in source and application packages.

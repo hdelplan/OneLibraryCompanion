@@ -215,6 +215,11 @@ impl NfsServer {
         // The unprivileged two first: if they cannot be had at all there is
         // nothing for a portmapper to publish, and finding that out is cheap.
         let (nfs, nfs_port) = bind_preferred(config.nfs_port, interface, "nfsd")?;
+        // macOS/iPadOS default to a 9216-byte UDP send buffer. This is a
+        // per-socket limit, not an immutable UDP datagram-size ceiling.
+        socket2::SockRef::from(&nfs)
+            .set_send_buffer_size(131_072)
+            .map_err(Error::io("reserving the NFS audio send buffer"))?;
         let (mount, mount_port) = bind_preferred(config.mount_port, interface, "mountd")?;
         // And 111 last, because it is the only one that can fail for want of
         // privilege and the only one whose failure is worth an error.
@@ -483,6 +488,46 @@ mod tests {
             .results()
             .expect("a successful reply")
             .to_vec()
+    }
+
+    #[tokio::test]
+    async fn full_pcm_reads_cross_real_udp_sockets() {
+        let (vfs, audio) = medium();
+        let server = NfsServer::start(vfs, ephemeral()).await.unwrap();
+        let client = socket::bind(0, None).unwrap();
+        let handle = Vfs::handle_for("/C/Contents/GESAFFELSTEIN/track.mp3");
+        // Match hardware PCM request sizes, not our NfsClient's 8192 cap.
+        // Include out-of-order, unaligned and EOF reads.
+        for (offset, count) in [
+            (37, 9408),
+            (8193, 14112),
+            (0, 28584),
+            (19, 65404),
+            (99900, 9408),
+        ] {
+            let args = nfs2::Request::Read(ReadArgs::at(handle, offset, count).unwrap())
+                .encode_arguments();
+            let call = encode(
+                Program::NFS,
+                nfs2::VERSION,
+                nfs2::Proc::READ.0,
+                &args,
+                count,
+            );
+            let reply = round_trip(&client, server.ports().nfs, &call).await;
+            assert!(reply.len() <= 65_507);
+            let payload = results(&reply);
+            let nfs2::Response::Read(Ok(data)) =
+                nfs2::Response::parse(nfs2::Proc::READ, &payload).unwrap()
+            else {
+                panic!("expected original audio bytes");
+            };
+            let start = offset as usize;
+            assert_eq!(
+                data.data,
+                &audio[start..(start + count as usize).min(audio.len())]
+            );
+        }
     }
 
     /// The whole path a deck walks, over real sockets: find mountd, mount the

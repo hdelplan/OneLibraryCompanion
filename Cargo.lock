@@ -507,7 +507,7 @@ dependencies = [
 
 [[package]]
 name = "pioneer-companion-host"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "axum",
  "futures-util",

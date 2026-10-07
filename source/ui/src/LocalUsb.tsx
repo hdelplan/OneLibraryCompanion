@@ -60,6 +60,11 @@ export function LocalUsb() {
             OLC checks mounted USBs every 5 seconds. Valid OneLibrary libraries
             appear automatically in the USB selector.
           </p>
+          <p>
+            CDJ loading uses Direct IP connections and player number 4 as the
+            OLC source. Keep physical players on numbers 1 and 2, keep OLC open,
+            and leave the USB connected. Audio is served without transcoding.
+          </p>
           {bridge && (
             <>
               <p>

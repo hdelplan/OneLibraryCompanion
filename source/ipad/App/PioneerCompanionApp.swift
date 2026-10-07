@@ -58,8 +58,12 @@ final class LocalService: ObservableObject {
     private func registerRoot(_ id: String, _ url: URL) -> String? {
         var buffer = [CChar](repeating: 0, count: 1024)
         let capacity = buffer.count
+        let values = try? url.resourceValues(forKeys: [.volumeLocalizedNameKey, .localizedNameKey])
+        let label = values?.volumeLocalizedName ?? values?.localizedName ?? "USB"
         let result = id.withCString { id in
-            url.path.withCString { path in pc_local_usb(id, path, &buffer, capacity) }
+            url.path.withCString { path in
+                label.withCString { name in pc_local_usb(id, path, name, &buffer, capacity) }
+            }
         }
         return result == 0 ? nil : String(cString: buffer)
     }
@@ -79,7 +83,7 @@ final class LocalService: ObservableObject {
         } catch { url.stopAccessingSecurityScopedResource(); return error.localizedDescription }
     }
     func forgetUSBRoot(_ id: String) {
-        _ = id.withCString { pc_local_usb($0, nil, nil, 0) }
+        _ = id.withCString { pc_local_usb($0, nil, nil, nil, 0) }
         usbRoots.removeValue(forKey: id)?.stopAccessingSecurityScopedResource()
         var saved = UserDefaults.standard.dictionary(forKey: usbBookmarkKey) as? [String: Data] ?? [:]
         saved.removeValue(forKey: id)

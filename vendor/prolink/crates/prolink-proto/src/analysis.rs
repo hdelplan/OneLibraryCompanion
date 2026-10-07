@@ -209,7 +209,7 @@ pub const CUE_ENTRY_LEN: usize = 0x24;
 /// happens here so no caller has to remember that it truncates.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Cue {
-    /// The cue's ordering field, as the file records it.
+    /// Packed loop/cue flag bytes: 0x0100 for a point, 0x0101 for a loop.
     pub order: u16,
     /// `0` for a memory point, `1` for hot cue A, `2` for B, and so on.
     pub hot_cue: u16,
@@ -243,8 +243,8 @@ pub struct CueBlobs {
 
 /// `GET_CUE_POINTS` → `0x4702`: memory points and hot cues.
 ///
-/// A record is `[u16 order][u16 hot cue][u32 0][u32 0][u32 frame]` followed by
-/// twenty zero bytes.
+/// A record starts with loop/cue flags and the hot cue number. Cue and
+/// loop-end positions occupy offsets 12 and 16 in 150 Hz frame units.
 ///
 /// Cues go out **sorted by time**, not in the order the file stores them —
 /// rekordbox had written the reference track's three cues newest-first.
@@ -260,7 +260,14 @@ pub fn cue_points(cues: &[Cue]) -> CueBlobs {
         records.extend_from_slice(&0u32.to_le_bytes());
         records.extend_from_slice(&0u32.to_le_bytes());
         records.extend_from_slice(&cue.frame().to_le_bytes());
-        records.resize(records.len() + (CUE_ENTRY_LEN - 16), 0);
+        let loop_frame = if cue.order & 0xff == 1 {
+            (u64::from(cue.loop_time_ms) * u64::from(WAVEFORM_FPS) / 1000).min(u64::from(u32::MAX))
+                as u32
+        } else {
+            0
+        };
+        records.extend_from_slice(&loop_frame.to_le_bytes());
+        records.resize(records.len() + (CUE_ENTRY_LEN - 20), 0);
 
         times.extend_from_slice(&cue.time_ms.to_le_bytes());
         times.extend_from_slice(&cue.loop_time_ms.to_le_bytes());
@@ -454,6 +461,25 @@ mod tests {
         // The first record's frame is the earliest cue's.
         let frame = u32::from_le_bytes(blobs.records[12..16].try_into().unwrap());
         assert_eq!(frame, 40);
+    }
+
+    #[test]
+    fn nexus_loop_flags_and_end_frame_match_independent_decoder_offsets() {
+        let blobs = cue_points(&[Cue {
+            order: 0x101,
+            hot_cue: 3,
+            time_ms: 2000,
+            loop_time_ms: 4000,
+        }]);
+        assert_eq!(&blobs.records[..4], &[1, 1, 3, 0]);
+        assert_eq!(
+            u32::from_le_bytes(blobs.records[12..16].try_into().unwrap()),
+            300
+        );
+        assert_eq!(
+            u32::from_le_bytes(blobs.records[16..20].try_into().unwrap()),
+            600
+        );
     }
 
     #[test]

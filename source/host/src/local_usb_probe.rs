@@ -358,7 +358,7 @@ async fn serve(
     step("Stopped serving the selected WAV");
     Ok(())
 }
-fn source_status(
+pub(crate) fn source_status(
     name: DeviceName,
     number: DeviceNumber,
     counter: u32,
