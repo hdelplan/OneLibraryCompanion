@@ -14,7 +14,7 @@ const el=id=>document.getElementById(id);
 let polling=false;
 async function refresh(){if(polling)return;polling=true;try{const r=await fetch('/api/diagnostics/local-usb');if(!r.ok)throw Error(await r.text());const s=await r.json();el('report').textContent=JSON.stringify(s,null,2);el('start').disabled=!!s.active;el('choose').disabled=!!s.active;el('stop').disabled=!s.active;}catch(e){el('error').textContent=e.message}finally{polling=false}}
 async function command(body){el('error').textContent='';try{const r=await fetch('/api/diagnostics/local-usb',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});if(!r.ok)throw Error(await r.text());await refresh()}catch(e){el('error').textContent=e.message}}
-el('choose').onclick=()=>{el('error').textContent='';if(window.webkit?.messageHandlers?.usbProbe){window.webkit.messageHandlers.usbProbe.postMessage('choose')}else{el('error').textContent='Native file selection is available in the iPad app. On desktop, use the local_usb_probe example with an explicitly selected path.'}};
+el('choose').onclick=()=>{el('error').textContent='';if(window.webkit?.messageHandlers?.usbProbe){window.webkit.messageHandlers.usbProbe.postMessage('choose')}else{el('error').textContent='Native file selection requires an embedded app with a file-picker bridge. On desktop, use the local_usb_probe example with an explicitly selected path.'}};
 el('start').onclick=()=>command({ip:el('ip').value,number:Number(el('number').value),isolated:el('isolated').checked});
 el('stop').onclick=()=>command({stop:true});
 refresh();setInterval(refresh,1000);

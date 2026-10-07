@@ -1,6 +1,6 @@
 // Feed production host replay output through the production UI motion clock.
 // Uses a simulated 60 Hz renderer and known 12 ms delivery delay. This does not
-// reproduce the iPad's physical screen or measure network latency.
+// reproduce the physical screen or measure network latency.
 import fs from "node:fs";
 import assert from "node:assert/strict";
 import { PlaybackClock } from "./src/playbackClock";

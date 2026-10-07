@@ -61,7 +61,7 @@ Use absolute paths. The corresponding `PIONEER_COMPANION_*` variables are compat
 
 ## Source snapshots and documentation
 
-`scripts/prepare-distribution.py <new-directory>` creates an allowlisted source snapshot and `SOURCE-MANIFEST.sha256`. It excludes private exports, captures, credentials, dependencies and generated build output. Publication documentation is explicitly selected, including the screenshot gallery. It refuses to overwrite an existing destination.
+`scripts/prepare-distribution.py <new-directory>` creates an allowlisted source snapshot and `SOURCE-MANIFEST.sha256`. It excludes private exports, captures, credentials, dependencies and generated build output. Publication documentation is explicitly selected, including the screenshot gallery. Platform source roots and build scripts are allowlisted. Optional `.local/distribution-overrides` files replace matching allowlisted paths during export; they cannot add files outside that selection. It refuses to overwrite an existing destination.
 
 Keep shared changes in `source/ui`, `source/host` and the native launchers. Review the snapshot and manifest before publishing. Read the remote branch before updating it so edits made on GitHub are retained. Documentation describes current behaviour: feature explanations belong in README and user guides; implementation contracts belong in architecture. Document only implemented features, current behaviour and known limitations. Do not include future plans, proposed features, roadmaps, development diaries or completed-work checklists.
 

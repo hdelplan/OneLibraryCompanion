@@ -1,4 +1,4 @@
-//! Desktop packaging configuration. iPad keeps its existing sandbox and identity.
+//! Desktop packaging configuration and application identity.
 use axum::{Json, Router, extract::State, http::StatusCode, routing::get};
 use network_interface::{NetworkInterface, NetworkInterfaceConfig};
 use serde::{Deserialize, Serialize};

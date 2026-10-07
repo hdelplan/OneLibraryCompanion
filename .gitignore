@@ -39,7 +39,7 @@ third-party/
 docs/setup/
 docs/research/initial-tree.txt
 
-# Platform-local caches and separate iPad assets
-dist-ipad/
+# Platform-local caches and alternate build assets
+dist-*/
 __pycache__/
 com.apple.DeveloperTools/

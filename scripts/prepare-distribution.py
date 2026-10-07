@@ -7,16 +7,18 @@ import shutil
 
 ROOT = Path(__file__).resolve().parent.parent
 FILES = ['Cargo.toml', 'Cargo.lock', 'LICENSE', 'THIRD_PARTY_NOTICES.md', 'README.md', '.gitignore', 'AGENTS.md']
-TREES = ['source', 'vendor/prolink', 'third-party-licenses', 'packaging', 'scripts', '.github']
+TREES = ['source/core', 'source/host', 'source/ui', 'source/desktop', 'vendor/prolink', 'third-party-licenses', 'packaging', '.github']
+SCRIPTS = ['bootstrap-mac.sh', 'build-linux.sh', 'build-macos.sh', 'build-pi-cross.sh', 'check-app.sh', 'check-distribution.py', 'check-docs.py', 'collect-third-party-notices.py', 'package-linux.py', 'position_signals.py', 'prepare-distribution.py', 'setup.sh', 'smoke-host.py', 'test_position_signals.py', 'trace-bar-position.py']
 DOCS = ['distribution.md', 'release-notes.md', 'architecture.md', 'configuration.md', 'set-history.md', 'development.md', 'hardware-testing.md', 'compatibility.md', 'local-usb.md', 'screenshots.md']
-OMITTED = {'source/ipad/README.md', 'vendor/prolink/Cargo.lock', 'scripts/benchmark-transcoding.py'}
+OMITTED = {'vendor/prolink/Cargo.lock'}
+OVERRIDES = ROOT / '.local/distribution-overrides'
 PUBLIC_AGENTS = '''# Project requirements
 
 - Keep UI and feature improvements shared across Mac and Raspberry Pi. Implement shared behavior in source/ui and source/host.
 - Keep the UI in English. Preserve existing workspace changes.
 - Keep distribution documentation focused on supported Mac and Raspberry Pi functionality and current behavior. Document only implemented features and known limitations; exclude future plans, proposed features and roadmaps.
 '''
-EXCLUDED = {'.git', 'target', 'builds', 'dist', 'dist-ipad', 'node_modules', 'DerivedData', 'xcuserdata', 'com.apple.DeveloperTools', '__pycache__', '.DS_Store'}
+EXCLUDED = {'.git', 'target', 'builds', 'dist', 'node_modules', 'DerivedData', 'xcuserdata', 'com.apple.DeveloperTools', '__pycache__', '.DS_Store'}
 BANNED = {'.p12', '.mobileprovision', '.cer', '.pem', '.key', '.db', '.pdb', '.wav', '.mp3', '.aiff', '.flac', '.log', '.pyc', '.xcuserstate'}
 
 
@@ -25,6 +27,7 @@ def prepare(destination):
     if destination.exists():
         raise SystemExit('Choose a new empty destination; existing snapshots are never overwritten.')
     candidates = [ROOT / name for name in FILES]
+    candidates.extend(ROOT / 'scripts' / name for name in SCRIPTS)
     for tree in TREES:
         candidates.extend(path for path in (ROOT / tree).rglob('*') if path.is_file())
     candidates.extend(ROOT / 'docs' / name for name in DOCS)
@@ -32,8 +35,11 @@ def prepare(destination):
     manifest = []
     for source in sorted(set(candidates)):
         relative = source.relative_to(ROOT)
-        if relative.as_posix() in OMITTED or any(part in EXCLUDED for part in relative.parts):
+        if relative.as_posix() in OMITTED or any(part in EXCLUDED or part.startswith('dist-') for part in relative.parts):
             continue
+        override = OVERRIDES / relative
+        if override.is_file():
+            source = override
         if source.is_symlink() or source.suffix.lower() in BANNED or source.name.startswith('.env'):
             raise SystemExit(f'Review excluded/sensitive file before publication: {relative}')
         if source.stat().st_size > 2 * 1024 * 1024:

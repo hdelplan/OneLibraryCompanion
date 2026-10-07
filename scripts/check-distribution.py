@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check paired build assets and a running, isolated desktop host without CDJ traffic."""
+"""Check desktop build assets and a running, isolated desktop host without CDJ traffic."""
 import argparse
 import json
 from pathlib import Path
@@ -11,8 +11,7 @@ parser.add_argument('--url', help='Optional isolated desktop host URL for read-o
 args = parser.parse_args()
 root = Path(__file__).resolve().parent.parent
 prod = root / 'source/ui/dist'
-ipad = root / 'source/ui/dist-ipad'
-for folder in (prod, ipad):
+for folder in (prod,):
     assert (folder / 'index.html').is_file(), f'Build {folder} first'
     assert 'OneLibraryCompanion' in (folder / 'index.html').read_text()
     for source in [root / 'LICENSE', root / 'THIRD_PARTY_NOTICES.md', *sorted((root / 'third-party-licenses').iterdir())]:
@@ -22,9 +21,6 @@ text = '\n'.join(p.read_text() for p in prod.rglob('*.js'))
 for marker in ['DIAGNOSTICS & EXPERIMENTS', '/api/diagnostics/cue-window', '/diagnostics/local-usb', 'Choose an offline preview in TEST', 'PIONEERCOMPANION / SET HISTORY']:
     assert marker not in text, f'Production asset leaked: {marker}'
 assert not list(prod.glob('assets/Experiments-*.js')), 'Production included the experiments chunk'
-ipad_text = '\n'.join(p.read_text() for p in ipad.rglob('*.js'))
-assert '/api/diagnostics/cue-window' in ipad_text, 'iPad experiments missing'
-assert 'DIAGNOSTICS & EXPERIMENTS' in ipad_text, 'iPad TEST missing'
 if args.url:
     def request(path):
         with urllib.request.urlopen(args.url.rstrip('/') + path, timeout=3) as response:
@@ -43,4 +39,4 @@ if args.url:
                 assert error.code in (404, 405), (path, error.code)
     assert isinstance(request('/api/library/sources'), dict)
     assert isinstance(request('/api/sets'), dict)
-print('Distribution checks passed: production excludes TEST; iPad retains it' + ('; desktop APIs verified' if args.url else ''))
+print('Distribution checks passed: production excludes TEST' + ('; desktop APIs verified' if args.url else ''))

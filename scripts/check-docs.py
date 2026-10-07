@@ -11,7 +11,7 @@ pages = [root / 'README.md', *(root / 'docs' / name for name in policy['DOCS'])]
 errors = []
 for page in pages:
     text = page.read_text()
-    if re.search(r'\bipad\b|\btest screen\b|\bexperiments?\b', text, re.I):
+    if re.search(r'\btest screen\b|\bexperiments?\b', text, re.I):
         errors.append(f'{page.relative_to(root)}: documentation outside distribution scope')
     for target in re.findall(r'!?\[[^\]]*\]\(([^\s)]+)(?:\s+[^)]*)?\)', text):
         link = urlsplit(target.strip('<>'))

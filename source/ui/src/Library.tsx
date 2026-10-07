@@ -460,7 +460,7 @@ function LibraryView({
     const resize = () => {
       const header = element.querySelector("thead") as HTMLElement | null;
       if (!header) return;
-      // Layout pixels are independent of the overall iPad/browser screen scale.
+      // Layout pixels are independent of the overall display scale.
       const available = element.clientHeight - header.offsetHeight - 0.5;
       setRowHeight(
         Math.max(

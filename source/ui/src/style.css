@@ -659,7 +659,7 @@ footer button {
   font-size: 11px;
 }
 
-/* Shared iPad / desktop / RPi waveform controls and track metrics. */
+/* Shared waveform controls and track metrics. */
 .waveforms {
   position: relative;
 }

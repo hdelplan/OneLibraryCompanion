@@ -31,7 +31,7 @@ pub struct BeatMark {
     pub beat_in_bar: u16,
 }
 
-/// PWV7 detail: low, mid, high (matched against Brickell iPad references).
+/// PWV7 detail: low, mid, high (matched against Brickell waveform references).
 /// PWV6 preview retains mid, high, low. Preserve raw values.
 /// Detail uses the CDJ-3000's 7-bit height domain. Preview scaling is provisional.
 pub fn decode(data: &[u8]) -> Result<Analysis, String> {

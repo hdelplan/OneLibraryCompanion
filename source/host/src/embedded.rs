@@ -1,4 +1,4 @@
-//! In-process offline host for the iPad shell. Never reads desktop environment
+//! In-process offline host for an embedded native shell. Never reads desktop environment
 //! configuration or starts a Pro DJ Link session.
 use std::{net::TcpListener, path::PathBuf};
 
@@ -10,7 +10,7 @@ pub struct Server {
 impl Server {
     pub fn start(ui_root: PathBuf, port: u16) -> Result<Self, String> {
         if !ui_root.join("index.html").is_file() {
-            return Err("The bundled interface is missing. Rebuild the iPad app.".into());
+            return Err("The bundled interface is missing. Rebuild the app.".into());
         }
         let listener = TcpListener::bind((std::net::Ipv4Addr::LOCALHOST, port))
             .map_err(|e| format!("Cannot start the local app service: {e}"))?;

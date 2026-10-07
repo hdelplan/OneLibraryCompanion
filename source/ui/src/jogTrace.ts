@@ -126,6 +126,6 @@ export function stopJogTrace() {
         ],
     frames,
     notes:
-      "receiptToFrameMs is browser receipt-to-frame-callback time, not physical screen latency. Host and browser clocks are separate. No CDJ-to-iPad network latency is measured.",
+      "receiptToFrameMs is browser receipt-to-frame-callback time, not physical screen latency. Host and browser clocks are separate. No CDJ-to-client network latency is measured.",
   };
 }

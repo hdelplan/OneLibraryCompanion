@@ -21,5 +21,4 @@ jobs:
       - run: ./scripts/setup.sh
       - run: ./scripts/check-app.sh
       - run: cargo test --workspace --locked --features experiments
-      - run: cd source/ui && node node_modules/vite/bin/vite.js build --mode ipad
       - run: python3 scripts/check-distribution.py

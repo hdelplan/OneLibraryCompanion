@@ -215,7 +215,7 @@ impl NfsServer {
         // The unprivileged two first: if they cannot be had at all there is
         // nothing for a portmapper to publish, and finding that out is cheap.
         let (nfs, nfs_port) = bind_preferred(config.nfs_port, interface, "nfsd")?;
-        // macOS/iPadOS default to a 9216-byte UDP send buffer. This is a
+        // Apple platforms default to a 9216-byte UDP send buffer. This is a
         // per-socket limit, not an immutable UDP datagram-size ceiling.
         socket2::SockRef::from(&nfs)
             .set_send_buffer_size(131_072)

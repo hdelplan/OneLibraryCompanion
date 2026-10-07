@@ -1,4 +1,4 @@
-//! Five-second local-volume reconciliation. OS mounting and iPad access grants
+//! Five-second local-volume reconciliation. OS mounting and file access grants
 //! belong to platform adapters; validation and catalog registration are shared.
 use crate::{library, onelibrary};
 use serde_json::{Value, json};
