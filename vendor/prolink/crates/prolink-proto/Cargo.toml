@@ -1,0 +1,26 @@
+[package]
+name = "prolink-proto"
+description = "Wire codecs for the Pioneer Pro DJ Link protocol: discovery, status, dbserver and ONC RPC/NFSv2"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+readme = "README.md"
+repository.workspace = true
+documentation = "https://docs.rs/prolink-proto"
+homepage.workspace = true
+keywords.workspace = true
+categories.workspace = true
+
+[dependencies]
+binrw.workspace = true
+thiserror.workspace = true
+
+# `tests/corpus.rs` replays the capture corpus through these codecs. It is a
+# dev-dependency and must stay one: this crate is a pure codec and depends on
+# nothing at build time.
+[dev-dependencies]
+prolink-capture.workspace = true
+
+[lints]
+workspace = true

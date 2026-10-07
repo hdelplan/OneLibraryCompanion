@@ -1,0 +1,16 @@
+[Unit]
+Description=OneLibraryCompanion headless LAN service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+Environment=OLC_UI_ROOT=/usr/lib/onelibrarycompanion/dist
+Environment=OLC_BIND=0.0.0.0:8787
+ExecStart=/usr/lib/onelibrarycompanion/olc-host
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=5
+
+[Install]
+WantedBy=default.target

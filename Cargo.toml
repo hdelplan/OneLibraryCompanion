@@ -1,0 +1,4 @@
+[workspace]
+resolver = "3"
+members = ["source/core", "source/host"]
+exclude = ["third-party/prolink", "vendor/prolink"]

@@ -1,0 +1,25 @@
+name: Application checks
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_call:
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: source/ui/package-lock.json
+      - run: rustup toolchain install 1.98.1 --profile minimal --component rustfmt --component clippy
+      - run: rustup override set 1.98.1
+      - run: ./scripts/setup.sh
+      - run: ./scripts/check-app.sh
+      - run: cargo test --workspace --locked --features experiments
+      - run: cd source/ui && node node_modules/vite/bin/vite.js build --mode ipad
+      - run: python3 scripts/check-distribution.py

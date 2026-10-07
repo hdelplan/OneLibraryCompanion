@@ -1,0 +1,45 @@
+# Build output
+builds/
+target/
+dist/
+
+# Node
+node_modules/
+
+# macOS / Xcode
+.DS_Store
+DerivedData/
+xcuserdata/
+*.xcuserstate
+
+# IDE
+.vscode/
+.idea/
+
+# Secrets / credentials
+.env
+.env.*
+*.p12
+*.mobileprovision
+*.cer
+
+# Temporary files
+*.tmp
+*.log
+
+# Large/private captures
+captures/private/
+
+# Local hardware data, experiments and preservation archives
+.local/
+captures/
+diagnostics/
+test-data/
+third-party/
+docs/setup/
+docs/research/initial-tree.txt
+
+# Platform-local caches and separate iPad assets
+dist-ipad/
+__pycache__/
+com.apple.DeveloperTools/

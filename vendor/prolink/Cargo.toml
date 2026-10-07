@@ -1,0 +1,101 @@
+[workspace]
+resolver = "3"
+members = ["crates/prolink-rekordbox", "crates/prolink", "crates/prolink-proto", "crates/prolink-capture"]
+
+[workspace.package]
+version = "0.3.0"
+edition = "2024"
+# 1.88 is the floor and it is a measured one: Debian trixie ships 1.85 and
+# this workspace fails on it with nine "`let` expressions in this position
+# are unstable" -- let-chains stabilised in 1.88. Edition 2024 alone would
+# only need 1.85.
+rust-version = "1.88"
+license = "GPL-3.0-only"
+repository = "https://github.com/usr-ein/prolink"
+homepage = "https://github.com/usr-ein/prolink"
+# `documentation` is deliberately not inherited: it differs per crate, and one
+# workspace-wide value would point every crate's crates.io page at the same
+# docs.rs URL. Each manifest names its own.
+keywords = ["dj", "pioneer", "cdj", "rekordbox", "prolink"]
+categories = ["network-programming", "multimedia::audio", "parser-implementations"]
+
+[workspace.dependencies]
+prolink = { version = "0.3.0", path = "crates/prolink" }
+prolink-capture = { version = "0.3.0", path = "crates/prolink-capture" }
+prolink-proto = { version = "0.3.0", path = "crates/prolink-proto" }
+prolink-rekordbox = { version = "0.3.0", path = "crates/prolink-rekordbox" }
+
+binrw = "0.15"
+bytes = "1"
+clap = { version = "4", features = ["derive"] }
+etherparse = "0.19"
+network-interface = "2"
+pcap-file = "2"
+rekordcrate = { version = "0.3", default-features = false }
+sha2 = "0.10"
+thiserror = "2"
+tokio = "1"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+unicode-normalization = "0.1"
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+# docs.rs passes `--cfg docsrs` so feature-gated items can be labelled with the
+# feature that gates them. Declared here or the compiler reports it as an
+# unknown cfg, which CI turns into a failure.
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(docsrs)'] }
+missing_docs = "warn"
+missing_debug_implementations = "warn"
+unreachable_pub = "warn"
+unused_qualifications = "warn"
+unused_import_braces = "warn"
+single_use_lifetimes = "warn"
+trivial_numeric_casts = "warn"
+rust_2018_idioms = { level = "warn", priority = -1 }
+future_incompatible = { level = "warn", priority = -1 }
+nonstandard_style = { level = "warn", priority = -1 }
+
+[workspace.lints.clippy]
+all = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+cargo = { level = "warn", priority = -1 }
+
+# Parse, don't validate: these turn "I checked earlier" into a compile error.
+unwrap_used = "warn"
+expect_used = "warn"
+panic = "warn"
+indexing_slicing = "warn"
+as_conversions = "warn"
+todo = "warn"
+unimplemented = "warn"
+missing_assert_message = "warn"
+mem_forget = "warn"
+
+# Deliberate exemptions, each for a reason that applies to this codebase.
+#
+# `module_name_repetitions` fights the naming a protocol library wants:
+# `djl::PacketKind` and `dbserver::MessageKind` are both correct.
+module_name_repetitions = "allow"
+# Prose in doc comments quotes wire field names that are not Rust items.
+doc_markdown = "allow"
+# Almost everything here is a pure accessor over parsed bytes.
+must_use_candidate = "allow"
+# The error type is documented once, on the module; repeating it on 200
+# functions adds noise rather than information.
+missing_errors_doc = "allow"
+# Nothing outside a test is allowed to panic (see `panic` above), so this
+# section would document a case that cannot arise.
+missing_panics_doc = "allow"
+# `integer_division` is not kept: in a byte codec every division is a
+# deliberate truncation (a chunk count, a frame index at 150 fps), and an
+# `expect` on each would be noise rather than safety. `as_conversions` stays,
+# because a silent numeric cast is where a length prefix quietly wraps.
+#
+# Offsets, lengths and counts are genuinely similar names in a wire codec.
+similar_names = "allow"
+# Dependency trees are not ours to deduplicate.
+multiple_crate_versions = "allow"
+
+[profile.release]
+lto = "thin"

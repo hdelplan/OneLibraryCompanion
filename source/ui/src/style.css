@@ -1,0 +1,936 @@
+/* RX3 visual language: NauticMixxx final QSS and user-supplied reference.
+   Adapted for a read-only CDJ status display, without performance controls. */
+:root {
+  font-family: "Arial Narrow", Arial, sans-serif;
+  color: #eee;
+  background: #000;
+  color-scheme: dark;
+  --panel: #202020;
+  --raised: #303030;
+  --line: #343434;
+  --muted: #929592;
+  --cyan: #007d96;
+  --blue: #008bea;
+  --orange: #ff7800;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+}
+#root {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+main {
+  position: relative;
+  flex-shrink: 0;
+}
+.screen {
+  width: 1280px;
+  height: 800px;
+  position: absolute;
+  transform-origin: top left;
+  background: #000;
+  overflow: hidden;
+}
+button,
+input,
+select {
+  font: inherit;
+}
+button,
+select,
+.file-button {
+  background: #202020;
+  border: 1px solid #626262;
+  color: #eee;
+  border-radius: 0;
+  cursor: pointer;
+}
+button {
+  padding: 9px 15px;
+}
+button:hover,
+.file-button:hover {
+  background: #303030;
+}
+button:disabled,
+select:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+button:focus-visible,
+select:focus-visible,
+input:focus-visible,
+.file-button:focus-within {
+  outline: 2px solid #0098f6;
+  outline-offset: 2px;
+}
+select {
+  padding: 8px 10px;
+}
+input {
+  accent-color: #008bea;
+}
+small {
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 400;
+  letter-spacing: 0.35px;
+}
+nav {
+  height: 42px;
+  display: flex;
+  align-items: center;
+  gap: 25px;
+  border-bottom: 1px solid #303030;
+  padding: 0 12px;
+  background: #080808;
+}
+.brand {
+  font-size: 18px;
+  font-weight: bold;
+  letter-spacing: -0.3px;
+}
+.brand > span {
+  font-weight: normal;
+  color: #bcbcbc;
+}
+.connection {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 10px;
+  color: #999;
+  letter-spacing: 0.8px;
+}
+.status-dot {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  background: #888;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.navigation {
+  margin-left: auto;
+  height: 100%;
+  display: flex;
+  gap: 3px;
+}
+.navigation button {
+  background: #161616;
+  border: 0;
+  color: #a9aaa8;
+  font-size: 11px;
+  letter-spacing: 0.6px;
+  padding: 0 18px;
+}
+.navigation button[aria-current="page"] {
+  background: #252525;
+  color: #fff;
+  border-bottom: 2px solid #007d96;
+}
+.waveforms {
+  height: 372px;
+  padding: 8px 10px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.wave-row {
+  height: 178px;
+  display: flex;
+  gap: 10px;
+}
+.rail {
+  width: 148px;
+  flex-shrink: 0;
+  background: #191919;
+  border: 1px solid #303030;
+}
+.rail h2 {
+  margin: 0;
+  height: 27px;
+  background: #303030;
+  border-bottom: 2px solid #007d96;
+  color: #b8b8b8;
+  padding: 5px 14px;
+  font-size: 13px;
+  font-weight: normal;
+}
+.source-label {
+  height: 36px;
+  border-bottom: 1px solid #303030;
+  padding: 11px 14px;
+  font-size: 13px;
+  color: #ddd;
+}
+.rail-key,
+.rail-state {
+  padding: 10px 14px;
+  border-bottom: 1px solid #262626;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.rail-key b {
+  font-size: 22px;
+  font-weight: normal;
+}
+.rail-state b {
+  font-size: 10px;
+  font-weight: normal;
+  white-space: nowrap;
+}
+.rail-state small {
+  font-size: 8px;
+  white-space: nowrap;
+}
+.rail-tags {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 12px 14px;
+  font-size: 10px;
+  color: #888;
+}
+.signal {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  border-bottom: 1px solid #222;
+}
+canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  color: #666;
+}
+.empty strong {
+  font-size: 19px;
+  font-weight: normal;
+}
+.empty span {
+  font-size: 12px;
+  color: #555;
+}
+.track-cards {
+  height: 338px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  padding: 12px 10px 0;
+}
+.track-card {
+  min-height: 0;
+  border: 1px solid #424242;
+  border-top: 2px solid #007d96;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 7px;
+}
+.track-card header {
+  height: 58px;
+  background: #202020;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+.deck-number {
+  height: 100%;
+  width: 83px;
+  flex-shrink: 0;
+  border-right: 1px solid #343434;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+}
+.deck-number small {
+  color: #ccc;
+}
+.deck-number b {
+  font-size: 24px;
+  font-weight: normal;
+  color: #eee;
+}
+.track-title {
+  padding: 0 15px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.track-title strong {
+  letter-spacing: 0.05em;
+  font-size: 20px;
+  font-weight: normal;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.track-title span {
+  font-size: 12px;
+  color: #aaa;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.track-metrics {
+  height: 99px;
+  display: grid;
+  grid-template-columns: 74px 1fr 110px 110px;
+  align-items: center;
+  padding: 8px 12px;
+  gap: 10px;
+}
+.track-metrics > div,
+.track-metrics > .time-box {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+.key-box b {
+  font-size: 24px;
+  font-weight: normal;
+}
+.track-metrics span {
+  color: #777;
+  font-size: 10px;
+}
+.time-box strong {
+  font-family: Arial, sans-serif;
+  font-variant-numeric: tabular-nums;
+  font-size: 43px;
+  line-height: 1;
+  font-weight: normal;
+  letter-spacing: -2px;
+}
+.pitch-box strong {
+  font-size: 29px;
+  font-weight: normal;
+}
+.pitch-box em {
+  font-size: 18px;
+  font-style: normal;
+  margin-left: 3px;
+}
+.bpm-box {
+  height: 80px;
+  border: 1px solid #ffa600;
+  padding: 7px 8px;
+}
+.bpm-box small {
+  color: #ddd;
+}
+.bpm-box strong {
+  font-size: 31px;
+  font-weight: normal;
+  line-height: 1;
+}
+.track-details {
+  height: 35px;
+  padding: 0 12px;
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  flex-shrink: 0;
+  font-size: 13.5px;
+  color: #777;
+}
+.track-details span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.track-details span:first-child {
+  flex: 1;
+}
+.track-details b {
+  font-weight: normal;
+  color: #bcbcbc;
+  margin-left: 4px;
+}
+.overview {
+  flex: 0 0 67px;
+  min-height: 67px;
+  margin: 0 12px;
+  position: relative;
+  border-bottom: 1px solid #999;
+}
+.overview canvas {
+  position: absolute;
+  inset: 0;
+}
+.overview > span {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 10px;
+  color: #555;
+}
+.no-overview .track-metrics {
+  flex: 1;
+}
+.no-overview .track-details {
+  margin-bottom: 8px;
+}
+footer {
+  height: 48px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 0 16px;
+  font-size: 11px;
+  color: #999;
+}
+footer .preview-badge {
+  font-size: 9px;
+  letter-spacing: 0.7px;
+  border: 1px solid #3c3c3c;
+  padding: 5px 7px;
+  color: #aaa;
+}
+footer select {
+  font-size: 11px;
+  padding: 4px 8px;
+}
+footer input {
+  width: 290px;
+}
+footer small {
+  margin-left: auto;
+  font-size: 10px;
+}
+footer button {
+  margin-left: auto;
+  font-size: 11px;
+  padding: 6px 12px;
+}
+.config-page {
+  height: 758px;
+  padding: 25px 35px;
+  overflow: auto;
+}
+.page-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 22px;
+}
+.page-heading small {
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  color: #888;
+}
+.page-heading h1 {
+  font-size: 29px;
+  font-weight: normal;
+  margin: 5px 0 0;
+}
+.page-heading button {
+  font-size: 12px;
+}
+.settings-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+.settings-panel {
+  background: #161616;
+  border: 1px solid #343434;
+  border-top: 2px solid #007d96;
+  padding: 18px 22px;
+}
+.settings-panel h2 {
+  font-size: 18px;
+  font-weight: normal;
+  margin: 0 0 15px;
+}
+.settings-panel > label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 43px;
+  gap: 20px;
+  border-bottom: 1px solid #262626;
+  font-size: 14px;
+}
+.settings-panel select {
+  width: 230px;
+  font-size: 13px;
+  padding: 6px 9px;
+}
+.settings-panel p {
+  color: #999;
+  line-height: 1.5;
+  font-size: 12px;
+  margin: 14px 0 0;
+}
+.toggle input {
+  width: 18px;
+  height: 18px;
+}
+.connection-note {
+  margin-top: 24px;
+  border-top: 1px solid #343434;
+  padding-top: 20px;
+  font-size: 11px;
+  color: #aaa;
+  letter-spacing: 0.4px;
+}
+.connection-note .status-dot {
+  margin-right: 7px;
+}
+.connection-note p {
+  letter-spacing: 0;
+}
+.offline-panel {
+  grid-column: 1/-1;
+}
+.offline-panel h2 {
+  margin-bottom: 8px;
+}
+.offline-panel p {
+  margin-top: 0;
+}
+.offline-controls {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  margin-top: 18px;
+}
+.offline-controls label {
+  font-size: 13px;
+}
+.offline-controls select {
+  width: 105px;
+  margin-left: 15px;
+}
+.primary {
+  background: #006f88;
+  border-color: #007d96;
+}
+.file-button {
+  display: inline-block;
+  position: relative;
+  padding: 10px 15px;
+  font-size: 13px;
+}
+.file-button input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  width: 100%;
+  cursor: pointer;
+}
+.settings-saved {
+  color: #777;
+  font-size: 11px;
+  text-align: right;
+  margin-top: 15px;
+}
+[role="alert"] {
+  color: #ff7800 !important;
+}
+
+.phrases {
+  position: relative;
+  flex: 0 0 24px;
+  margin: 4px 12px 0;
+  background: #151515;
+  overflow: hidden;
+}
+.phrase {
+  position: absolute;
+  height: 24px;
+  background: #475965;
+  border-right: 1px solid #080808;
+  overflow: hidden;
+  color: #fff;
+  font-size: 10px;
+  line-height: 24px;
+}
+.phrase span {
+  padding-left: 4px;
+  white-space: nowrap;
+}
+.phrases-empty {
+  color: #777;
+  font-size: 10px;
+  line-height: 24px;
+  padding-left: 5px;
+}
+
+/* Compact status rail keeps the larger overview within the 800px display. */
+.rail .source-label {
+  height: 26px;
+  padding: 6px 10px;
+}
+.rail-key,
+.rail-state {
+  padding: 5px 10px;
+}
+.rail-key b {
+  font-size: 18px;
+}
+.rail-tags {
+  flex-direction: row;
+  gap: 10px;
+  padding: 6px 10px;
+}
+
+.time-box strong.player-time {
+  font-size: clamp(17px, 2.3vw, 30px);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.time-box strong.player-time .time-unit {
+  font-size: 50%;
+  margin-left: 0.18em;
+  margin-right: 0.08em;
+  display: inline;
+  color: inherit;
+}
+.bpm-box {
+  text-align: center;
+  position: relative;
+  padding-bottom: 21px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.bpm-box .master-badge {
+  position: absolute;
+  bottom: -1px;
+  left: -1px;
+  right: -1px;
+  height: 17px;
+  line-height: 17px;
+  color: #000;
+  background: #ffa600;
+  text-align: center;
+}
+
+.artwork-box {
+  width: 74px;
+  height: 74px;
+  background: #181818;
+  overflow: hidden;
+}
+.artwork-box img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.artwork-box .artwork-placeholder {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  font-size: 30px;
+  color: #555;
+}
+
+.time-box {
+  padding-left: 12px;
+}
+
+.time-box > span {
+  font-size: 11px;
+}
+
+/* Shared iPad / desktop / RPi waveform controls and track metrics. */
+.waveforms {
+  position: relative;
+}
+.waveform-zoom {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #111d;
+}
+.waveform-zoom button {
+  width: 36px;
+  height: 34px;
+  padding: 0;
+  font-size: 22px;
+}
+.waveform-zoom span {
+  min-width: 28px;
+  text-align: center;
+  font-size: 12px;
+  color: #aaa;
+}
+.track-metrics {
+  grid-template-columns: 60px minmax(0, 1fr) 76px 80px 94px;
+  gap: 8px;
+}
+.artwork-box {
+  width: 60px;
+  height: 60px;
+}
+.time-box {
+  padding-left: 0;
+}
+.time-box strong.player-time {
+  font-size: 25px;
+  letter-spacing: calc(-2px + 0.05em);
+}
+.standard-bpm-box strong,
+.pitch-box strong {
+  font-size: 24px;
+  font-weight: normal;
+  white-space: nowrap;
+}
+.bpm-box strong {
+  font-size: 28px;
+}
+
+.cue-countdown {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 5px 8px;
+  background: #000b;
+  pointer-events: none;
+}
+.cue-countdown small {
+  font-size: 9px;
+}
+.cue-countdown strong {
+  font-size: 23px;
+  font-weight: normal;
+  font-variant-numeric: tabular-nums;
+  color: #fff;
+}
+
+.cue-countdown strong span {
+  font-size: 11px;
+  color: #aaa;
+  margin-left: 4px;
+}
+
+.time-box strong.player-time .time-fraction {
+  font-size: 60%;
+  color: inherit;
+  letter-spacing: 0.05em;
+}
+
+.track-info-button {
+  position: absolute;
+  right: 8px;
+  top: 6px;
+  z-index: 3;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font:
+    italic bold 20px Georgia,
+    serif;
+  padding: 0;
+  background: #151b20;
+}
+.track-info-dismiss {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+}
+.track-info-popup {
+  position: absolute;
+  z-index: 31;
+  right: 10px;
+  top: 8px;
+  width: 540px;
+  height: 356px;
+  box-sizing: border-box;
+  padding: 16px;
+  background: #141a20;
+  border: 1px solid #62717d;
+  box-shadow: 0 8px 30px #000b;
+  color: #eee;
+  overflow: hidden;
+  cursor: pointer;
+}
+.track-info-heading {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.track-info-art {
+  width: 84px;
+  height: 84px;
+  flex-shrink: 0;
+  background: #252e36;
+  display: grid;
+  place-items: center;
+  font-size: 32px;
+}
+.track-info-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.track-info-heading h2 {
+  font-size: 18px;
+  margin: 4px 0;
+}
+.track-info-heading p {
+  margin: 4px 0;
+  color: #bbc4cd;
+}
+.track-info-heading > div:last-child {
+  min-width: 0;
+}
+.track-info-heading h2,
+.track-info-heading p {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.track-info-popup small {
+  color: #91a3b1;
+  font-size: 10px;
+  letter-spacing: 1px;
+}
+.track-info-fields {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0;
+}
+.track-info-fields dt {
+  color: #91a3b1;
+  font-size: 10px;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.track-info-fields dd {
+  margin: 0;
+  font-size: 13px;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow-wrap: anywhere;
+}
+.track-info-wide {
+  grid-column: span 2;
+}
+.track-info-popup > small {
+  display: block;
+  margin-top: 12px;
+  text-align: right;
+}
+
+/* Shared top edge for artwork, labels, and the live BPM frame. */
+.track-metrics {
+  align-items: start;
+}
+.track-metrics .time-box {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  text-align: left;
+  color: inherit;
+  font: inherit;
+  min-height: 44px;
+}
+.track-metrics .time-box:hover {
+  background: #ffffff08;
+}
+.track-metrics .time-box:focus-visible {
+  outline: 2px solid #ffa600;
+  outline-offset: 3px;
+}
+.time-box > small,
+.standard-bpm-box > small,
+.pitch-box > small {
+  font-size: 14.3px;
+  line-height: 1;
+}
+
+.connection-settings {
+  margin-bottom: 18px;
+}
+.connection-settings .direct-connections {
+  padding: 0;
+  border-bottom: 0;
+}
+
+.rail-tags .sync-status {
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+}
+.sync-flashing {
+  animation: sync-phase-flash 0.65s steps(1, end) infinite;
+}
+@keyframes sync-phase-flash {
+  50% {
+    opacity: 0.25;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sync-flashing {
+    animation: none;
+    text-decoration: underline;
+  }
+}
+
+.test-tools {
+  margin-top: 18px;
+}
+.test-tool-link {
+  display: inline-block;
+  margin-top: 18px;
+  padding: 9px 15px;
+  text-decoration: none;
+}
+
+.cue-window-panel {
+  margin-bottom: 18px;
+}
+.cue-window-status {
+  position: absolute;
+  z-index: 10;
+  bottom: 2px;
+  left: 0;
+  right: 0;
+  min-height: 28px;
+  padding: 4px 18px;
+  background: #17333b;
+  color: #fff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+}
+.cue-window-status button {
+  padding: 3px 8px;
+}

@@ -1,0 +1,21 @@
+[package]
+name = "prolink-capture"
+description = "Read Pro DJ Link traffic out of pcap/pcapng captures, with TCP reassembly"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+readme = "README.md"
+repository.workspace = true
+documentation = "https://docs.rs/prolink-capture"
+homepage.workspace = true
+keywords.workspace = true
+categories.workspace = true
+
+[dependencies]
+etherparse.workspace = true
+pcap-file.workspace = true
+thiserror.workspace = true
+
+[lints]
+workspace = true

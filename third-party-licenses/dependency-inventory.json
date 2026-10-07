@@ -1,0 +1,1816 @@
+[
+  {
+    "ecosystem": "cargo",
+    "name": "ahash",
+    "version": "0.8.12",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/tkaitchuck/ahash",
+    "notice_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "array-init",
+    "version": "2.1.0",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/Manishearth/array-init/",
+    "notice_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "atomic-waker",
+    "version": "1.1.2",
+    "license": "Apache-2.0 OR MIT",
+    "repository": "https://github.com/smol-rs/atomic-waker",
+    "notice_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT",
+      "LICENSE-THIRD-PARTY"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "axum",
+    "version": "0.8.9",
+    "license": "MIT",
+    "repository": "https://github.com/tokio-rs/axum",
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "axum-core",
+    "version": "0.5.6",
+    "license": "MIT",
+    "repository": "https://github.com/tokio-rs/axum",
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "binrw",
+    "version": "0.15.2",
+    "license": "MIT",
+    "repository": "https://github.com/jam1garner/binrw",
+    "notice_files": [
+      "binrw-LICENSE-MIT.txt"
+    ],
+    "provenance": "Upstream v0.15.2 LICENSE (shared workspace license)."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "binrw_derive",
+    "version": "0.15.2",
+    "license": "MIT",
+    "repository": "https://github.com/jam1garner/binrw",
+    "notice_files": [
+      "binrw-LICENSE-MIT.txt"
+    ],
+    "provenance": "Upstream v0.15.2 LICENSE (shared workspace license)."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "bitflags",
+    "version": "2.13.2",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/bitflags/bitflags",
+    "notice_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "block-buffer",
+    "version": "0.10.4",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/RustCrypto/utils",
+    "notice_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "bytemuck",
+    "version": "1.25.2",
+    "license": "Zlib OR Apache-2.0 OR MIT",
+    "repository": "https://github.com/Lokathor/bytemuck",
+    "notice_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT",
+      "LICENSE-ZLIB"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "bytes",
+    "version": "1.12.1",
+    "license": "MIT",
+    "repository": "https://github.com/tokio-rs/bytes",
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "cc",
+    "version": "1.5.1",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/rust-lang/cc-rs",
+    "notice_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "cfg-if",
+    "version": "1.0.5",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/rust-lang/cfg-if",
+    "notice_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "cpufeatures",
+    "version": "0.2.17",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/RustCrypto/utils",
+    "notice_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "crypto-common",
+    "version": "0.1.7",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/RustCrypto/traits",
+    "notice_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "digest",
+    "version": "0.10.7",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/RustCrypto/traits",
+    "notice_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "either",
+    "version": "1.18.0",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/rayon-rs/either",
+    "notice_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "errno",
+    "version": "0.3.14",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/lambda-fairy/rust-errno",
+    "notice_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "fallible-iterator",
+    "version": "0.3.0",
+    "license": "MIT/Apache-2.0",
+    "repository": "https://github.com/sfackler/rust-fallible-iterator",
+    "notice_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "fallible-streaming-iterator",
+    "version": "0.1.9",
+    "license": "MIT/Apache-2.0",
+    "repository": "https://github.com/sfackler/fallible-streaming-iterator",
+    "notice_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "find-msvc-tools",
+    "version": "0.1.14",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/rust-lang/cc-rs",
+    "notice_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "form_urlencoded",
+    "version": "1.2.2",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/servo/rust-url",
+    "notice_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "futures-channel",
+    "version": "0.3.34",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/rust-lang/futures-rs",
+    "notice_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "futures-core",
+    "version": "0.3.34",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/rust-lang/futures-rs",
+    "notice_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "futures-sink",
+    "version": "0.3.34",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/rust-lang/futures-rs",
+    "notice_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "futures-task",
+    "version": "0.3.34",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/rust-lang/futures-rs",
+    "notice_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "futures-util",
+    "version": "0.3.34",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/rust-lang/futures-rs",
+    "notice_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "generic-array",
+    "version": "0.14.7",
+    "license": "MIT",
+    "repository": "https://github.com/fizyk20/generic-array.git",
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "hashbrown",
+    "version": "0.14.5",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/rust-lang/hashbrown",
+    "notice_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "hashlink",
+    "version": "0.9.1",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/kyren/hashlink",
+    "notice_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "http",
+    "version": "1.5.0",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/hyperium/http",
+    "notice_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "http-body",
+    "version": "1.1.0",
+    "license": "MIT",
+    "repository": "https://github.com/hyperium/http-body",
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "http-body-util",
+    "version": "0.1.5",
+    "license": "MIT",
+    "repository": "https://github.com/hyperium/http-body",
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "http-range-header",
+    "version": "0.4.2",
+    "license": "MIT",
+    "repository": "https://github.com/MarcusGrass/parse-range-headers",
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "httparse",
+    "version": "1.10.1",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/seanmonstar/httparse",
+    "notice_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "httpdate",
+    "version": "1.0.3",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/pyfisch/httpdate",
+    "notice_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "hyper",
+    "version": "1.11.1",
+    "license": "MIT",
+    "repository": "https://github.com/hyperium/hyper",
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "hyper-util",
+    "version": "0.1.21",
+    "license": "MIT",
+    "repository": "https://github.com/hyperium/hyper-util",
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "itoa",
+    "version": "1.0.18",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/dtolnay/itoa",
+    "notice_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "libc",
+    "version": "0.2.189",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/rust-lang/libc",
+    "notice_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "libsqlite3-sys",
+    "version": "0.30.1",
+    "license": "MIT",
+    "repository": "https://github.com/rusqlite/rusqlite",
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "log",
+    "version": "0.4.34",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/rust-lang/log",
+    "notice_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "matchit",
+    "version": "0.8.4",
+    "license": "MIT AND BSD-3-Clause",
+    "repository": "https://github.com/ibraheemdev/matchit",
+    "notice_files": [
+      "LICENSE",
+      "LICENSE.httprouter"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "memchr",
+    "version": "2.8.3",
+    "license": "Unlicense OR MIT",
+    "repository": "https://github.com/BurntSushi/memchr",
+    "notice_files": [
+      "COPYING",
+      "LICENSE-MIT",
+      "UNLICENSE"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "mime",
+    "version": "0.3.17",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/hyperium/mime",
+    "notice_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "mime_guess",
+    "version": "2.0.5",
+    "license": "MIT",
+    "repository": "https://github.com/abonander/mime_guess",
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "mio",
+    "version": "1.2.3",
+    "license": "MIT",
+    "repository": "https://github.com/tokio-rs/mio",
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "network-interface",
+    "version": "2.0.5",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/EstebanBorai/network-interface",
+    "notice_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "once_cell",
+    "version": "1.21.4",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/matklad/once_cell",
+    "notice_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "openssl-src",
+    "version": "300.6.1+3.6.3",
+    "license": "MIT/Apache-2.0",
+    "repository": "https://github.com/alexcrichton/openssl-src-rs",
+    "notice_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "openssl-sys",
+    "version": "0.9.117",
+    "license": "MIT",
+    "repository": "https://github.com/rust-openssl/rust-openssl",
+    "notice_files": [
+      "LICENSE-MIT"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "owo-colors",
+    "version": "4.4.0",
+    "license": "MIT",
+    "repository": "https://github.com/owo-colors/owo-colors",
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "percent-encoding",
+    "version": "2.3.2",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/servo/rust-url/",
+    "notice_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "pin-project-lite",
+    "version": "0.2.17",
+    "license": "Apache-2.0 OR MIT",
+    "repository": "https://github.com/taiki-e/pin-project-lite",
+    "notice_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "pkg-config",
+    "version": "0.3.34",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/rust-lang/pkg-config-rs",
+    "notice_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "proc-macro2",
+    "version": "1.0.107",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/dtolnay/proc-macro2",
+    "notice_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "prolink",
+    "version": "0.3.0",
+    "license": "GPL-3.0-only",
+    "repository": "https://github.com/usr-ein/prolink",
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "prolink-proto",
+    "version": "0.3.0",
+    "license": "GPL-3.0-only",
+    "repository": "https://github.com/usr-ein/prolink",
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "prolink-rekordbox",
+    "version": "0.3.0",
+    "license": "GPL-3.0-only",
+    "repository": "https://github.com/usr-ein/prolink",
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "quote",
+    "version": "1.0.47",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/dtolnay/quote",
+    "notice_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "rusqlite",
+    "version": "0.32.1",
+    "license": "MIT",
+    "repository": "https://github.com/rusqlite/rusqlite",
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "ryu",
+    "version": "1.0.23",
+    "license": "Apache-2.0 OR BSL-1.0",
+    "repository": "https://github.com/dtolnay/ryu",
+    "notice_files": [
+      "LICENSE-APACHE",
+      "LICENSE-BOOST"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "serde",
+    "version": "1.0.229",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/serde-rs/serde",
+    "notice_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "serde_core",
+    "version": "1.0.229",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/serde-rs/serde",
+    "notice_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "serde_derive",
+    "version": "1.0.229",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/serde-rs/serde",
+    "notice_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "serde_json",
+    "version": "1.0.151",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/serde-rs/json",
+    "notice_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "serde_path_to_error",
+    "version": "0.1.20",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/dtolnay/path-to-error",
+    "notice_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "serde_urlencoded",
+    "version": "0.7.1",
+    "license": "MIT/Apache-2.0",
+    "repository": "https://github.com/nox/serde_urlencoded",
+    "notice_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "sha2",
+    "version": "0.10.9",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/RustCrypto/hashes",
+    "notice_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "shlex",
+    "version": "2.0.1",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/comex/rust-shlex",
+    "notice_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "signal-hook-registry",
+    "version": "1.4.8",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/vorner/signal-hook",
+    "notice_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "slab",
+    "version": "0.4.12",
+    "license": "MIT",
+    "repository": "https://github.com/tokio-rs/slab",
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "smallvec",
+    "version": "1.16.2",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/servo/rust-smallvec",
+    "notice_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "socket2",
+    "version": "0.6.5",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/rust-lang/socket2",
+    "notice_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "syn",
+    "version": "2.0.119",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/dtolnay/syn",
+    "notice_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "syn",
+    "version": "3.0.6",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/dtolnay/syn",
+    "notice_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "sync_wrapper",
+    "version": "1.0.2",
+    "license": "Apache-2.0",
+    "repository": "https://github.com/Actyx/sync_wrapper",
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "thiserror",
+    "version": "2.0.21",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/dtolnay/thiserror",
+    "notice_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "thiserror-impl",
+    "version": "2.0.21",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/dtolnay/thiserror",
+    "notice_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "tinyvec",
+    "version": "1.13.3",
+    "license": "Zlib OR Apache-2.0 OR MIT",
+    "repository": "https://github.com/Lokathor/tinyvec",
+    "notice_files": [
+      "LICENSE-APACHE.md",
+      "LICENSE-MIT.md",
+      "LICENSE-ZLIB.md"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "tokio",
+    "version": "1.53.1",
+    "license": "MIT",
+    "repository": "https://github.com/tokio-rs/tokio",
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "tokio-macros",
+    "version": "2.7.2",
+    "license": "MIT",
+    "repository": "https://github.com/tokio-rs/tokio",
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "tokio-util",
+    "version": "0.7.19",
+    "license": "MIT",
+    "repository": "https://github.com/tokio-rs/tokio",
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "tower",
+    "version": "0.5.3",
+    "license": "MIT",
+    "repository": "https://github.com/tower-rs/tower",
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "tower-http",
+    "version": "0.6.11",
+    "license": "MIT",
+    "repository": "https://github.com/tower-rs/tower-http",
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "tower-layer",
+    "version": "0.3.3",
+    "license": "MIT",
+    "repository": "https://github.com/tower-rs/tower",
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "tower-service",
+    "version": "0.3.3",
+    "license": "MIT",
+    "repository": "https://github.com/tower-rs/tower",
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "tracing",
+    "version": "0.1.44",
+    "license": "MIT",
+    "repository": "https://github.com/tokio-rs/tracing",
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "tracing-attributes",
+    "version": "0.1.31",
+    "license": "MIT",
+    "repository": "https://github.com/tokio-rs/tracing",
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "tracing-core",
+    "version": "0.1.36",
+    "license": "MIT",
+    "repository": "https://github.com/tokio-rs/tracing",
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "typenum",
+    "version": "1.20.1",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/paholg/typenum",
+    "notice_files": [
+      "LICENSE",
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "unicase",
+    "version": "2.9.0",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/seanmonstar/unicase",
+    "notice_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "unicode-ident",
+    "version": "1.0.26",
+    "license": "(MIT OR Apache-2.0) AND Unicode-3.0",
+    "repository": "https://github.com/dtolnay/unicode-ident",
+    "notice_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT",
+      "LICENSE-UNICODE"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "unicode-normalization",
+    "version": "0.1.25",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/unicode-rs/unicode-normalization",
+    "notice_files": [
+      "COPYRIGHT",
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "vcpkg",
+    "version": "0.2.15",
+    "license": "MIT/Apache-2.0",
+    "repository": "https://github.com/mcgoo/vcpkg-rs",
+    "notice_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "version_check",
+    "version": "0.9.5",
+    "license": "MIT/Apache-2.0",
+    "repository": "https://github.com/SergioBenitez/version_check",
+    "notice_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "wasi",
+    "version": "0.11.1+wasi-snapshot-preview1",
+    "license": "Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT",
+    "repository": "https://github.com/bytecodealliance/wasi",
+    "notice_files": [
+      "LICENSE-APACHE",
+      "LICENSE-Apache-2.0_WITH_LLVM-exception",
+      "LICENSE-MIT"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "winapi",
+    "version": "0.3.9",
+    "license": "MIT/Apache-2.0",
+    "repository": "https://github.com/retep998/winapi-rs",
+    "notice_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "winapi-i686-pc-windows-gnu",
+    "version": "0.4.0",
+    "license": "MIT/Apache-2.0",
+    "repository": "https://github.com/retep998/winapi-rs",
+    "notice_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "provenance": "winapi workspace licenses; Windows target support crate."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "winapi-x86_64-pc-windows-gnu",
+    "version": "0.4.0",
+    "license": "MIT/Apache-2.0",
+    "repository": "https://github.com/retep998/winapi-rs",
+    "notice_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "provenance": "winapi workspace licenses; Windows target support crate."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "windows-link",
+    "version": "0.2.1",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/microsoft/windows-rs",
+    "notice_files": [
+      "license-apache-2.0",
+      "license-mit"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "windows-sys",
+    "version": "0.61.2",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/microsoft/windows-rs",
+    "notice_files": [
+      "license-apache-2.0",
+      "license-mit"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "zerocopy",
+    "version": "0.8.60",
+    "license": "BSD-2-Clause OR Apache-2.0 OR MIT",
+    "repository": "https://github.com/google/zerocopy",
+    "notice_files": [
+      "LICENSE-APACHE",
+      "LICENSE-BSD",
+      "LICENSE-MIT"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "zerocopy-derive",
+    "version": "0.8.60",
+    "license": "BSD-2-Clause OR Apache-2.0 OR MIT",
+    "repository": "https://github.com/google/zerocopy",
+    "notice_files": [
+      "LICENSE-APACHE",
+      "LICENSE-BSD",
+      "LICENSE-MIT"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "zmij",
+    "version": "1.0.23",
+    "license": "MIT",
+    "repository": "https://github.com/dtolnay/zmij",
+    "notice_files": [
+      "LICENSE-MIT"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "npm",
+    "name": "@babel/runtime",
+    "version": "7.29.7",
+    "license": "MIT",
+    "repository": "https://github.com/babel/babel.git",
+    "development_only": false,
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the installed, lockfile-pinned npm package."
+  },
+  {
+    "ecosystem": "npm",
+    "name": "@esbuild/darwin-arm64",
+    "version": "0.28.2",
+    "license": "MIT",
+    "repository": "git+https://github.com/evanw/esbuild.git",
+    "development_only": true,
+    "notice_files": [
+      "LICENSE.md"
+    ],
+    "provenance": "esbuild workspace license for the optional platform executable."
+  },
+  {
+    "ecosystem": "npm",
+    "name": "@rollup/rollup-darwin-arm64",
+    "version": "4.63.5",
+    "license": "MIT",
+    "repository": "git+https://github.com/rollup/rollup.git",
+    "development_only": true,
+    "notice_files": [
+      "LICENSE.md"
+    ],
+    "provenance": "Rollup workspace license for the optional platform executable."
+  },
+  {
+    "ecosystem": "npm",
+    "name": "@types/estree",
+    "version": "1.0.9",
+    "license": "MIT",
+    "repository": "https://github.com/DefinitelyTyped/DefinitelyTyped.git",
+    "development_only": true,
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the installed, lockfile-pinned npm package."
+  },
+  {
+    "ecosystem": "npm",
+    "name": "@types/node",
+    "version": "24.19.0",
+    "license": "MIT",
+    "repository": "https://github.com/DefinitelyTyped/DefinitelyTyped.git",
+    "development_only": true,
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the installed, lockfile-pinned npm package."
+  },
+  {
+    "ecosystem": "npm",
+    "name": "@types/pako",
+    "version": "2.0.4",
+    "license": "MIT",
+    "repository": "https://github.com/DefinitelyTyped/DefinitelyTyped.git",
+    "development_only": false,
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the installed, lockfile-pinned npm package."
+  },
+  {
+    "ecosystem": "npm",
+    "name": "@types/raf",
+    "version": "3.4.3",
+    "license": "MIT",
+    "repository": "https://github.com/DefinitelyTyped/DefinitelyTyped.git",
+    "development_only": false,
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the installed, lockfile-pinned npm package."
+  },
+  {
+    "ecosystem": "npm",
+    "name": "@types/react",
+    "version": "19.3.0",
+    "license": "MIT",
+    "repository": "https://github.com/DefinitelyTyped/DefinitelyTyped.git",
+    "development_only": true,
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the installed, lockfile-pinned npm package."
+  },
+  {
+    "ecosystem": "npm",
+    "name": "@types/react-dom",
+    "version": "19.3.0",
+    "license": "MIT",
+    "repository": "https://github.com/DefinitelyTyped/DefinitelyTyped.git",
+    "development_only": true,
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the installed, lockfile-pinned npm package."
+  },
+  {
+    "ecosystem": "npm",
+    "name": "@types/trusted-types",
+    "version": "2.0.7",
+    "license": "MIT",
+    "repository": "https://github.com/DefinitelyTyped/DefinitelyTyped.git",
+    "development_only": false,
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the installed, lockfile-pinned npm package."
+  },
+  {
+    "ecosystem": "npm",
+    "name": "base64-arraybuffer",
+    "version": "1.0.2",
+    "license": "MIT",
+    "repository": "https://github.com/niklasvh/base64-arraybuffer",
+    "development_only": false,
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the installed, lockfile-pinned npm package."
+  },
+  {
+    "ecosystem": "npm",
+    "name": "canvg",
+    "version": "3.0.11",
+    "license": "MIT",
+    "repository": "https://github.com/canvg/canvg",
+    "development_only": false,
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the installed, lockfile-pinned npm package."
+  },
+  {
+    "ecosystem": "npm",
+    "name": "core-js",
+    "version": "3.50.0",
+    "license": "MIT",
+    "repository": "git+https://github.com/zloirock/core-js.git",
+    "development_only": false,
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the installed, lockfile-pinned npm package."
+  },
+  {
+    "ecosystem": "npm",
+    "name": "css-line-break",
+    "version": "2.1.0",
+    "license": "MIT",
+    "repository": "git+ssh://git@github.com/niklasvh/css-line-break.git",
+    "development_only": false,
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the installed, lockfile-pinned npm package."
+  },
+  {
+    "ecosystem": "npm",
+    "name": "csstype",
+    "version": "3.2.3",
+    "license": "MIT",
+    "repository": "https://github.com/frenic/csstype",
+    "development_only": true,
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the installed, lockfile-pinned npm package."
+  },
+  {
+    "ecosystem": "npm",
+    "name": "dompurify",
+    "version": "3.4.16",
+    "license": "(MPL-2.0 OR Apache-2.0)",
+    "repository": "git://github.com/cure53/DOMPurify.git",
+    "development_only": false,
+    "notice_files": [
+      "LICENSE",
+      "LICENSE-MPL"
+    ],
+    "provenance": "Files from the installed, lockfile-pinned npm package."
+  },
+  {
+    "ecosystem": "npm",
+    "name": "esbuild",
+    "version": "0.28.2",
+    "license": "MIT",
+    "repository": "git+https://github.com/evanw/esbuild.git",
+    "development_only": true,
+    "notice_files": [
+      "LICENSE.md"
+    ],
+    "provenance": "Files from the installed, lockfile-pinned npm package."
+  },
+  {
+    "ecosystem": "npm",
+    "name": "fast-png",
+    "version": "6.4.0",
+    "license": "MIT",
+    "repository": "git+https://github.com/image-js/fast-png.git",
+    "development_only": false,
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the installed, lockfile-pinned npm package."
+  },
+  {
+    "ecosystem": "npm",
+    "name": "fdir",
+    "version": "6.5.0",
+    "license": "MIT",
+    "repository": "git+https://github.com/thecodrr/fdir.git",
+    "development_only": true,
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the installed, lockfile-pinned npm package."
+  },
+  {
+    "ecosystem": "npm",
+    "name": "fflate",
+    "version": "0.8.3",
+    "license": "MIT",
+    "repository": "https://github.com/101arrowz/fflate",
+    "development_only": false,
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the installed, lockfile-pinned npm package."
+  },
+  {
+    "ecosystem": "npm",
+    "name": "fsevents",
+    "version": "2.3.3",
+    "license": "MIT",
+    "repository": "https://github.com/fsevents/fsevents.git",
+    "development_only": true,
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the installed, lockfile-pinned npm package."
+  },
+  {
+    "ecosystem": "npm",
+    "name": "html2canvas",
+    "version": "1.4.1",
+    "license": "MIT",
+    "repository": "git@github.com:niklasvh/html2canvas.git",
+    "development_only": false,
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the installed, lockfile-pinned npm package."
+  },
+  {
+    "ecosystem": "npm",
+    "name": "iobuffer",
+    "version": "5.4.0",
+    "license": "MIT",
+    "repository": "git+https://github.com/image-js/iobuffer.git",
+    "development_only": false,
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the installed, lockfile-pinned npm package."
+  },
+  {
+    "ecosystem": "npm",
+    "name": "jspdf",
+    "version": "4.2.1",
+    "license": "MIT",
+    "repository": "https://github.com/parallax/jsPDF.git",
+    "development_only": false,
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the installed, lockfile-pinned npm package."
+  },
+  {
+    "ecosystem": "npm",
+    "name": "nanoid",
+    "version": "3.3.19",
+    "license": "MIT",
+    "repository": "ai/nanoid",
+    "development_only": true,
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the installed, lockfile-pinned npm package."
+  },
+  {
+    "ecosystem": "npm",
+    "name": "pako",
+    "version": "2.2.0",
+    "license": "(MIT AND Zlib)",
+    "repository": "nodeca/pako",
+    "development_only": false,
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the installed, lockfile-pinned npm package."
+  },
+  {
+    "ecosystem": "npm",
+    "name": "performance-now",
+    "version": "2.1.0",
+    "license": "MIT",
+    "repository": "git://github.com/braveg1rl/performance-now.git",
+    "development_only": false,
+    "notice_files": [
+      "license.txt"
+    ],
+    "provenance": "Files from the installed, lockfile-pinned npm package."
+  },
+  {
+    "ecosystem": "npm",
+    "name": "picocolors",
+    "version": "1.1.1",
+    "license": "ISC",
+    "repository": "alexeyraspopov/picocolors",
+    "development_only": true,
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the installed, lockfile-pinned npm package."
+  },
+  {
+    "ecosystem": "npm",
+    "name": "picomatch",
+    "version": "4.0.7",
+    "license": "MIT",
+    "repository": "micromatch/picomatch",
+    "development_only": true,
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the installed, lockfile-pinned npm package."
+  },
+  {
+    "ecosystem": "npm",
+    "name": "postcss",
+    "version": "8.5.28",
+    "license": "MIT",
+    "repository": "postcss/postcss",
+    "development_only": true,
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the installed, lockfile-pinned npm package."
+  },
+  {
+    "ecosystem": "npm",
+    "name": "prettier",
+    "version": "3.6.2",
+    "license": "MIT",
+    "repository": "prettier/prettier",
+    "development_only": true,
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the installed, lockfile-pinned npm package."
+  },
+  {
+    "ecosystem": "npm",
+    "name": "raf",
+    "version": "3.4.1",
+    "license": "MIT",
+    "repository": "git://github.com/chrisdickinson/raf.git",
+    "development_only": false,
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the installed, lockfile-pinned npm package."
+  },
+  {
+    "ecosystem": "npm",
+    "name": "react",
+    "version": "19.3.0",
+    "license": "MIT",
+    "repository": "https://github.com/react/react.git",
+    "development_only": false,
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the installed, lockfile-pinned npm package."
+  },
+  {
+    "ecosystem": "npm",
+    "name": "react-dom",
+    "version": "19.3.0",
+    "license": "MIT",
+    "repository": "https://github.com/react/react.git",
+    "development_only": false,
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the installed, lockfile-pinned npm package."
+  },
+  {
+    "ecosystem": "npm",
+    "name": "regenerator-runtime",
+    "version": "0.13.11",
+    "license": "MIT",
+    "repository": "https://github.com/facebook/regenerator/tree/main/packages/runtime",
+    "development_only": false,
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the installed, lockfile-pinned npm package."
+  },
+  {
+    "ecosystem": "npm",
+    "name": "rgbcolor",
+    "version": "1.0.1",
+    "license": "MIT OR SEE LICENSE IN FEEL-FREE.md",
+    "repository": "https://github.com/yetzt/node-rgbcolor.git",
+    "development_only": false,
+    "notice_files": [
+      "LICENSE.md"
+    ],
+    "provenance": "Files from the installed, lockfile-pinned npm package."
+  },
+  {
+    "ecosystem": "npm",
+    "name": "rollup",
+    "version": "4.63.5",
+    "license": "MIT",
+    "repository": "git+https://github.com/rollup/rollup.git",
+    "development_only": true,
+    "notice_files": [
+      "LICENSE.md"
+    ],
+    "provenance": "Files from the installed, lockfile-pinned npm package."
+  },
+  {
+    "ecosystem": "npm",
+    "name": "scheduler",
+    "version": "0.28.0",
+    "license": "MIT",
+    "repository": "https://github.com/react/react.git",
+    "development_only": false,
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the installed, lockfile-pinned npm package."
+  },
+  {
+    "ecosystem": "npm",
+    "name": "source-map-js",
+    "version": "1.2.1",
+    "license": "BSD-3-Clause",
+    "repository": "7rulnik/source-map-js",
+    "development_only": true,
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the installed, lockfile-pinned npm package."
+  },
+  {
+    "ecosystem": "npm",
+    "name": "stackblur-canvas",
+    "version": "2.7.0",
+    "license": "MIT",
+    "repository": "https://github.com/flozz/StackBlur.git",
+    "development_only": false,
+    "notice_files": [
+      "LICENSE-MIT.txt"
+    ],
+    "provenance": "Files from the installed, lockfile-pinned npm package."
+  },
+  {
+    "ecosystem": "npm",
+    "name": "svg-pathdata",
+    "version": "6.0.3",
+    "license": "MIT",
+    "repository": "https://github.com/nfroidure/svg-pathdata.git",
+    "development_only": false,
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the installed, lockfile-pinned npm package."
+  },
+  {
+    "ecosystem": "npm",
+    "name": "text-segmentation",
+    "version": "1.0.3",
+    "license": "MIT",
+    "repository": "git+ssh://git@github.com/niklasvh/text-segmentation.git",
+    "development_only": false,
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the installed, lockfile-pinned npm package."
+  },
+  {
+    "ecosystem": "npm",
+    "name": "tinyglobby",
+    "version": "0.2.17",
+    "license": "MIT",
+    "repository": "git+https://github.com/SuperchupuDev/tinyglobby.git",
+    "development_only": true,
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the installed, lockfile-pinned npm package."
+  },
+  {
+    "ecosystem": "npm",
+    "name": "tsx",
+    "version": "4.23.15",
+    "license": "MIT",
+    "repository": "privatenumber/tsx",
+    "development_only": true,
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the installed, lockfile-pinned npm package."
+  },
+  {
+    "ecosystem": "npm",
+    "name": "typescript",
+    "version": "5.9.3",
+    "license": "Apache-2.0",
+    "repository": "https://github.com/microsoft/TypeScript.git",
+    "development_only": true,
+    "notice_files": [
+      "LICENSE.txt"
+    ],
+    "provenance": "Files from the installed, lockfile-pinned npm package."
+  },
+  {
+    "ecosystem": "npm",
+    "name": "undici-types",
+    "version": "7.24.6",
+    "license": "MIT",
+    "repository": "git+https://github.com/nodejs/undici.git",
+    "development_only": true,
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the installed, lockfile-pinned npm package."
+  },
+  {
+    "ecosystem": "npm",
+    "name": "utrie",
+    "version": "1.0.2",
+    "license": "MIT",
+    "repository": "git+ssh://git@github.com/niklasvh/utrie.git",
+    "development_only": false,
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the installed, lockfile-pinned npm package."
+  },
+  {
+    "ecosystem": "npm",
+    "name": "vite",
+    "version": "7.3.6",
+    "license": "MIT",
+    "repository": "git+https://github.com/vitejs/vite.git",
+    "development_only": true,
+    "notice_files": [
+      "LICENSE.md"
+    ],
+    "provenance": "Files from the installed, lockfile-pinned npm package."
+  }
+]

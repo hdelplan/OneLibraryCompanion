@@ -1,0 +1,79 @@
+name: Distribution builds
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+permissions:
+  contents: read
+jobs:
+  verify:
+    uses: ./.github/workflows/check.yml
+  mac:
+    needs: verify
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-15
+            arch: arm64
+          - runner: macos-15-intel
+            arch: x86_64
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: source/ui/package-lock.json
+      - run: rustup toolchain install 1.98.1 --profile minimal
+      - run: rustup override set 1.98.1
+      - run: npm --prefix source/ui ci
+      - run: ./scripts/build-macos.sh ${{ matrix.arch }}
+      - run: python3 scripts/smoke-host.py builds/macos-${{ matrix.arch }}/OneLibraryCompanion.app/Contents/Resources/olc-host --ui builds/macos-${{ matrix.arch }}/OneLibraryCompanion.app/Contents/Resources/dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos-${{ matrix.arch }}
+          path: builds/releases/*
+          if-no-files-found: error
+  raspberry-pi:
+    needs: verify
+    runs-on: ubuntu-24.04-arm
+    container: debian:bookworm
+    steps:
+      - name: Build dependencies
+        run: apt-get update && apt-get install -y ca-certificates curl git build-essential pkg-config perl python3 dpkg-dev
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Rust
+        shell: bash
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs -o /tmp/rustup.sh
+          sh /tmp/rustup.sh -y --profile minimal --default-toolchain 1.98.1
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+      - run: npm --prefix source/ui ci
+      - run: ./scripts/build-linux.sh
+      - run: python3 scripts/smoke-host.py target/release/pioneer-companion-host
+      - uses: actions/upload-artifact@v4
+        with:
+          name: raspberry-pi-arm64
+          path: builds/releases/*
+          if-no-files-found: error
+  draft-release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [mac, raspberry-pi]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+      - name: Draft prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" artifacts/* --draft --prerelease --verify-tag --title "OneLibraryCompanion $GITHUB_REF_NAME" --notes-file docs/release-notes.md

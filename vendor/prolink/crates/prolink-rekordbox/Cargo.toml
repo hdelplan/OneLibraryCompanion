@@ -1,0 +1,46 @@
+[package]
+name = "prolink-rekordbox"
+description = "Readers for the rekordbox device export: export.pdb, ANLZ analysis files and device settings"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+readme = "README.md"
+repository.workspace = true
+documentation = "https://docs.rs/prolink-rekordbox"
+homepage.workspace = true
+keywords.workspace = true
+categories.workspace = true
+
+# `settings-detail` is off by default, so docs.rs would otherwise not show the
+# named settings types at all. Build the docs with it on, and mark the items it
+# gates so the page says which feature they need.
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
+
+[features]
+default = []
+# Turn the 32 opaque bytes of `PIONEER/MYSETTING.DAT` into named options
+# (jog ring brightness, auto cue level, ...). Off by default: `rekordcrate`
+# pins `binrw` 0.14 where the rest of this workspace is on 0.15, and nothing in
+# the Pro DJ Link protocol needs the settings interpreted -- a player asks for
+# the bytes and formats them itself. See `work_log/009`.
+settings-detail = ["dep:rekordcrate", "dep:binrw-014"]
+
+[dependencies]
+binrw.workspace = true
+rekordcrate = { workspace = true, optional = true }
+thiserror.workspace = true
+
+# `rekordcrate` derives its readers from binrw 0.14 and re-exports neither the
+# trait nor a from-bytes helper, so calling them needs that version's `BinRead`
+# in scope beside the workspace's 0.15. Both are already in the lock file; this
+# only names the older one. Compiled only with `settings-detail`.
+[dependencies.binrw-014]
+package = "binrw"
+version = "0.14"
+optional = true
+
+[lints]
+workspace = true

@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Direct IP test</title>
+<style>body{background:#101419;color:#ecf1f7;font:18px system-ui;padding:24px;max-width:760px;margin:auto}input,button,select{font:inherit;padding:12px;border-radius:8px;margin:8px 0}input{width:90%}button{background:#82c8ff;color:#101419;border:0}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#202833;padding:16px;border-radius:8px}p{line-height:1.5}label{display:block}small{color:#b5c3d5}</style>
+<h1>Direct CDJ IP test</h1>
+<p>Connect the iPad to the same network as the CDJ. Insert a rekordbox-exported USB into the player and enter its IPv4 address from its network settings.</p>
+<p>The USB test reads the library. The status experiment sends the registration sequence for observer 15 directly to this CDJ for 20 seconds. Close other DJ observer apps before testing. Neither test sends load or playback commands.</p>
+<form id="form"><label>CDJ IPv4 address <input id="ip" placeholder="169.254.12.34" inputmode="decimal" required autocomplete="off"></label>
+<label>Read size <select id="size"><option value="small">1280 bytes — first test</option><option value="large">8192 bytes — fragmentation test</option></select></label>
+<button id="run">Test USB library access</button></form>
+<button id="status" type="button">Test direct playback status v2 (20 seconds)</button>
+<p>During the status test, use Play/Pause on the physical CDJ to check whether changes are reported. Results appear after 20 seconds.</p>
+<small>Allow Local Network access if prompted. Then run the test again. Keep this app in the foreground; each test is limited to 35 seconds and a 64 MiB database.</small>
+<pre id="result" role="status" aria-live="polite">Ready.</pre>
+<p>If there is no reply, check the IP, Ethernet address, USB and Local Network permission. Try disabling Wi-Fi temporarily to remove routing ambiguity. A timeout does not identify the cause and does not prove an entitlement restriction.</p>
+<script>
+const form=document.querySelector('#form'), button=document.querySelector('#run'), output=document.querySelector('#result');
+form.addEventListener('submit',async event=>{event.preventDefault();button.disabled=true;document.querySelector('#status').disabled=true;output.textContent='Testing… Please keep this screen open (up to 35 seconds).';try{
+ const response=await fetch('/api/diagnostics/direct-ip',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ip:document.querySelector('#ip').value,large_reads:document.querySelector('#size').value==='large'}),signal:AbortSignal.timeout(40000)});
+ if(!response.ok)throw new Error(await response.text());const data=await response.json();output.textContent=(data.ok?'PASSED':'INCOMPLETE')+' — '+(data.elapsedMs/1000).toFixed(1)+' seconds\n\n'+data.steps.join('\n')+(data.error?'\n\n'+data.error:'');
+}catch(error){output.textContent='Test unavailable: '+error.message;}finally{button.disabled=false;document.querySelector('#status').disabled=false;}});
+const statusButton=document.querySelector('#status');
+const savedIp=localStorage.getItem('pc.manual-ip');if(savedIp)document.querySelector('#ip').value=savedIp;
+statusButton.addEventListener('click',async()=>{
+ button.disabled=true;statusButton.disabled=true;output.textContent='Listening for 20 seconds… Use Play/Pause on the CDJ now. Keep this screen open.';
+ try {const response=await fetch('/api/diagnostics/direct-status',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ip:document.querySelector('#ip').value}),signal:AbortSignal.timeout(25000)});
+ if(!response.ok)throw new Error(await response.text());const data=await response.json();output.textContent=(data.ok?'STATUS RECEIVED':'NO SUSTAINED STATUS')+'\n'+JSON.stringify(data,null,2);
+ }catch(error){output.textContent='Status test unavailable: '+error.message;}finally{button.disabled=false;statusButton.disabled=false;}
+});
+</script></html>

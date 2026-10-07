@@ -1,0 +1,21 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Local USB playback test</title>
+<style>body{background:#101820;color:#e6edf3;font:16px system-ui;margin:24px;max-width:950px}a{color:#86cfff}button,input{font:inherit;padding:12px;margin:8px 10px 8px 0}button{background:#244b63;color:white;border:1px solid #70a7c8;border-radius:5px}pre{white-space:pre-wrap;background:#1b2934;padding:16px;font-size:13px}label{display:block;margin:12px 0}#error{color:#ff9b9b}button:disabled{opacity:.4}</style>
+<a href="/#test">Back to TEST</a><h1>Local USB playback test</h1>
+<p>Serve one original WAV from the USB. This tests storage and network playback; it does not read OneLibrary yet. No transcoding or remote load/play commands.</p>
+<ol><li>Keep OLC in the foreground. Disconnect live mode in MENU.</li><li>Choose a stereo PCM WAV (44.1/48 kHz, 16/24-bit) from the USB under Files → Browse. The file stays on the USB.</li><li>Use an isolated test network with one physical CDJ. Confirm the virtual source number is unused.</li><li>Start serving, then on the CDJ press LINK, select <b>OLC USB TEST</b>, open TRACK and load the selected file. Start playback manually.</li><li>Check audible playback for at least two minutes, then seek and loop. Stop playback before stopping this test or leaving the app.</li></ol>
+<button id="choose">Choose WAV from USB</button>
+<label>CDJ IP <input id="ip" value="10.80.1.200" inputmode="decimal"></label>
+<label>Unused virtual source number <input id="number" type="number" min="1" max="4" value="4"></label>
+<label><input id="isolated" type="checkbox"> Only one physical CDJ is on this test network, and the source number above is unused.</label>
+<button id="start">Start serving</button><button id="stop">Stop serving</button>
+<p id="error" role="alert"></p><pre id="report">Loading…</pre>
+<script>
+const el=id=>document.getElementById(id);
+let polling=false;
+async function refresh(){if(polling)return;polling=true;try{const r=await fetch('/api/diagnostics/local-usb');if(!r.ok)throw Error(await r.text());const s=await r.json();el('report').textContent=JSON.stringify(s,null,2);el('start').disabled=!!s.active;el('choose').disabled=!!s.active;el('stop').disabled=!s.active;}catch(e){el('error').textContent=e.message}finally{polling=false}}
+async function command(body){el('error').textContent='';try{const r=await fetch('/api/diagnostics/local-usb',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});if(!r.ok)throw Error(await r.text());await refresh()}catch(e){el('error').textContent=e.message}}
+el('choose').onclick=()=>{el('error').textContent='';if(window.webkit?.messageHandlers?.usbProbe){window.webkit.messageHandlers.usbProbe.postMessage('choose')}else{el('error').textContent='Native file selection is available in the iPad app. On desktop, use the local_usb_probe example with an explicitly selected path.'}};
+el('start').onclick=()=>command({ip:el('ip').value,number:Number(el('number').value),isolated:el('isolated').checked});
+el('stop').onclick=()=>command({stop:true});
+refresh();setInterval(refresh,1000);
+</script></html>

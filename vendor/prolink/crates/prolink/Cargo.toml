@@ -1,0 +1,33 @@
+[package]
+name = "prolink"
+description = "Pioneer Pro DJ Link: browse and play from CDJs on the network, and serve a rekordbox medium to them"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+readme = "README.md"
+repository.workspace = true
+documentation = "https://docs.rs/prolink"
+homepage.workspace = true
+keywords.workspace = true
+categories.workspace = true
+
+[dependencies]
+prolink-proto.workspace = true
+prolink-rekordbox.workspace = true
+
+network-interface.workspace = true
+sha2.workspace = true
+socket2 = "0.6"
+thiserror.workspace = true
+tokio = { workspace = true, features = ["rt", "rt-multi-thread", "net", "time", "sync", "macros", "io-util", "fs"] }
+tracing.workspace = true
+unicode-normalization.workspace = true
+
+[lints]
+workspace = true
+
+[dev-dependencies]
+# Replaying real captured traffic through the servers. A dev-dependency only:
+# nothing in this crate reads a capture at run time.
+prolink-capture.workspace = true

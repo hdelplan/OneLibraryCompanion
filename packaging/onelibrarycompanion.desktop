@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=OneLibraryCompanion
+Comment=CDJ library and performance companion
+Exec=olc
+Icon=onelibrarycompanion
+Terminal=false
+Categories=AudioVideo;Audio;
+StartupWMClass=org.onelibrarycompanion.desktop
