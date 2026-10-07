@@ -125,7 +125,7 @@ function App() {
       <div className="screen" style={{ transform: `scale(${scale})` }}>
         <nav className={page === "library" ? "browse-nav" : undefined}>
           <span className="brand" title="OneLibraryCompanion">
-            OLC
+            OneLibraryCompanion
           </span>
           <span className="connection">
             <i className="status-dot" />{" "}
