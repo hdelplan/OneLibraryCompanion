@@ -6,6 +6,8 @@ When a player is paused and is not the tempo master, OLC cannot reliably couple 
 
 Do not rely on OLC’s waveform for precise cue positioning in this state; use the player’s own display and audio. This limitation concerns visual tracking, not the player’s ability to cue or play audio. Smoother tracking during normal playback or on the master player does not imply the same precision on a paused non-master player. Changing the jog-smoothing setting cannot restore position data that is unavailable.
 
+**Practical workaround:** temporarily make the paused player the tempo master while cueing. This can improve waveform coupling during fine jog movements. Make the change on the physical CDJ, then restore the intended master when cueing is complete. The paused non-master limitation still applies after the player relinquishes master; OLC does not switch master automatically.
+
 ## Unresolved track-loading issues
 
 - **First local USB load:** the initial request may not load the track because the CDJ has not discovered OLC’s local source. Pressing **LINK**, waiting for **OLC LOCAL USB** to appear and then making a new explicit request may help. Check the player’s selection before retrying an uncertain request. This is a workaround, not a resolved issue.

@@ -8,7 +8,7 @@ Use CDJ STATUS while performing to compare the two decks' timing and track struc
 
 Use the zoom controls or a two-finger pinch to change the visible time window, tap the time display to switch elapsed/remaining time, and open the information button for fuller track metadata. OLC follows the players; transport and cue controls remain on the CDJs. Waveforms and phrase sections require the corresponding exported analysis.
 
-**Current limitation:** a paused player that is not the tempo master does not provide reliable fine waveform tracking for jog movements or scratching. Use the CDJ’s own display and audio for precise cue positioning; see [waveform coupling limits](compatibility.md#main-limitation-paused-non-master-waveform-coupling).
+**Current limitation:** a paused player that is not the tempo master does not provide reliable fine waveform tracking for jog movements or scratching. Use the CDJ’s own display and audio for precise cue positioning. As a practical workaround, temporarily make that player the tempo master while cueing for better waveform tracking, then restore the intended master when finished. See [waveform coupling limits](compatibility.md#main-limitation-paused-non-master-waveform-coupling).
 
 ![CDJ Status](screenshots/cdj-status.png)
 
