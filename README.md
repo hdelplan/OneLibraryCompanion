@@ -33,7 +33,7 @@ Use manual-IP connections in MENU, or select a CDJ-facing interface and restart.
 
 ## Screenshots
 
-[View all application screens](docs/screenshots.md).
+[View all application screens](docs/screenshots.md), illustrated with simulated active-session data.
 
 ![OLC Browse](docs/screenshots/browse.png)
 

@@ -1,28 +1,28 @@
 # Application screenshots
 
-Captured from the OLC production interface at 1280 × 800. These images show a fresh, disconnected session with no library or saved sets. The Menu is scrollable and is shown in several views. Network choices depend on the host.
+Captured from the OLC production interface at 1280 × 800. These images simulate active use with fictional track names, generated waveforms, a populated USB library and recorded sessions. They illustrate the production interface; they are not evidence of a live hardware connection. The Menu is scrollable and is shown in several views. Network choices depend on the host.
 
 ## CDJ Status
 
-Two-deck status, track information and waveform areas, waiting for a connection.
+Two playing decks with three-band waveforms, phrase sections, timing and track information.
 
 ![CDJ Status](screenshots/cdj-status.png)
 
 ## Browse
 
-Library navigation, search and filters before a USB library is connected.
+A populated 16-track USB library with playlists, ratings, musical keys and tempo.
 
 ![Browse](screenshots/browse.png)
 
 ## Set History
 
-The initial session screen before recording or importing a set.
+An active 12-track recording with session details and a saved past set.
 
 ![Set History](screenshots/set-history.png)
 
 ## Menu — connections
 
-CDJ connections, desktop service settings and offline preview.
+Configured Ethernet discovery, a LAN address and offline preview controls.
 
 ![Menu — connections](screenshots/menu-connections.png)
 
@@ -34,7 +34,7 @@ Waveform, track information and library filter preferences.
 
 ## Menu — additional library filters
 
-The lower part of the scrollable library filter list.
+Library filter ordering and an automatically discovered My Tag category.
 
 ![Menu — additional library filters](screenshots/menu-library-filters.png)
 
