@@ -20,7 +20,7 @@ Use **CDJ STATUS / BROWSE** to switch between the two screens. Its text uses the
 
 Compare both decks at a glance and see how the tracks fit together. Zoom into the waveforms for the next transition, follow approaching cues and phrases, and switch between elapsed and remaining time. Open track information for artwork and fuller library details.
 
-![CDJ status with two active decks and three-band waveforms](docs/screenshots/cdj-status.png)
+![CDJ status with two active decks and three-band waveforms](docs/screenshots/cdj-status.png?v=2)
 
 ## Library — find and load the next track
 

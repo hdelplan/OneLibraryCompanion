@@ -8,7 +8,7 @@ Follow the mix, choose your next track and keep a record of the set. Playback an
 
 Use the two-deck view to compare timing and track structure. Zoom the waveforms, watch approaching cues and phrases, and tap the time display to switch between elapsed and remaining time. The information button opens more track details.
 
-![CDJ status](screenshots/cdj-status.png)
+![CDJ status](screenshots/cdj-status.png?v=2)
 
 Converted local tracks show their output format and bit depth on one line in the left panel.
 
@@ -30,6 +30,6 @@ Choose **Start set** before playing and **Finish & save** afterwards. Edit the t
 
 ![Set history](screenshots/set-history.png)
 
-*These 1280 × 800 screenshots illustrate active sessions. CDJ status uses real exported waveform and phrase data, with the same track at two positions. Playback and connection states are illustrative; the library uses example data.*
+*These 1280 × 800 screenshots illustrate active sessions. CDJ status uses the real exported waveforms, beat grids, cues and phrases for Hail From Mali and What You Want. Playback and connection states are illustrative; the library uses example data.*
 
 [Install OLC](distribution.md) · [Display and filter preferences](configuration.md)
