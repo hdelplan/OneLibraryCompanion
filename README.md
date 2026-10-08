@@ -1,6 +1,8 @@
 # OneLibraryCompanion (OLC)
 
-Your library, both CDJs and your set history in one place. OLC runs on Mac or Raspberry Pi, alongside your players. You keep playback, cueing and mixing on the CDJs.
+Give your old CDJs a makeover! OneLibraryCompanion (OLC) reads Rekordbox One Library drives, shows your CDJ status in a modern user interface, remotely load tracks to your CDJs even if they don't support new formats, navigates in your library at blazing speed, records your sets' tracklists, and more..
+
+OLC runs on Mac or Raspberry Pi, alongside your players. You keep playback, cueing and mixing on the CDJs.
 
 ## Key features
 
