@@ -23,7 +23,7 @@ Compare both decks at a glance and see how the tracks fit together. Zoom into th
 
 ## Browse — find and load the next track in your OneLibrary
 
-Explore playlists, narrow your choices with combined filters and save useful searches. Currently playing titles are bright green; previously played titles use softer green. Browse remembers your position when you return, and key highlighting helps with selection. Press **CDJ1** or **CDJ2** to load a stopped player; OLC blocks loads when the player is playing or unavailable.
+Explore playlists, narrow your choices with combined filters and save useful searches. Currently playing titles are bright green; previously played titles use softer green. Harmonic key highlighting helps with selection. Press **CDJ1** or **CDJ2** to load a stopped player; OLC blocks loads when the player is playing or unavailable.
 
 For music attached to the Mac/Pi, both players can use different tracks from the same local USB library. When conversion is needed, OLC prepares the track before loading and shows progress. [Local USB and transcoding guide](docs/local-usb.md).
 
