@@ -50,9 +50,9 @@ Choose **Start set** before playing. OLC adds tracks after more than 45 seconds 
 
 The interface uses a fixed 1280 × 800 layout scaled to the display. Downloads require access to this private repository.
 
-## Know before a set
+## Know before a set - a few limitations
 
-- **Paused non-master waveform tracking is limited.** Use the CDJ's display and audio for precise cueing. Temporarily making that player the tempo master can improve tracking.
+- **Paused non-master waveform tracking is limited.** Due to ProDJ Link protocol limitations, the non master player position is updated less often than the master player (1 beat precision). Workarounds: Use the CDJ's display and audio for precise cueing. Temporarily making that player the tempo master can improve tracking.
 - **One local USB library per connection session.** Stop both players and reconnect in OLC before switching local libraries.
 - Physical Raspberry Pi, Intel Mac and minimum-OS testing is incomplete. Check [compatibility and operating limits](docs/compatibility.md) before relying on a setup.
 
