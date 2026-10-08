@@ -15,15 +15,13 @@ OLC runs on Mac or Raspberry Pi, alongside your players. You keep playback, cuei
 - **Record and reuse sets:** capture your tracklist, edit it, import supported rekordbox histories, revisit past sets as playlists, and export text, CSV or PDF.
 - **Choose your setup:** use the standalone app or a browser on the same network, with mouse, keyboard or touch. Adjust the waveform display, visible filters and track-list size to suit you.
 
-Use **CDJ STATUS / BROWSE** to switch between the two screens. Its text uses the same size as the other navigation buttons.
-
 ## CDJ status — follow the mix
 
 Compare both decks at a glance and see how the tracks fit together. Zoom into the waveforms for the next transition, follow approaching cues and phrases, and switch between elapsed and remaining time. Open track information for artwork and fuller library details.
 
 ![CDJ status with two active decks and three-band waveforms](docs/screenshots/cdj-status.png?v=2)
 
-## Library — find and load the next track
+## Browse — find and load the next track in your OneLibrary
 
 Explore playlists, narrow your choices with combined filters and save useful searches. Currently playing titles are bright green; previously played titles use softer green. Browse remembers your position when you return, and key highlighting helps with selection. Press **CDJ1** or **CDJ2** to load a stopped player; OLC blocks loads when the player is playing or unavailable.
 
