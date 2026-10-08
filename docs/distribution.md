@@ -15,10 +15,10 @@ Closing the window keeps OLC running. **Quit OLC** stops it. **Open at Login** i
 
 ## Raspberry Pi Desktop
 
-Use a **Pi 4 or 5 with Raspberry Pi OS Bookworm or later, 64-bit**. Download both ARM64 `.deb` packages from the same release into one folder. For version 0.2.1, run this command in that folder:
+Use a **Pi 4 or 5 with Raspberry Pi OS Bookworm or later, 64-bit**. Download both ARM64 `.deb` packages from the same release into one folder. For version 0.2.2, run this command in that folder:
 
 ```sh
-sudo apt install ./onelibrarycompanion-host_0.2.1_arm64.deb ./onelibrarycompanion_0.2.1_arm64.deb
+sudo apt install ./onelibrarycompanion-host_0.2.2_arm64.deb ./onelibrarycompanion_0.2.2_arm64.deb
 ```
 
 Open OneLibraryCompanion from the applications menu. It has its own desktop window, with full-screen and login-startup options. A compatible touchscreen is supported; use the system's on-screen keyboard for typing. Mount the music USB through the operating system before selecting it in OLC.
@@ -41,7 +41,7 @@ Keep OLC running, the computer awake and the USB attached while serving music or
 To use a Pi only through other devices' browsers, install the host package on 64-bit Raspberry Pi OS Lite and start its user service:
 
 ```sh
-sudo apt install ./onelibrarycompanion-host_0.2.1_arm64.deb
+sudo apt install ./onelibrarycompanion-host_0.2.2_arm64.deb
 systemctl --user enable --now olc-host.service
 ```
 

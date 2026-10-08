@@ -14,10 +14,10 @@ export function useTrackWindow(
     savedTop.current = 0;
     if (ref.current) ref.current.scrollTop = 0;
     setTop(0);
-  }, [result, rowHeight]);
+  }, [result]);
   useLayoutEffect(() => {
     if (active && ref.current) ref.current.scrollTop = savedTop.current;
-  }, [active]);
+  }, [active, count, rowHeight]);
   useEffect(() => {
     const element = ref.current;
     if (!element || !active) return;

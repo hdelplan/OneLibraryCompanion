@@ -193,6 +193,17 @@ function LibraryView({
   const generation = source?.generation;
   const state = source?.state;
   const base = `/api/library/${encodeURIComponent(sourceId)}`;
+  const resultKey = JSON.stringify([
+    sourceId,
+    showSetHistory,
+    showSetHistory ? currentSet?.id : null,
+    filters,
+    density,
+  ]);
+  useEffect(() => {
+    setPage(null);
+    setSelected(null);
+  }, [resultKey]);
   useEffect(() => {
     previewRequest.current?.abort();
     setPreviewBusy(false);
@@ -285,8 +296,8 @@ function LibraryView({
       playlist: "",
     }));
     setInfo(null);
-    setPage(null);
-    setSelected(null);
+  }, [sourceId]);
+  useEffect(() => {
     if (!sourceId) return;
     const controller = new AbortController();
     if (state === "idle") {
@@ -307,7 +318,9 @@ function LibraryView({
         `${base}?generation=${generation}`,
         controller.signal,
       )
-        .then(setInfo)
+        .then((next) => {
+          if (!controller.signal.aborted) setInfo(next);
+        })
         .catch((e: unknown) => {
           if (!controller.signal.aborted) setError(String(e));
         });
@@ -324,8 +337,6 @@ function LibraryView({
     }
     const controller = new AbortController();
     setLoading(true);
-    setPage(null);
-    setSelected(null);
     const timer = setTimeout(() => {
       const params = new URLSearchParams({
         ...activeFilterParams(
@@ -454,7 +465,7 @@ function LibraryView({
   const loader = useTrackLoader(source, active, onLoaded);
   const window = useTrackWindow(
     page?.tracks.length ?? 0,
-    page,
+    resultKey,
     active,
     rowHeight,
   );
@@ -735,12 +746,14 @@ function LibraryView({
                 </p>
                 <p>A configured local export is also supported.</p>
               </div>
-            ) : !showSetHistory && !source?.available ? (
+            ) : !showSetHistory && !source?.available && !page ? (
               <div className="library-empty">
                 <h2>USB unavailable</h2>
                 <p>Reconnect the source player or insert the USB again.</p>
               </div>
-            ) : !showSetHistory && (state === "loading" || state === "idle") ? (
+            ) : !showSetHistory &&
+              !page &&
+              (state === "loading" || state === "idle") ? (
               <div className="library-empty">
                 <h2>Reading USB library…</h2>
                 <p>
@@ -756,7 +769,7 @@ function LibraryView({
                 <h2>{currentNode.name}</h2>
                 <p>Choose a child playlist or folder on the left.</p>
               </div>
-            ) : loading ? (
+            ) : loading && !page ? (
               <div className="library-empty">Finding tracks…</div>
             ) : page?.tracks.length ? (
               <table
@@ -923,7 +936,13 @@ function LibraryView({
                             )}
                             <LoadControls
                               track={track}
-                              source={{ ...source, loadable: true }}
+                              source={{
+                                ...source,
+                                loadable:
+                                  !loading &&
+                                  page.generation === generation &&
+                                  state === "ready",
+                              }}
                               players={players.filter(
                                 (p) =>
                                   p.sourceLabel === "Direct IP · USB" ||
@@ -935,7 +954,16 @@ function LibraryView({
                         ) : (
                           <LoadControls
                             track={track}
-                            source={source}
+                            source={
+                              source && {
+                                ...source,
+                                loadable:
+                                  source.loadable &&
+                                  !loading &&
+                                  page.generation === generation &&
+                                  state === "ready",
+                              }
+                            }
                             players={players}
                             loader={loader}
                           />

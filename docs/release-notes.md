@@ -1,4 +1,9 @@
-# OneLibraryCompanion 0.2.1
+# OneLibraryCompanion 0.2.2
+
+## Browse refresh fixes
+
+- Preserve list position and playlist/filter selections through same-library refreshes after loading.
+- Keep the existing rows visible during background refreshes, and disable loading until fresh library data arrives.
 
 ## Browse and navigation
 
@@ -34,9 +39,9 @@ OLC also provides two-deck live status, three-band waveforms, playlist browsing,
 
 ## Downloads and setup
 
-- Apple Silicon: `OneLibraryCompanion-0.2.1-macos-arm64.dmg` or `.zip`.
-- Intel Mac: `OneLibraryCompanion-0.2.1-macos-x86_64.dmg` or `.zip`.
-- Raspberry Pi Desktop: install both `onelibrarycompanion-host_0.2.1_arm64.deb` and `onelibrarycompanion_0.2.1_arm64.deb`.
+- Apple Silicon: `OneLibraryCompanion-0.2.2-macos-arm64.dmg` or `.zip`.
+- Intel Mac: `OneLibraryCompanion-0.2.2-macos-x86_64.dmg` or `.zip`.
+- Raspberry Pi Desktop: install both `onelibrarycompanion-host_0.2.2_arm64.deb` and `onelibrarycompanion_0.2.2_arm64.deb`.
 - Pi headless: install the host package and enable its user service.
 
 Mac requires macOS 13+; Pi requires 64-bit Raspberry Pi OS Bookworm or later. Mac packages are ad-hoc signed and not notarized. On Mac, install **Local USB Support** from the application menu, then quit and reopen OLC. Reinstall this component after updating OLC. The Pi package grants the host its required port-binding capability.
