@@ -45,3 +45,16 @@ Export the selected set, the last finished set or all past sets as:
 Sets and copied artwork are stored in the [host data directory](distribution.md#data-and-backups), shared by all clients. Only one host should use a directory at a time. Quit OLC before backing up or moving the complete directory.
 
 The host writes history atomically. A persistence error is shown explicitly and retried while running; corrupt or unsupported history files are preserved rather than overwritten.
+
+## Played-track marks
+
+Track titles in BROWSE turn green after more than 45 seconds of uninterrupted
+normal playback or active looping, even when no set is recording. Pauses, cue
+audition, changing tracks and stale status reset the qualification timer.
+Offline previews are excluded. Marks match the original file path, track ID,
+title and artist; they persist across OLC restarts.
+
+Use **Clear played tracks** in the SET HISTORY top banner to reset the marks.
+This restarts qualification for currently playing tracks and leaves recorded
+sets and exported tracklists intact. Starting, pausing, finishing, cancelling
+or deleting a set does not clear the marks.

@@ -855,7 +855,7 @@
   color: #f59ac8;
 }
 
-.library-table .played-in-current-set .library-title-text {
+.library-table .played-track .library-title-text {
   color: #519568;
 }
 
@@ -1072,21 +1072,8 @@
   height: var(--library-art);
 }
 
-.local-usb-control {
-  position: relative;
-}
 .local-usb-panel {
-  position: absolute;
-  z-index: 30;
-  top: 100%;
-  left: 0;
-  width: min(420px, 80vw);
-  max-height: 65vh;
-  overflow: auto;
-  padding: 16px;
-  background: #17232d;
-  border: 1px solid #476275;
-  box-shadow: 0 8px 24px #0008;
+  min-width: 0;
   font-size: 13px;
   line-height: 1.4;
 }
@@ -1109,10 +1096,6 @@
 
 .library-unsupported.library-transcode-needed {
   border-color: #dca74a;
-  color: #f4c875;
-}
-.library-row-load button.transcode-needed {
-  border-color: #bd8f3a;
   color: #f4c875;
 }
 .transcoding-settings select,

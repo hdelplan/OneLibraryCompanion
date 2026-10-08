@@ -1,8 +1,7 @@
-import { LocalUsb } from "./LocalUsb";
 import {
   type SetHistoryState,
   setDate,
-  currentSetTrackKeys,
+  playedTrackKeys,
   playedTrackKey,
 } from "./setHistoryModel";
 import { memo, useEffect, useRef, useState, type CSSProperties } from "react";
@@ -169,7 +168,7 @@ function LibraryView({
       clearTimeout(timer);
     };
   }, [active]);
-  const playedTracks = currentSetTrackKeys(history);
+  const playedTracks = playedTrackKeys(history);
   const [previewBusy, setPreviewBusy] = useState(false);
   const previewRequest = useRef<AbortController | null>(null);
   const [sources, setSources] = useState<LibrarySource[]>([]);
@@ -487,7 +486,6 @@ function LibraryView({
         toolbarTarget &&
         createPortal(
           <div className="library-top-controls">
-            <LocalUsb />
             <select
               aria-label="Library source"
               value={sourceId}
@@ -826,7 +824,7 @@ function LibraryView({
                     <tr
                       key={`${track.id}:${track.entry}`}
                       aria-rowindex={window.start + index + 2}
-                      className={`${selected?.entry === track.entry ? "selected" : ""} ${playedTracks.has(playedTrackKey(track) ?? "") ? "played-in-current-set" : ""}`}
+                      className={`${selected?.entry === track.entry ? "selected" : ""} ${playedTracks.has(playedTrackKey(track) ?? "") ? "played-track" : ""}`}
                     >
                       <td>
                         <span

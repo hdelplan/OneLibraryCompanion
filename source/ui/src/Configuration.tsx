@@ -1,3 +1,4 @@
+import { LocalUsb } from "./LocalUsb";
 import { TranscodingSettings } from "./Transcoding";
 import type { LivePlayer } from "./model";
 import type { ReactNode } from "react";
@@ -55,6 +56,10 @@ export function Configuration({
         </section>
       )}
       <div className="settings-grid">
+        <section className="settings-panel">
+          <h2>Local USB</h2>
+          <LocalUsb />
+        </section>
         {desktopTools}
         <TranscodingSettings players={players} />
         <section className="settings-panel">

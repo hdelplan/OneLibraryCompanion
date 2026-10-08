@@ -59,7 +59,7 @@ at startup. A conversion has a 120-second worker limit. Keep the USB attached
 and OLC running as before. Only tracks identified as unsupported for the destination may enter conversion;
 compatible tracks bypass inspection and conversion entirely.
 
-See [conversion configuration and measurements](configuration.md#audio-transcoding-and-benchmarks).
+See [conversion configuration](configuration.md#audio-transcoding).
 
 The source reports the selected USB’s label, capacity and available space where
 the host can read them. Unknown creation dates are left empty. Saved player

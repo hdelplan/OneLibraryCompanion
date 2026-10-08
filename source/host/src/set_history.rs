@@ -87,6 +87,8 @@ struct Archive {
     sets: Vec<Set>,
     active_id: Option<String>,
     import_note: String,
+    #[serde(default)]
+    played_tracks: BTreeMap<String, Track>,
 }
 impl Default for Archive {
     fn default() -> Self {
@@ -96,6 +98,7 @@ impl Default for Archive {
             sets: vec![],
             active_id: None,
             import_note: String::new(),
+            played_tracks: BTreeMap::new(),
         }
     }
 }
@@ -117,6 +120,7 @@ pub struct Store {
     dir: PathBuf,
     archive: Archive,
     runs: BTreeMap<u8, Run>,
+    played_runs: BTreeMap<u8, (String, u64, u64)>,
     ordinal: u64,
     recording: bool,
     dirty: bool,
@@ -129,6 +133,7 @@ impl Store {
             dir,
             archive: Archive::default(),
             runs: BTreeMap::new(),
+            played_runs: BTreeMap::new(),
             ordinal: now(),
             recording: false,
             dirty: false,
@@ -179,6 +184,7 @@ impl Store {
 
     pub fn snapshot(&self) -> Value {
         json!({"version":1,"revision":self.archive.revision,"sets":self.archive.sets,"activeId":self.archive.active_id,"recording":self.recording,"error":self.error,"importNote":self.archive.import_note,
+            "playedTracks":self.archive.played_tracks.values().collect::<Vec<_>>(),
             "pending":self.runs.iter().filter(|(_,r)|r.event_id.is_none()).map(|(deck,r)|json!({"deck":deck,"seconds":r.last.saturating_sub(r.since)/1000})).collect::<Vec<_>>()})
     }
     fn changed(&mut self) {
@@ -222,6 +228,12 @@ impl Store {
             return Err(self.error.clone().unwrap_or_default());
         }
         let action = body["action"].as_str().ok_or("Missing action")?;
+        if action == "clearPlayed" {
+            self.archive.played_tracks.clear();
+            self.played_runs.clear();
+            self.changed();
+            return self.flush();
+        }
         if action == "cancel" || action == "delete" {
             let id = body["id"].as_str().ok_or("Missing set")?;
             let is_active = self.archive.active_id.as_deref() == Some(id);
@@ -364,7 +376,40 @@ impl Store {
         self.flush()
     }
     // Monotonic elapsed time is separate from the wall clock. No per-track timestamps are published.
+    fn observe_played(&mut self, samples: &[Sample], clock: u64) {
+        self.played_runs
+            .retain(|deck, _| samples.iter().any(|s| s.deck == *deck && s.playing));
+        for sample in samples
+            .iter()
+            .filter(|s| s.playing && !s.identity.is_empty())
+        {
+            let run = self
+                .played_runs
+                .entry(sample.deck)
+                .or_insert_with(|| (sample.identity.clone(), clock, clock));
+            if run.0 != sample.identity || clock.saturating_sub(run.2) > 2000 {
+                *run = (sample.identity.clone(), clock, clock);
+            }
+            run.2 = clock;
+            if clock.saturating_sub(run.1) > 45_000 && !sample.track.file_path.is_empty() {
+                let key = serde_json::to_string(&(
+                    &sample.track.file_path,
+                    sample.track.id,
+                    &sample.track.title,
+                    &sample.track.artist,
+                ))
+                .unwrap();
+                if let std::collections::btree_map::Entry::Vacant(entry) =
+                    self.archive.played_tracks.entry(key)
+                {
+                    entry.insert(sample.track.clone());
+                    self.changed();
+                }
+            }
+        }
+    }
     pub fn observe(&mut self, samples: &[Sample], clock: u64) -> Vec<(String, String, u8, String)> {
+        self.observe_played(samples, clock);
         if !self.recording || self.blocked {
             self.runs.clear();
             return vec![];
@@ -613,6 +658,40 @@ mod tests {
             s.observe(samples, second * 1000);
         }
     }
+    #[test]
+    fn played_tracks_qualify_without_recording_and_persist_until_cleared() {
+        let mut s = store();
+        let mut track = sample(1, "a", true);
+        track.track.file_path = "/Contents/a.mp3".into();
+        seconds(&mut s, &[track.clone()], 0, 45);
+        assert!(s.archive.played_tracks.is_empty());
+        s.observe(&[track.clone()], 45_001);
+        assert_eq!(s.archive.played_tracks.len(), 1);
+        assert!(s.archive.sets.is_empty());
+        let revision = s.archive.revision;
+        seconds(&mut s, &[track], 46, 60);
+        assert_eq!(s.archive.revision, revision);
+        s.flush().unwrap();
+        let mut reopened = Store::open(s.dir.clone());
+        assert_eq!(reopened.archive.played_tracks.len(), 1);
+        reopened.command(&json!({"action":"clearPlayed"})).unwrap();
+        assert!(Store::open(s.dir.clone()).archive.played_tracks.is_empty());
+    }
+
+    #[test]
+    fn played_tracks_reset_qualification_after_pause_or_connection_gap() {
+        let mut s = store();
+        let mut track = sample(1, "a", true);
+        track.track.file_path = "/Contents/a.mp3".into();
+        seconds(&mut s, &[track.clone()], 0, 40);
+        s.observe(&[], 41_000);
+        seconds(&mut s, &[track.clone()], 42, 82);
+        assert!(s.archive.played_tracks.is_empty());
+        s.observe(&[track.clone()], 90_000);
+        seconds(&mut s, &[track], 91, 135);
+        assert!(s.archive.played_tracks.is_empty());
+    }
+
     #[test]
     fn strictly_more_than_45_seconds_and_once_per_run() {
         let mut s = store();

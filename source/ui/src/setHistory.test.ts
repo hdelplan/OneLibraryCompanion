@@ -5,7 +5,7 @@ import {
   orderedTracks,
   setCsv,
   setText,
-  currentSetTrackKeys,
+  playedTrackKeys,
   playedTrackKey,
 } from "./setHistoryModel";
 const set: DJSet = {
@@ -72,7 +72,7 @@ test("all-set exports include every set and empty sets retain metadata", () => {
   assert.match(text, /SET HISTORY — Sample/);
 });
 
-test("played coloring uses only the current set and distinguishes paths with reused IDs", () => {
+test("played coloring is independent of set recording and distinguishes paths with reused IDs", () => {
   const track = {
     id: 1,
     title: "Track",
@@ -96,17 +96,21 @@ test("played coloring uses only the current set and distinguishes paths with reu
     error: null,
     importNote: "",
     pending: [],
+    playedTracks: [track],
   };
-  assert.ok(currentSetTrackKeys(history).has(playedTrackKey(track)!));
+  assert.ok(playedTrackKeys(history).has(playedTrackKey(track)!));
   assert.ok(
-    !currentSetTrackKeys(history).has(
+    !playedTrackKeys(history).has(
       playedTrackKey({ ...track, filePath: "/Contents/b.mp3" })!,
     ),
   );
-  assert.equal(currentSetTrackKeys({ ...history, activeId: null }).size, 0);
+  assert.equal(
+    playedTrackKeys({ ...history, activeId: null, recording: false }).size,
+    1,
+  );
   assert.equal(playedTrackKey({ ...track, filePath: undefined }), null);
   assert.equal(
-    currentSetTrackKeys({ ...history, sets: [{ ...current, order: [] }] }).size,
-    0,
+    playedTrackKeys({ ...history, sets: [{ ...current, order: [] }] }).size,
+    1,
   );
 });

@@ -40,6 +40,15 @@ export function StatusDisplay({
                       ? "SAVED DATA"
                       : "NO SOURCE"}
                 </div>
+                {deck?.analysis.conversion && (
+                  <div className="source-label conversion-label">
+                    Converted to{" "}
+                    {deck.analysis.conversion.profile.startsWith("AIFF")
+                      ? "AIFF"
+                      : "WAV"}{" "}
+                    {deck.analysis.conversion.result.sampleDepth}-bit
+                  </div>
+                )}
                 <div className="rail-key">
                   <small>KEY</small>
                   <b>{track?.key || "—"}</b>

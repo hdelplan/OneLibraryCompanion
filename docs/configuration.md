@@ -45,7 +45,7 @@ Display settings, filter presets and row size belong to the client. A different 
 Environment configuration and precedence are documented in the [development guide](development.md#host-configuration).
 
 
-## Audio transcoding and benchmarks
+## Audio transcoding
 
 The Mac/Pi converter runs inside the host, without an FFmpeg installation.
 MENU → **Audio transcoding** selects Automatic, WAV 16-bit, WAV 24-bit,
@@ -60,15 +60,14 @@ rejected. Rate conversion uses an antialiasing filter with delay compensation;
 bit-depth reduction uses TPDF dither. PCM output clamps out-of-range samples
 and reports the count. MP3/AAC encoding is not supported.
 
-The **Conversion benchmark** uses a track from a host-attached OneLibrary USB,
-always bypasses the conversion cache, and never loads or plays a CDJ. Choose a
-target, search/select a track and press **Run benchmark**. Repeat the same track
-and target on the hosts being compared. Results include elapsed conversion time, actual
-output size/rate/depth, source properties and clipping count; **Share / save
-results** exports JSON with engine, OS and architecture. USB reads and local
-writes are included; OS file caches are not flushed, and timing does not include
-player discovery or NFS transfer. Real load responses separately show total
-request-to-CDJ-status-confirmation time, which is not proof of audible playback.
+CDJ load buttons remain white when conversion is available. While a track is
+being prepared, OLC shows conversion progress and supports cancellation. Once
+loaded, CDJ STATUS displays **Converted to WAV 24-bit** (or the actual output
+format and depth) on one line in the left panel. Compatible original tracks
+have no conversion label. The conversion benchmark is no longer in MENU.
 
-The Mac benchmark works without installing Local USB Support. Loading the
-converted file onto a CDJ requires that component.
+## Local USB panel
+
+MENU → **Local USB** shows mounted libraries, the serving source, connected
+CDJs and load diagnostics directly in the panel. BROWSE retains the USB source
+selector. 

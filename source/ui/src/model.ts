@@ -35,6 +35,10 @@ export type TrackInfo = {
   sampleRate: number;
 };
 export type Analysis = {
+  conversion?: {
+    profile: string;
+    result: { sampleRate: number; sampleDepth: number };
+  };
   beats?: { time: number; beatInBar: number }[];
   artworkAvailable?: boolean;
   artworkUrl?: string;

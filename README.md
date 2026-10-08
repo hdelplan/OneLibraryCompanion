@@ -10,7 +10,7 @@ OLC runs as a standalone application on Mac or Raspberry Pi. Other devices on th
 
 Choose automatic quality preservation or 16-/24-bit WAV/AIFF output. OLC handles sample-rate conversion when needed, shows progress and reuses prepared files during the session. Your original USB files stay untouched. Compatible tracks are sent as-is, and exported waveforms, beat grids, hot cues and memory cues accompany the music. No separate converter or audio software is required.
 
-[Local USB playback and transcoding](docs/local-usb.md) · [Audio settings](docs/configuration.md#audio-transcoding-and-benchmarks)
+[Local USB playback and transcoding](docs/local-usb.md) · [Audio settings](docs/configuration.md#audio-transcoding)
 
 ## Download and install
 
@@ -56,11 +56,10 @@ See [compatibility and operating limits](docs/compatibility.md) for player, medi
 - **Search and sorting:** search metadata and sort the matching track list by its column headings. Three row sizes let you choose between more tracks and larger touch targets.
 - **Combined filters:** narrow tracks by rating, BPM, color, musical key, genre, artist, label, format, date, year, duration and exported My Tags. My Tag selections support ANY, ALL or NONE matching. Active filter chips show what is restricting the results.
 - **Personal filter layout and presets:** choose visible filters, their order and BPM menu bounds in MENU. Save named filter combinations for a particular USB export and recall them in BROWSE.
-- **Mixing context:** key highlighting helps find harmonically related tracks; tracks recorded in the active set are marked as played. Known player-format incompatibilities are flagged before loading.
+- **Mixing context:** key highlighting helps find harmonically related tracks; track titles turn green after more than 45 seconds of qualifying playback, independently of set recording. Marks survive restarts until cleared in SET HISTORY. Known player-format incompatibilities are flagged before loading.
 - **Protected track loading:** request a track on CDJ1 or CDJ2 without leaving the library. OLC checks the source, connection and stopped-player state before sending one load request. Playing, looping, busy or stale targets are blocked; uncertain requests are never retried automatically.
 - **Host-attached USB playback:** OLC serves compatible original audio and its exported metadata, artwork and analysis to a directly connected CDJ. Both players can use different tracks from the same local USB library throughout the serving session. See [local USB usage](docs/local-usb.md) for setup and limits. Mac requires the included Local USB Support component.
 - **Audio transcoding:** known incompatible local tracks are converted to WAV or AIFF before loading, with 16-bit or 24-bit output and sample-rate conversion where needed. MENU selects the output profile. Progress, cancellation and cache reuse are shown while the original USB stays unchanged. Conversion runs inside OLC without additional audio software; linked CDJ-mounted USB tracks are not converted.
-- **Conversion measurements:** MENU can measure conversion time for a selected local track and export the results, without loading or playing a CDJ. See [audio settings](docs/configuration.md#audio-transcoding-and-benchmarks).
 
 ### Keep and reuse set lists
 

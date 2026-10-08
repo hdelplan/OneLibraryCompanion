@@ -363,6 +363,12 @@ export function SetHistory({ active }: { active: boolean }) {
               ? "RECOVERED SET"
               : "READY FOR YOUR NEXT SET"}
         </span>
+        <button
+          disabled={busy || !state?.playedTracks?.length}
+          onClick={() => void command({ action: "clearPlayed" })}
+        >
+          Clear played tracks
+        </button>
         <button disabled={busy} onClick={() => void loadSources()}>
           Import history
         </button>

@@ -34,6 +34,7 @@ export type SetHistoryState = {
   recording: boolean;
   error: string | null;
   importNote: string;
+  playedTracks?: SetTrack[];
   pending: { deck: number; seconds: number }[];
 };
 export type ExportFormat = "txt" | "csv" | "pdf";
@@ -137,13 +138,10 @@ export function playedTrackKey(track: {
     ? JSON.stringify([track.filePath, track.id, track.title, track.artist])
     : null;
 }
-export function currentSetTrackKeys(
-  history: SetHistoryState | null,
-): Set<string> {
-  const active = history?.sets.find((set) => set.id === history.activeId);
+export function playedTrackKeys(history: SetHistoryState | null): Set<string> {
   return new Set(
-    (active ? orderedTracks(active) : []).flatMap((event) => {
-      const key = playedTrackKey(event.track);
+    (history?.playedTracks ?? []).flatMap((track) => {
+      const key = playedTrackKey(track);
       return key ? [key] : [];
     }),
   );

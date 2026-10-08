@@ -585,6 +585,11 @@ footer button {
   height: 26px;
   padding: 6px 10px;
 }
+.rail .conversion-label {
+  padding-inline: 4px;
+  font-size: 10px;
+  white-space: nowrap;
+}
 .rail-key,
 .rail-state {
   padding: 5px 10px;

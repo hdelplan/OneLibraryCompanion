@@ -8,6 +8,8 @@ Use CDJ STATUS while performing to compare the two decks' timing and track struc
 
 Use the zoom controls or a two-finger pinch to change the visible time window, tap the time display to switch elapsed/remaining time, and open the information button for fuller track metadata. OLC follows the players; transport and cue controls remain on the CDJs. Waveforms and phrase sections require the corresponding exported analysis.
 
+Converted local tracks show their output format and bit depth on one line in the left panel.
+
 **Current limitation:** a paused player that is not the tempo master does not provide reliable fine waveform tracking for jog movements or scratching. Use the CDJ’s own display and audio for precise cue positioning. As a practical workaround, temporarily make that player the tempo master while cueing for better waveform tracking, then restore the intended master when finished. See [waveform coupling limits](compatibility.md#main-limitation-paused-non-master-waveform-coupling).
 
 ![CDJ Status](screenshots/cdj-status.png)
@@ -18,6 +20,8 @@ Choose a USB source, then explore playlists or select a past set using the PLAYL
 
 Key highlighting helps identify compatible choices, while played-track highlighting shows tracks already recorded in the active set. Select a track to inspect its details; press CDJ1 or CDJ2 to load a stopped connected player. A disabled load button means the player, source or format does not meet the loading requirements. [Local USB loading](local-usb.md) also requires OLC to keep serving the drive during playback.
 
+Played track titles turn green after more than 45 seconds of qualifying playback, independently of set recording. Marks persist until cleared in SET HISTORY. Conversion-capable load buttons stay white.
+
 ![Browse](screenshots/browse.png)
 
 ## Set History — keep a record and reuse it
@@ -26,11 +30,15 @@ Start a set before performing. OLC adds each track after more than 45 seconds of
 
 This archive is independent of the USB's history. Past sets can be selected inside BROWSE as playlists and matched against your connected library. Recording runs on the host even while another screen is open. [Set history guide](set-history.md).
 
+Use **Clear played tracks** in the top banner to reset green titles without changing your sets.
+
 ![Set History](screenshots/set-history.png)
 
 ## Menu — connect players and other devices
 
 Choose Manual IP connections for explicit player addresses and local USB loading, or select a network interface for automatic discovery. Use the LAN addresses to open the same OLC host from another device. Offline preview lets you inspect an exported analysis file without loading a player.
+
+Local USB status, connected CDJs, folder controls where available, and diagnostics appear directly in the Local USB panel. Audio transcoding retains target-format selection.
 
 ![Menu connections](screenshots/menu-connections.png)
 

@@ -1,12 +1,19 @@
 # OneLibraryCompanion 0.2.0
 
+## UI refinements
+
+- Local USB controls are embedded in the MENU panel; BROWSE retains its USB selector.
+- Conversion-capable CDJ buttons stay white. CDJ STATUS shows the converted format and bit depth on one line.
+- Audio target selection remains; conversion benchmark controls have been removed from MENU.
+- Played-track titles turn green without set recording and persist until **Clear played tracks** is used in the SET HISTORY banner.
+
 ## More music for older CDJs
 
 **Built-in audio transcoding lets older players such as the CDJ-2000nexus play supported local files they cannot decode directly, including FLAC and ALAC.** Attach your OneLibrary USB to the Mac or Raspberry Pi, choose a track marked **TRANSCODE NEEDED**, and load it onto a stopped player. OLC prepares a compatible WAV or AIFF file before sending the load request.
 
 - Automatic quality preservation or selectable 16-/24-bit WAV and AIFF output.
 - Sample-rate conversion to 44.1 or 48 kHz when needed.
-- Conversion progress, cancellation, prepared-file caching and conversion benchmarks.
+- Conversion progress, cancellation, prepared-file caching.
 - Original USB files remain untouched; compatible tracks are sent as-is.
 - Exported artwork, waveforms, beat grids, hot cues and memory cues accompany the track.
 - Conversion runs inside OLC without additional audio software. It applies to host-attached USBs; linked CDJ USBs use their original files.
