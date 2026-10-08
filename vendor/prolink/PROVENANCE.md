@@ -26,4 +26,13 @@ Protocol reference: https://djl-analysis.deepsymmetry.org/djl-analysis/vcdj.html
 
 Review an explicit upstream commit when updating this subset, retain notices, and run application checks. Upstream tests requiring omitted fixtures are not part of the application suite.
 
+Build 36 (2026-10-08): add a bounded monotonic serving-event log (512 messages,
+512 characters each, no audio payloads) for metadata connections/handshakes/query
+summaries, NFS mounts/lookups/initial reads and send errors. Expose empty VFS
+directory creation so the local USB root can be mounted before a track is selected.
+Original NFS audio response sizing is unchanged. Shared host code uses the same
+log for early registration and load progress. Tested with upstream reference
+fixtures temporarily supplied from third-party/prolink/testdata: 165 serving tests
+pass; temporary fixture copies removed after testing.
+
 The NFS server accepts a caller-supplied portmapper socket for platform-authorized socket handoff, validating the address and retaining normal socket ownership and shutdown.

@@ -339,6 +339,11 @@ impl Vfs {
         }
     }
 
+    /// Publish an empty export before tracks are selected.
+    pub fn add_directory(&mut self, path: &str) {
+        self.ensure_parents(&format!("{}/.placeholder", path.trim_end_matches('/')));
+    }
+
     /// Add a file held in memory, creating any directories it needs.
     pub fn add_file(&mut self, path: &str, data: Vec<u8>) {
         self.ensure_parents(path);

@@ -314,6 +314,15 @@ pub fn load_source(
         .ok_or("Selected track is no longer in the catalog")?;
     Ok((ip, track.title.clone()))
 }
+/// Only validated, available local OneLibrary catalogs trigger pre-registration.
+pub(crate) fn has_local_usb(shared: &Shared) -> bool {
+    shared.lock().unwrap().sources.iter().any(|(id, s)| {
+        id.starts_with("local-usb:")
+            && s.available
+            && s.catalog.is_some()
+            && matches!(s.location, Location::Local(_))
+    })
+}
 pub fn sources(shared: &Shared) -> Value {
     let state = shared.lock().unwrap();
     json!({"sources":state.sources.iter().map(|(id,s)| {

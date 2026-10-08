@@ -67,3 +67,30 @@ test("model changes refresh memoized rows", () => {
     false,
   );
 });
+
+test("only a known local destination enables the transcoding route", async () => {
+  const { canTranscode } = await import("./trackCompatibility");
+  assert.equal(
+    canTranscode(track("flac"), "local-usb:1", player("CDJ-2000nexus")),
+    true,
+  );
+  assert.equal(
+    canTranscode(track("flac"), "cdj:1:usb", player("CDJ-2000nexus")),
+    false,
+  );
+  assert.equal(
+    canTranscode(track("flac"), "local-usb:1", player("Unknown")),
+    false,
+  );
+  assert.equal(
+    canTranscode(track("unknown"), "local-usb:1", player("CDJ-2000nexus")),
+    false,
+  );
+  assert.equal(
+    canTranscode(track("flac"), "local-usb:1", {
+      ...player("CDJ-2000nexus"),
+      connection: "disconnected",
+    }),
+    false,
+  );
+});

@@ -231,6 +231,9 @@ function App() {
         page === "history" ||
         page === "test" ? null : page === "config" ? (
           <Configuration
+            players={live.decks.flatMap((deck) =>
+              deck?.live ? [deck.live] : [],
+            )}
             desktopTools={
               !__OLC_EXPERIMENTS__ ? (
                 <>

@@ -25,6 +25,9 @@ prolink-proto = { path = "../../vendor/prolink/crates/prolink-proto" }
 network-interface = "2.0.5"
 
 rusqlite = { version = "0.32.1", features = ["bundled-sqlcipher-vendored-openssl"] }
+symphonia = { version = "0.6.1", features = ["all"] }
+rubato = "0.16"
+sha2 = "0.10"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 libc = "0.2"

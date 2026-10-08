@@ -15,8 +15,12 @@ Mac ZIP alternatives, matching source and `SHA256SUMS.txt` accompany the install
 
 Local browsing is available on Mac and Pi. On Mac, install Local USB Support from the application menu with administrator approval, then quit and reopen OLC. Its system service supplies UDP 111 only to the matching signed host executable. Reinstall the component after updating OLC. The Pi installer grants the host executable the port-binding capability needed for UDP 111.
 
-Use Manual IP connections to physical players 1 and 2, leaving player number 4 free for OLC. Up to three mounted OneLibrary USBs are available. OLC serves original audio and exported metadata/analysis, keeps independent tracks available to both decks, and returns complete audio reads within the network payload limit.
+Use Manual IP connections to physical players 1 and 2, leaving player number 4 free for OLC. Up to three mounted OneLibrary USBs are available. OLC serves compatible originals unchanged and converts known incompatible local tracks to WAV or AIFF before loading. MENU selects 16-bit or 24-bit output; progress, cancellation, cache reuse and conversion measurements are available. Exported metadata and analysis accompany each selection, and independent tracks remain available to both decks. The converter is included in the host; no separate audio software is required.
 
 Keep the host awake, OLC running and the USB connected during playback. First-load discovery may require LINK on the target player. Check the displayed load result and physical cue position; OLC does not force a start position or retry an uncertain load automatically.
 
 See the README for features and `docs/distribution.md`, `docs/local-usb.md` and `docs/compatibility.md` for usage and limits. License notices and source credits are included in source and application packages.
+
+## Validation limits
+
+The Mac system-helper installation and real UDP 111 handoff are not yet validated. Converted-file playback and cue/loop alignment on physical CDJs are also unverified. These limits are separate from the first-load and incorrect-start-position issues described in the README.

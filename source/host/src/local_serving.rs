@@ -21,6 +21,13 @@ use std::{
 };
 use tokio::{net::UdpSocket, time::Instant};
 
+static STATUS: std::sync::Mutex<Value> = std::sync::Mutex::new(Value::Null);
+pub fn status() -> Value {
+    STATUS.lock().unwrap().clone()
+}
+pub fn publish_status(value: Value) {
+    *STATUS.lock().unwrap() = value;
+}
 pub const NUMBER: u8 = 4;
 const NAME: &str = "CDJ-2000nexus";
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
@@ -28,17 +35,20 @@ pub struct Key {
     pub source: String,
     pub generation: u64,
     pub track: u32,
+    pub variant: String,
 }
 pub struct Prepared {
     pub key: Key,
     pub track: Track,
     pub audio: PathBuf,
+    pub converted: Option<Arc<crate::transcoding::Artifact>>,
     pub analysis: Arc<Analysis>,
     pub artwork: Vec<u8>,
     pub ui: crate::live::Asset,
 }
 pub fn key(body: &Value) -> Result<Key, String> {
     Ok(Key {
+        variant: String::new(),
         source: body["source"]
             .as_str()
             .filter(|s| s.starts_with("local-usb:"))
@@ -176,6 +186,7 @@ pub fn prepare(catalogs: &library::Shared, key: Key) -> Result<Prepared, String>
         key,
         track,
         audio,
+        converted: None,
         analysis,
         artwork,
         ui,
@@ -200,6 +211,7 @@ pub struct Server {
     artwork: BTreeMap<u32, Vec<u8>>,
     registrations: BTreeMap<Ipv4Addr, Registration>,
     ui: BTreeMap<u32, crate::live::Asset>,
+    converted: Vec<Arc<crate::transcoding::Artifact>>,
     pub local: Ipv4Addr,
     session: u128,
 }
@@ -221,7 +233,9 @@ impl Server {
         nfs_config: NfsConfig,
         db_config: DbServerConfig,
     ) -> Result<Self, String> {
-        let vfs = Arc::new(RwLock::new(Vfs::new()));
+        let mut tree = Vfs::new();
+        tree.add_directory("/C");
+        let vfs = Arc::new(RwLock::new(tree));
         #[cfg(target_os = "macos")]
         let portmapper = if nfs_config.portmap_port == 111 {
             let socket = tokio::task::spawn_blocking(crate::mac_networking::acquire)
@@ -236,7 +250,11 @@ impl Server {
         let nfs = NfsServer::start_with_portmapper(vfs.clone(), nfs_config, portmapper)
             .await
             .map_err(|e| format!("Local USB NFS unavailable: {e}"))?;
-        let media = Arc::new(MediaSet::new([]));
+        let media = Arc::new(MediaSet::new([Arc::new(Medium::synthetic(
+            ServedSlot::USB,
+            Library::default(),
+            "OLC LOCAL USB",
+        ))]));
         let db =
             DbServer::start_watching(db_config, media.clone(), Arc::new(LoadedTracks::default()))
                 .await
@@ -244,6 +262,11 @@ impl Server {
         if db.query_port().is_none() {
             return Err("Local USB metadata query port is in use".into());
         }
+        prolink::serve::diagnostics::record(format!(
+            "source_started local={local} nfs={:?} db={}",
+            nfs.ports(),
+            db.port()
+        ));
         Ok(Self {
             _nfs: nfs,
             _db: db,
@@ -256,6 +279,7 @@ impl Server {
             registrations: BTreeMap::new(),
             ui: BTreeMap::new(),
             local,
+            converted: Vec::new(),
             session: std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
                 .unwrap_or_default()
@@ -283,6 +307,9 @@ impl Server {
             id = id.max(1);
         }
 
+        if let Some(artifact) = prepared.converted {
+            self.converted.push(artifact);
+        }
         let mut track = prepared.track;
         let extension = prepared
             .audio
@@ -324,6 +351,10 @@ impl Server {
         let medium = Medium::synthetic(ServedSlot::USB, self.library.clone(), "OLC LOCAL USB");
         medium.seed_assets(self.analysis.clone(), self.artwork.clone());
         self.media.insert(Arc::new(medium));
+        prolink::serve::diagnostics::record(format!(
+            "track_published source={} generation={} original={} served={id}",
+            prepared.key.source, prepared.key.generation, prepared.key.track
+        ));
         self.entries.insert(prepared.key, id);
         Ok(id)
     }
@@ -332,6 +363,12 @@ impl Server {
     }
     pub fn track(&self, id: u32) -> Option<&Track> {
         self.library.tracks.get(&id)
+    }
+    pub fn forget_peer(&mut self, ip: Ipv4Addr) {
+        self.registrations.remove(&ip);
+    }
+    pub fn diagnostics(&self) -> Value {
+        serde_json::json!({"active":true,"local":self.local.to_string(),"publishedTracks":self.entries.len(),"peers":self.registrations.iter().map(|(ip,r)|serde_json::json!({"ip":ip.to_string(),"announced":r.sent>=stages(self.local).len(),"mediaQueried":r.media_queried})).collect::<Vec<_>>(),"mounts":self._nfs.mounts().iter().map(|m|format!("{} {}",m.peer,m.export)).collect::<Vec<_>>()})
     }
     pub fn ready(&self, ip: Ipv4Addr) -> bool {
         self.registrations
@@ -374,6 +411,9 @@ impl Server {
             && media_query
             && let Some(registration) = self.registrations.get_mut(&peer)
         {
+            if !registration.media_queried {
+                prolink::serve::diagnostics::record(format!("media_query_answered peer={peer}"));
+            }
             registration.media_queried = true;
         }
     }
@@ -400,10 +440,19 @@ impl Server {
                 counter: 0,
             });
             if Instant::now() >= r.next {
+                if r.sent == 0 {
+                    prolink::serve::diagnostics::record(format!("registration_started peer={ip}"));
+                }
                 discovery
                     .try_send_to(&stages[r.sent.min(stages.len() - 1)], (ip, 50000).into())
                     .map_err(|e| e.to_string())?;
                 r.sent += 1;
+                if r.sent == stages.len() {
+                    prolink::serve::diagnostics::record(format!(
+                        "registration_sent peer={ip} media_queried={}",
+                        r.media_queried
+                    ));
+                }
                 r.next = Instant::now()
                     + Duration::from_millis(if r.sent < stages.len() { 300 } else { 1500 });
             }
@@ -422,6 +471,12 @@ impl Server {
             }
         }
         Ok(())
+    }
+}
+impl Drop for Server {
+    fn drop(&mut self) {
+        publish_status(serde_json::json!({"active":false}));
+        prolink::serve::diagnostics::record("source_stopped");
     }
 }
 fn stages(local: Ipv4Addr) -> Vec<Vec<u8>> {
@@ -570,6 +625,7 @@ mod tests {
                 .unwrap();
             (
                 Key {
+                    variant: String::new(),
                     source,
                     generation,
                     track: 1,
@@ -601,6 +657,44 @@ mod tests {
         )
         .await
         .unwrap()
+    }
+    #[tokio::test]
+    async fn empty_source_mount_survives_first_track_publication() {
+        use prolink::consume::nfs::{NfsClient, NfsConfig as ClientConfig};
+        let fixture = Fixture::new();
+        let catalogs = library::with_local_path(None, None);
+        assert!(!library::has_local_usb(&catalogs));
+        let (key, bytes) = fixture.register(&catalogs, 1);
+        assert!(library::has_local_usb(&catalogs));
+        let mut server = server().await;
+        assert!(
+            server
+                .media
+                .get(Slot::USB)
+                .unwrap()
+                .library()
+                .tracks
+                .is_empty()
+        );
+        let mut client = NfsClient::connect_with(
+            Ipv4Addr::LOCALHOST,
+            None,
+            ClientConfig {
+                portmap_port: server._nfs.ports().portmap,
+                ..Default::default()
+            },
+        )
+        .await
+        .unwrap();
+        let mount = client.mount_slot(Slot::USB).await.unwrap();
+        let id = server.add(prepare(&catalogs, key).unwrap()).unwrap();
+        let file = client
+            .open(&mount, &server.track(id).unwrap().file_path)
+            .await
+            .unwrap();
+        assert_eq!(client.read_file(&file).await.unwrap(), bytes);
+        library::sync_local(&catalogs, vec![]);
+        assert!(!library::has_local_usb(&catalogs));
     }
     #[tokio::test]
     async fn three_usb_ids_remain_distinct_and_nfs_delivers_original_bytes() {
@@ -695,6 +789,7 @@ mod tests {
         assert!(confined(&fixture.0.join("1"), "escape.wav").is_err());
         let source = library::sources(&catalogs)["sources"][0].clone();
         let key = Key {
+            variant: String::new(),
             source: "local-usb:1".into(),
             generation: source["generation"].as_u64().unwrap(),
             track: 1,

@@ -5,11 +5,21 @@ type Volume = {
   state: string;
   error?: string | null;
 };
-type Status = { count: number; volumes: Volume[]; needsFolderAccess: boolean };
+type Status = {
+  count: number;
+  volumes: Volume[];
+  needsFolderAccess: boolean;
+  serving?: {
+    active?: boolean;
+    error?: string;
+    peers?: { ip: string; announced: boolean; mediaQueried: boolean }[];
+  };
+};
 export function LocalUsb() {
   const [open, setOpen] = useState(false);
   const [status, setStatus] = useState<Status | null>(null);
   const [error, setError] = useState("");
+  const [report, setReport] = useState<File | null>(null);
   const bridge = (
     window as unknown as {
       webkit?: {
@@ -63,8 +73,69 @@ export function LocalUsb() {
           <p>
             CDJ loading uses Direct IP connections and player number 4 as the
             OLC source. Keep physical players on numbers 1 and 2, keep OLC open,
-            and leave the USB connected. Audio is served without transcoding.
+            and leave the USB connected. Unsupported audio can be converted
+            locally; choose a target format in MENU.
           </p>
+          <p>
+            {status?.serving?.active
+              ? "Local source running; tracks are prepared when selected."
+              : "Local source waiting for USB and a live Direct IP connection."}
+          </p>
+          {status?.serving?.peers?.map((peer) => (
+            <p key={peer.ip}>
+              {peer.ip}:{" "}
+              {peer.mediaQueried && peer.announced
+                ? "Source discovered"
+                : "Discovering source…"}
+            </p>
+          ))}
+          {status?.serving?.error && <p role="alert">{status.serving.error}</p>}
+          <button
+            onClick={() =>
+              void fetch("/api/library/local/trace")
+                .then((r) => {
+                  if (!r.ok) throw new Error("Cannot read load diagnostics");
+                  return r.json();
+                })
+                .then((value) => {
+                  setReport(
+                    new File(
+                      [JSON.stringify(value, null, 2)],
+                      "olc-local-load-trace.json",
+                      { type: "application/json" },
+                    ),
+                  );
+                })
+                .catch((e) => setError(String(e)))
+            }
+          >
+            Prepare load diagnostics
+          </button>
+          {report && (
+            <button
+              onClick={async () => {
+                try {
+                  if (navigator.canShare?.({ files: [report] })) {
+                    await navigator.share({
+                      files: [report],
+                      title: "OLC local load diagnostics",
+                    });
+                  } else {
+                    const url = URL.createObjectURL(report);
+                    const link = document.createElement("a");
+                    link.href = url;
+                    link.download = report.name;
+                    link.click();
+                    setTimeout(() => URL.revokeObjectURL(url), 60000);
+                  }
+                } catch (e) {
+                  setError(String(e));
+                }
+              }}
+            >
+              Share / save diagnostics
+            </button>
+          )}
           {bridge && (
             <>
               <p>
@@ -84,6 +155,47 @@ export function LocalUsb() {
               <b>{v.label}</b>
               <span>{v.state}</span>
               {v.error && <p role="alert">{v.error}</p>}
+              <p>
+                {status?.serving?.active
+                  ? "Local source running; tracks are prepared when selected."
+                  : "Local source waiting for USB and a live Direct IP connection."}
+              </p>
+              {status?.serving?.peers?.map((peer) => (
+                <p key={peer.ip}>
+                  {peer.ip}:{" "}
+                  {peer.mediaQueried && peer.announced
+                    ? "Source discovered"
+                    : "Discovering source…"}
+                </p>
+              ))}
+              {status?.serving?.error && (
+                <p role="alert">{status.serving.error}</p>
+              )}
+              <button
+                onClick={() =>
+                  void fetch("/api/library/local/trace")
+                    .then((r) => {
+                      if (!r.ok)
+                        throw new Error("Cannot read load diagnostics");
+                      return r.json();
+                    })
+                    .then((value) => {
+                      const url = URL.createObjectURL(
+                        new Blob([JSON.stringify(value, null, 2)], {
+                          type: "application/json",
+                        }),
+                      );
+                      const link = document.createElement("a");
+                      link.href = url;
+                      link.download = "olc-local-load-trace.json";
+                      link.click();
+                      setTimeout(() => URL.revokeObjectURL(url), 60000);
+                    })
+                    .catch((e) => setError(String(e)))
+                }
+              >
+                Export load diagnostics
+              </button>
               {bridge && (
                 <button onClick={() => bridge.postMessage({ forget: v.id })}>
                   Forget

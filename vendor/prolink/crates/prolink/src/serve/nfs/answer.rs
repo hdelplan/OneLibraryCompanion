@@ -299,6 +299,10 @@ impl Dispatcher {
             mount::Request::Mnt(path) => {
                 let path = path.to_string_lossy();
                 let result = self.root_of(&path).ok_or(ErrorStatus::NOENT);
+                super::super::diagnostics::record(format!(
+                    "nfs_mount peer={peer} path={path} ok={}",
+                    result.is_ok()
+                ));
                 if let Ok(handle) = &result {
                     debug!(%peer, %path, ?handle, "MNT");
                     self.remember_mount(peer, &path);
@@ -344,11 +348,24 @@ impl Dispatcher {
             nfs2::Request::Lookup { dir, name } => {
                 let name = name.to_string_lossy();
                 let found = lookup(&vfs, dir, &name);
+                super::super::diagnostics::record(format!(
+                    "nfs_lookup name={name} ok={}",
+                    found.is_ok()
+                ));
                 trace!(?dir, %name, status = %nfs2::Response::Lookup(found).status(), "LOOKUP");
                 nfs2::Response::Lookup(found).encode()
             }
             nfs2::Request::Read(args) => {
                 let read = read(&vfs, args);
+                if args.offset == 0 || read.is_err() {
+                    super::super::diagnostics::record(format!(
+                        "nfs_read path={} offset={} requested={} returned={:?}",
+                        vfs.path_of(args.handle).unwrap_or("unknown"),
+                        args.offset,
+                        args.count,
+                        read.as_ref().map(|(_, data)| data.len()).ok()
+                    ));
+                }
                 match &read {
                     Ok((attr, data)) => nfs2::Response::Read(Ok(FileData {
                         attr: *attr,

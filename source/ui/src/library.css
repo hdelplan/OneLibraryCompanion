@@ -1102,3 +1102,17 @@
 .local-usb-volume > span {
   display: block;
 }
+
+.library-unsupported.library-transcode-needed {
+  border-color: #dca74a;
+  color: #f4c875;
+}
+.library-row-load button.transcode-needed {
+  border-color: #bd8f3a;
+  color: #f4c875;
+}
+.transcoding-settings select,
+.transcoding-settings input {
+  min-width: 0;
+  max-width: 100%;
+}

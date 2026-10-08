@@ -20,6 +20,13 @@ PUBLIC_AGENTS = '''# Project requirements
 '''
 EXCLUDED = {'.git', 'target', 'builds', 'dist', 'node_modules', 'DerivedData', 'xcuserdata', 'com.apple.DeveloperTools', '__pycache__', '.DS_Store'}
 BANNED = {'.p12', '.mobileprovision', '.cer', '.pem', '.key', '.db', '.pdb', '.wav', '.mp3', '.aiff', '.flac', '.log', '.pyc', '.xcuserstate'}
+# Original synthetic regression signals, never user music. Pin their bytes so
+# an unrelated audio file cannot silently enter the source distribution.
+FIXTURES = {
+    'source/host/tests/fixtures/transcoding/reference.flac': 'e24560f13fc9ab2af5440550ec8ef0c323aa78d81a7439af3a2c47fa59e7ed57',
+    'source/host/tests/fixtures/transcoding/reference.m4a': 'e50b13e40bafaf8b0b57bdc873e51e15f65d544201653038dd4d7f418b6914c3',
+    'source/host/tests/fixtures/transcoding/reference.wav': 'baa2705b98262623dea90b3360335448ff177972b5e3c5aa766b4d4c118c08ef',
+}
 
 
 def prepare(destination):
@@ -40,7 +47,10 @@ def prepare(destination):
         override = OVERRIDES / relative
         if override.is_file():
             source = override
-        if source.is_symlink() or source.suffix.lower() in BANNED or source.name.startswith('.env'):
+        fixture = FIXTURES.get(relative.as_posix())
+        if fixture and hashlib.sha256(source.read_bytes()).hexdigest() != fixture:
+            raise SystemExit(f'Synthetic fixture changed; review before publication: {relative}')
+        if source.is_symlink() or (source.suffix.lower() in BANNED and not fixture) or source.name.startswith('.env'):
             raise SystemExit(f'Review excluded/sensitive file before publication: {relative}')
         if source.stat().st_size > 2 * 1024 * 1024:
             raise SystemExit(f'Review unusually large source file: {relative}')

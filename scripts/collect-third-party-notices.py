@@ -30,6 +30,9 @@ def main():
         if package['name'] in ('binrw', 'binrw_derive'):
             files = [OUT / 'binrw-LICENSE-MIT.txt']
             source_note = 'Upstream v0.15.2 LICENSE (shared workspace license).'
+        elif package['name'] == 'realfft':
+            files = [OUT / 'realfft-NOTICE.txt']
+            source_note = 'Pinned upstream MIT declaration and author; standard MIT permission text.'
         elif package['name'].startswith('winapi-') and not files:
             files = notices(Path(by_name['winapi']['manifest_path']).parent)
             source_note = 'winapi workspace licenses; Windows target support crate.'

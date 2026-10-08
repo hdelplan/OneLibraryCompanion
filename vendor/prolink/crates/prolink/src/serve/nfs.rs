@@ -355,6 +355,7 @@ fn listen(
                     Ok(Some(reply)) => {
                         if let Err(error) = socket.send_to(&reply, SocketAddr::V4(from)).await {
                             warn!(%error, %from, "reply not sent");
+                            super::diagnostics::record(format!("nfs_send_error peer={from} error={error}"));
                         }
                     }
                     Ok(None) => {}

@@ -18,7 +18,7 @@ The Pi host package grants its executable `CAP_NET_BIND_SERVICE` during installa
 4. On a first connection, the CDJ may need **LINK** before it discovers **OLC LOCAL USB**. Follow the load message, wait for the source to appear, then make a new explicit load request. If the outcome is unknown, check the physical player's selection before trying again.
 5. Keep OLC running, the host awake and the drive attached throughout playback. Stop both players before disconnecting the USB or changing the connection mode.
 
-The file is streamed from the USB without transcoding. Exported metadata, artwork, waveform analysis, beats and cues accompany it. Each requested track has an independent serving identity, so loading another track on the other deck does not replace the first deck's audio source.
+Compatible files are streamed from the USB unchanged. Known incompatible local files can be converted into a local WAV/AIFF cache before loading. Exported metadata, artwork, waveform analysis, beats and cues accompany it. Each requested track has an independent serving identity, so loading another track on the other deck does not replace the first deck's audio source.
 
 ## Unresolved loading issues
 
@@ -30,7 +30,7 @@ Both issues remain unresolved.
 ## Operating limits
 
 - Automatic-discovery mode supports local browsing; local track loading requires Manual IP connections.
-- The destination player's audio format, sample rate and bit-depth limits still apply. OLC flags known incompatibilities; it cannot make an unsupported file playable.
+- The destination player's audio format, sample rate and bit-depth limits still apply. OLC shows amber **TRANSCODE NEEDED** for known convertible local tracks. MENU selects the PCM target; unsupported decoders and unknown conversion destinations remain unavailable.
 - Local sources require OneLibrary `exportLibrary.db`. Linked CDJ libraries use legacy `export.pdb`; an optional configured local legacy export is a separate browse-only source.
 - Keep the original exported paths. Missing files, paths outside the mounted volume, changing libraries and invalid databases are rejected.
 - The serving session holds up to 128 distinct requested selections. The native CDJ source lists requested tracks; use OLC to browse the full library. Restart the session only after stopping playback.
@@ -38,3 +38,26 @@ Both issues remain unresolved.
 - A USB attached to a web client is not attached to the OLC host. All clients use the host's mounted libraries.
 
 See [compatibility](compatibility.md) for platform validation limits.
+
+
+## Local audio conversion
+
+On Mac and Pi hosts with local serving available, pressing an amber
+track's CDJ load button converts the complete audio file first, then rechecks
+that the destination is connected, fresh and stopped before sending the load
+command. The UI reports conversion progress, cache reuse and elapsed time.
+**Cancel conversion** stops preparation without sending a load command when the
+worker observes cancellation; no remote unload or stop is sent if conversion has
+already completed. Linked CDJ-mounted USBs are not transcoded by this feature.
+
+The original USB, database, artwork and analysis files are never written.
+Converted files use classic integer PCM WAV or AIFF headers and independent
+serving identities for each variant. Existing beat grids and cues retain their
+time coordinates. Cache files live in the host data directory, with a 512 MiB
+per-track and 2 GiB session limit, and remain pinned while the serving session
+uses them. Unused cache entries may be evicted; old process caches are cleaned
+at startup. A conversion has a 120-second worker limit. Keep the USB attached
+and OLC running as before. ALAC is decoded to PCM because the current serving
+metadata has no verified ALAC container code, even for newer players.
+
+See [conversion configuration and measurements](configuration.md#audio-transcoding-and-benchmarks).

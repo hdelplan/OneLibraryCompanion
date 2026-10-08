@@ -43,3 +43,33 @@ Open an exported analysis file from MENU, or use a configured saved analysis cap
 Display settings, filter presets and row size belong to the client. A different browser, host IP or port has separate storage; a native window also has its own storage. History and host connection settings reside in the [host data directory](distribution.md#data-and-backups). Invalid preference values fall back to defaults.
 
 Environment configuration and precedence are documented in the [development guide](development.md#host-configuration).
+
+
+## Audio transcoding and benchmarks
+
+The Mac/Pi converter runs inside the host, without an FFmpeg installation.
+MENU → **Audio transcoding** selects Automatic, WAV 16-bit, WAV 24-bit,
+AIFF 16-bit or AIFF 24-bit. This preference is saved in the host data directory
+and shared by its web clients. Display “Restore defaults” does not reset it.
+
+Compatible originals remain unchanged. For known incompatible local tracks,
+Automatic outputs WAV, preserving a 16-bit source and otherwise using 24-bit.
+44.1/48 kHz are preserved; 88.2/176.4 kHz become 44.1 kHz; other unsupported
+rates become 48 kHz. Mono is duplicated to stereo. Multichannel inputs are
+rejected. Rate conversion uses an antialiasing filter with delay compensation;
+bit-depth reduction uses TPDF dither. PCM output clamps out-of-range samples
+and reports the count. MP3/AAC encoding is not supported.
+
+The **Conversion benchmark** uses a track from a host-attached OneLibrary USB,
+always bypasses the conversion cache, and never loads or plays a CDJ. Choose a
+target, search/select a track and press **Run benchmark**. Repeat the same track
+and target on the hosts being compared. Results include elapsed conversion time, actual
+output size/rate/depth, source properties and clipping count; **Share / save
+results** exports JSON with engine, OS and architecture. USB reads and local
+writes are included; OS file caches are not flushed, and timing does not include
+player discovery or NFS transfer. Real load responses separately show total
+request-to-CDJ-status-confirmation time, which is not proof of audible playback.
+
+The Mac benchmark works without installing Local USB Support. Loading the
+converted file onto a CDJ requires that component. Physical converted-file
+playback and cue/loop alignment have not yet been validated on the actual CDJs.

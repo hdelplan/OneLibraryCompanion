@@ -52,7 +52,9 @@ See [compatibility and operating limits](docs/compatibility.md) for player, medi
 - **Personal filter layout and presets:** choose visible filters, their order and BPM menu bounds in MENU. Save named filter combinations for a particular USB export and recall them in BROWSE.
 - **Mixing context:** key highlighting helps find harmonically related tracks; tracks recorded in the active set are marked as played. Known player-format incompatibilities are flagged before loading.
 - **Protected track loading:** request a track on CDJ1 or CDJ2 without leaving the library. OLC checks the source, connection and stopped-player state before sending one load request. Playing, looping, busy or stale targets are blocked; uncertain requests are never retried automatically.
-- **Host-attached USB playback:** OLC serves the selected original audio file and its exported metadata, artwork and analysis to a directly connected CDJ, without transcoding. Different tracks from different local libraries can remain available to both players. See [local USB usage](docs/local-usb.md) for setup and limits. Mac requires the included Local USB Support component.
+- **Host-attached USB playback:** OLC serves compatible original audio and its exported metadata, artwork and analysis to a directly connected CDJ. Different tracks from different local libraries can remain available to both players. See [local USB usage](docs/local-usb.md) for setup and limits. Mac requires the included Local USB Support component.
+- **Audio transcoding:** known incompatible local tracks are converted to WAV or AIFF before loading, with 16-bit or 24-bit output and sample-rate conversion where needed. MENU selects the output profile. Progress, cancellation and cache reuse are shown while the original USB stays unchanged. Conversion runs inside OLC without additional audio software; linked CDJ-mounted USB tracks are not converted.
+- **Conversion measurements:** MENU can measure conversion time for a selected local track and export the results, without loading or playing a CDJ. See [audio settings](docs/configuration.md#audio-transcoding-and-benchmarks).
 
 ### Keep and reuse set lists
 
