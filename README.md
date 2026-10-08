@@ -46,7 +46,7 @@ Choose **Start set** before playing. OLC adds tracks after more than 45 seconds 
 
 1. Install OLC and connect the computer and CDJs to the same network.
 2. Set up the player connection in MENU and select a library in BROWSE. Local USB loading currently requires **Manual IP connections**; Mac also requires the included **Local USB Support** installation.
-3. Keep OLC running and the USB attached while playing. To use another device, open the network address shown in MENU in its browser. No login or pairing is needed.
+3. Keep OLC running and the USB attached while playing. To use OLC from a tablet or any web browser, open the network address shown in MENU in your browser. No login or pairing is needed.
 
 The interface uses a fixed 1280 × 800 layout scaled to the display. Downloads require access to this private repository.
 
