@@ -173,3 +173,69 @@ test("clearing track filters preserves collection selection and ordering", () =>
   assert.deepEqual(cleared, navigation);
   assert.equal(filterCount(cleared), 0);
 });
+
+test("playing titles follow either deck immediately and stop for paused or stale players", async () => {
+  const { currentlyPlayingTrackKeys } = await import("./libraryLoading");
+  const { playedTrackKey } = await import("./setHistoryModel");
+  const track = {
+    id: 7,
+    title: "Track",
+    artist: "Artist",
+    filePath: "/Contents/a.wav",
+    album: "",
+    key: "8A",
+    bpm: 120,
+    duration: 300,
+    genre: "",
+    bitrate: 1411,
+    sampleRate: 44100,
+  };
+  const deck = {
+    source: "live",
+    name: "CDJ1",
+    position: 0,
+    analysis: { track, detail: null, preview: null },
+    live: {
+      number: 1,
+      connection: "connected",
+      playing: true,
+      playState: "playing",
+    },
+  } as import("./model").Deck;
+  const change = (live: Partial<import("./model").LivePlayer>) => ({
+    ...deck!,
+    live: { ...deck!.live!, ...live },
+  });
+  assert.deepEqual(currentlyPlayingTrackKeys([null, deck]), [
+    playedTrackKey(track),
+  ]);
+  assert.deepEqual(currentlyPlayingTrackKeys([deck, deck]), [
+    playedTrackKey(track),
+  ]);
+  assert.deepEqual(
+    currentlyPlayingTrackKeys([
+      change({ playing: false, playState: "paused" }),
+    ]),
+    [],
+  );
+  assert.deepEqual(
+    currentlyPlayingTrackKeys([change({ connection: "stale" })]),
+    [],
+  );
+  assert.deepEqual(
+    currentlyPlayingTrackKeys([
+      change({ playing: undefined, playState: "looping" }),
+    ]),
+    [playedTrackKey(track)],
+  );
+  const switched = {
+    ...deck!,
+    analysis: {
+      ...deck!.analysis,
+      track: { ...track, id: 8, filePath: "/Contents/b.wav" },
+    },
+  };
+  assert.deepEqual(currentlyPlayingTrackKeys([switched]), [
+    playedTrackKey(switched.analysis.track),
+  ]);
+});

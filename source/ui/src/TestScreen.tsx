@@ -1,3 +1,4 @@
+import { LoadDiagnostics } from "./LoadDiagnostics";
 import { OfflinePreview } from "./OfflinePreview";
 import type { ReactNode } from "react";
 import { JogDiagnostics } from "./JogDiagnostics";
@@ -41,6 +42,7 @@ export function TestScreen({
           {active && (
             <div className="settings-grid test-tools">
               <CueDiagnostics liveEnabled={liveEnabled} />
+              <LoadDiagnostics />
             </div>
           )}
         </div>

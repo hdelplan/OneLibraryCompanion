@@ -14,6 +14,8 @@ Your library, both CDJs and your set history in one place. OLC runs on Mac or Ra
 - **Choose your setup:** use the standalone app or a browser on the same network, with mouse, keyboard or touch. Adjust the waveform display, visible filters and track-list size to suit you.
 - **Preview away from the decks:** inspect an exported waveform analysis file without connecting a CDJ.
 
+Use **CDJ STATUS / BROWSE** to switch between the two screens. Its text uses the same size as the other navigation buttons.
+
 ## CDJ status — follow the mix
 
 Compare both decks at a glance and see how the tracks fit together. Zoom into the waveforms for the next transition, follow approaching cues and phrases, and switch between elapsed and remaining time. Open track information for artwork and fuller library details.
@@ -22,7 +24,7 @@ Compare both decks at a glance and see how the tracks fit together. Zoom into th
 
 ## Library — find and load the next track
 
-Explore playlists, narrow your choices with combined filters and save useful searches. Played-track marks and key highlighting give context while selecting music. Press **CDJ1** or **CDJ2** to load a stopped player; OLC blocks loads when the player is playing or unavailable.
+Explore playlists, narrow your choices with combined filters and save useful searches. Currently playing titles are bright green; previously played titles use softer green. Browse remembers your position when you return, and key highlighting helps with selection. Press **CDJ1** or **CDJ2** to load a stopped player; OLC blocks loads when the player is playing or unavailable.
 
 For music attached to the Mac/Pi, both players can use different tracks from the same local USB library. When conversion is needed, OLC prepares the track before loading and shows progress. [Local USB and transcoding guide](docs/local-usb.md).
 

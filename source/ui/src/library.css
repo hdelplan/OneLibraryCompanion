@@ -859,6 +859,10 @@
   color: #519568;
 }
 
+.library-table .currently-playing-track .library-title-text {
+  color: #70ff91;
+}
+
 /* Shared Browse layout: compact controls and persisted track density. */
 .browse-nav {
   gap: 16px;

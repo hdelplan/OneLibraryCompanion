@@ -1,4 +1,12 @@
-import { lazy, Suspense, useCallback, useEffect, useState } from "react";
+import { currentlyPlayingTrackKeys } from "./libraryLoading";
+import {
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { createRoot } from "react-dom/client";
 import type { Analysis, Deck } from "./model";
 import { durationOf } from "./model";
@@ -36,6 +44,10 @@ function App() {
           ? "history"
           : "status",
     );
+  const lastPrimaryPage = useRef<"status" | "library">("status");
+  useEffect(() => {
+    if (page === "status" || page === "library") lastPrimaryPage.current = page;
+  }, [page]);
   const [librarySourceRequest, setLibrarySourceRequest] = useState<{
     id: string;
   } | null>(null);
@@ -167,16 +179,37 @@ function App() {
           )}
           <div className="navigation">
             <button
-              aria-current={page === "status" ? "page" : undefined}
-              onClick={() => setPage("status")}
+              className="primary-screen-toggle"
+              aria-label="CDJ STATUS / BROWSE"
+              aria-current={
+                page === "status" || page === "library" ? "page" : undefined
+              }
+              title={
+                page === "status"
+                  ? "Switch to Browse"
+                  : page === "library"
+                    ? "Switch to CDJ Status"
+                    : "Return to CDJ Status / Browse"
+              }
+              onClick={() =>
+                setPage(
+                  page === "status"
+                    ? "library"
+                    : page === "library"
+                      ? "status"
+                      : lastPrimaryPage.current,
+                )
+              }
             >
-              CDJ STATUS
-            </button>
-            <button
-              aria-current={page === "library" ? "page" : undefined}
-              onClick={() => setPage("library")}
-            >
-              BROWSE
+              <span className={page === "status" ? "active-screen" : undefined}>
+                CDJ STATUS
+              </span>
+              <span className="toggle-divider"> / </span>
+              <span
+                className={page === "library" ? "active-screen" : undefined}
+              >
+                BROWSE
+              </span>
             </button>
             <button
               aria-current={page === "history" ? "page" : undefined}
@@ -203,6 +236,7 @@ function App() {
         <Library
           toolbarTarget={libraryToolbar}
           activeKey={activeMixKey(live.decks)}
+          playingTrackKeys={currentlyPlayingTrackKeys(live.decks)}
           directAllowed={!live.enabled}
           sourceRequest={librarySourceRequest}
           onPreview={previewLibrary}

@@ -135,6 +135,21 @@ nav {
   color: #fff;
   border-bottom: 2px solid #007d96;
 }
+.navigation .primary-screen-toggle {
+  min-width: 240px;
+  padding: 0 24px;
+  font-size: 11px;
+  white-space: nowrap;
+  color: #999;
+}
+.primary-screen-toggle .active-screen {
+  color: #fff;
+  font-weight: bold;
+}
+.primary-screen-toggle .toggle-divider {
+  padding: 0 5px;
+  color: #777;
+}
 .waveforms {
   height: 372px;
   padding: 8px 10px 0;

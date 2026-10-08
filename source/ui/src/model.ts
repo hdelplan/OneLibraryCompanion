@@ -7,6 +7,7 @@ export type Wave = {
   normalization: number;
 };
 export type TrackInfo = {
+  filePath?: string;
   format?: string;
   sampleDepth?: number;
   databaseFormat?: string;

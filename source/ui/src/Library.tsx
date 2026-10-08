@@ -103,6 +103,7 @@ function readPresets(): Preset[] {
 function LibraryView({
   toolbarTarget,
   activeKey,
+  playingTrackKeys,
   active,
   filterOrder,
   bpmRange,
@@ -115,6 +116,7 @@ function LibraryView({
 }: {
   toolbarTarget: HTMLDivElement | null;
   activeKey: string | null;
+  playingTrackKeys: string[];
   active: boolean;
   filterOrder: string[];
   bpmRange: { min: number; max: number };
@@ -169,6 +171,7 @@ function LibraryView({
     };
   }, [active]);
   const playedTracks = playedTrackKeys(history);
+  const playingTracks = new Set(playingTrackKeys);
   const [previewBusy, setPreviewBusy] = useState(false);
   const previewRequest = useRef<AbortController | null>(null);
   const [sources, setSources] = useState<LibrarySource[]>([]);
@@ -722,7 +725,7 @@ function LibraryView({
             ref={window.ref}
             onScroll={window.onScroll}
           >
-            {!active ? null : !showSetHistory && !sourceId ? (
+            {!showSetHistory && !sourceId ? (
               <div className="library-empty">
                 <h2>Connect a Rekordbox USB</h2>
                 <p>
@@ -824,7 +827,7 @@ function LibraryView({
                     <tr
                       key={`${track.id}:${track.entry}`}
                       aria-rowindex={window.start + index + 2}
-                      className={`${selected?.entry === track.entry ? "selected" : ""} ${playedTracks.has(playedTrackKey(track) ?? "") ? "played-track" : ""}`}
+                      className={`${selected?.entry === track.entry ? "selected" : ""} ${playedTracks.has(playedTrackKey(track) ?? "") ? "played-track" : ""} ${playingTracks.has(playedTrackKey(track) ?? "") ? "currently-playing-track" : ""}`}
                     >
                       <td>
                         <span
@@ -1042,6 +1045,8 @@ export const Library = memo(
     a.toolbarTarget === b.toolbarTarget &&
     a.active === b.active &&
     a.activeKey === b.activeKey &&
+    a.playingTrackKeys.length === b.playingTrackKeys.length &&
+    a.playingTrackKeys.every((key, i) => key === b.playingTrackKeys[i]) &&
     a.directAllowed === b.directAllowed &&
     a.sourceRequest === b.sourceRequest &&
     a.onPreview === b.onPreview &&

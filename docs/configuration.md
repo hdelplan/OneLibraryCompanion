@@ -2,6 +2,10 @@
 
 Open MENU to connect your players and adjust the display and library filters.
 
+## Navigation
+
+Click **CDJ STATUS / BROWSE** to switch between the two screens. From MENU or SET HISTORY, it returns to your last performance screen. Its text matches the other navigation buttons. BROWSE keeps your previous list position when you return.
+
 ## CDJ connections
 
 Choose **Manual IP connections** for players 1 and 2 when using a USB attached to the Mac/Pi. Subnet search helps find their addresses. Mac local playback also requires **Local USB Support** from the application menu.
@@ -28,11 +32,11 @@ Choose small, medium or large track rows for more tracks or larger touch targets
 
 Choose **Automatic**, **WAV 16-bit**, **WAV 24-bit**, **AIFF 16-bit** or **AIFF 24-bit**. Automatic preserves supported source quality while preparing a format the destination can use. Compatible originals are always left unchanged.
 
-OLC shows conversion progress and offers cancellation during preparation. CDJ STATUS identifies the converted output once loaded. No separate audio software is required. [Local USB and conversion limits](local-usb.md).
+OLC shows conversion progress and offers cancellation during preparation. CDJ STATUS identifies the converted output once loaded. The conversion benchmark has been removed. No separate audio software is required. [Local USB and conversion limits](local-usb.md).
 
 ## Local USB panel
 
-Open **Local USB** in MENU to check attached libraries, connected players and any loading messages. Select the library itself in BROWSE.
+Open **Local USB** in MENU to check attached libraries, connected players and any loading messages directly in the panel. Select the library itself in BROWSE.
 
 ## Offline preview
 

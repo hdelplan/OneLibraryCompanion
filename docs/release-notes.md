@@ -1,7 +1,15 @@
-# OneLibraryCompanion 0.2.0
+# OneLibraryCompanion 0.2.1
+
+## Browse and navigation
+
+- A larger **CDJ STATUS / BROWSE** toggle replaces the two separate buttons, using the same font size as the other navigation buttons. The active screen is highlighted; from MENU or SET HISTORY it returns to the last-used primary screen.
+- BROWSE preserves list scroll position when returning from another screen. Changing collection, filters or sorting starts the new results at the top.
+- Track titles currently playing on either connected deck appear in bright green immediately. Previously played titles retain softer green after qualifying playback.
+- Screenshots use real exported waveform data for CDJ STATUS.
 
 ## UI refinements
 
+- Load diagnostics have moved out of the normal MENU.
 - Local USB controls are embedded in the MENU panel; BROWSE retains its USB selector.
 - Conversion-capable CDJ buttons stay white. CDJ STATUS shows the converted format and bit depth on one line.
 - Audio target selection remains; conversion benchmark controls have been removed from MENU.
@@ -26,9 +34,9 @@ OLC also provides two-deck live status, three-band waveforms, playlist browsing,
 
 ## Downloads and setup
 
-- Apple Silicon: `OneLibraryCompanion-0.2.0-macos-arm64.dmg` or `.zip`.
-- Intel Mac: `OneLibraryCompanion-0.2.0-macos-x86_64.dmg` or `.zip`.
-- Raspberry Pi Desktop: install both `onelibrarycompanion-host_0.2.0_arm64.deb` and `onelibrarycompanion_0.2.0_arm64.deb`.
+- Apple Silicon: `OneLibraryCompanion-0.2.1-macos-arm64.dmg` or `.zip`.
+- Intel Mac: `OneLibraryCompanion-0.2.1-macos-x86_64.dmg` or `.zip`.
+- Raspberry Pi Desktop: install both `onelibrarycompanion-host_0.2.1_arm64.deb` and `onelibrarycompanion_0.2.1_arm64.deb`.
 - Pi headless: install the host package and enable its user service.
 
 Mac requires macOS 13+; Pi requires 64-bit Raspberry Pi OS Bookworm or later. Mac packages are ad-hoc signed and not notarized. On Mac, install **Local USB Support** from the application menu, then quit and reopen OLC. Reinstall this component after updating OLC. The Pi package grants the host its required port-binding capability.

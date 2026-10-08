@@ -18,9 +18,6 @@ type Status = {
 };
 export function LocalUsb() {
   const [status, setStatus] = useState<Status | null>(null);
-  const [error, setError] = useState("");
-  const [report, setReport] = useState<File | null>(null);
-  const [preparing, setPreparing] = useState(false);
   const [pollError, setPollError] = useState("");
   const bridge = (
     window as unknown as {
@@ -88,63 +85,6 @@ export function LocalUsb() {
         </p>
       ))}
       {status?.serving?.error && <p role="alert">{status.serving.error}</p>}
-      <strong>Load diagnostics</strong>
-      <button
-        disabled={preparing}
-        onClick={() => {
-          setPreparing(true);
-          setError("");
-          setReport(null);
-          void fetch("/api/library/local/trace")
-            .then((r) => {
-              if (!r.ok) throw new Error("Cannot read load diagnostics");
-              return r.json();
-            })
-            .then((value) => {
-              setReport(
-                new File(
-                  [JSON.stringify(value, null, 2)],
-                  "olc-local-load-trace.json",
-                  { type: "application/json" },
-                ),
-              );
-            })
-            .catch((e) => setError(String(e)))
-            .finally(() => setPreparing(false));
-        }}
-      >
-        {preparing ? "Preparing diagnostics…" : "Prepare load diagnostics"}
-      </button>
-      {report && (
-        <button
-          onClick={async () => {
-            try {
-              setError("");
-              if (bridge) {
-                bridge.postMessage({
-                  shareDiagnostics: await report.text(),
-                });
-              } else if (navigator.canShare?.({ files: [report] })) {
-                await navigator.share({
-                  files: [report],
-                  title: "OLC local load diagnostics",
-                });
-              } else {
-                const url = URL.createObjectURL(report);
-                const link = document.createElement("a");
-                link.href = url;
-                link.download = report.name;
-                link.click();
-                setTimeout(() => URL.revokeObjectURL(url), 60000);
-              }
-            } catch (e) {
-              setError(String(e));
-            }
-          }}
-        >
-          Share / save diagnostics
-        </button>
-      )}
       {bridge && (
         <>
           <p>
@@ -173,7 +113,6 @@ export function LocalUsb() {
       ))}
       {!status?.volumes.length && <p>No local USB library detected.</p>}
       {pollError && <p role="alert">{pollError}</p>}
-      {error && <p role="alert">{error}</p>}
     </div>
   );
 }

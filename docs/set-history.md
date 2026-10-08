@@ -32,9 +32,11 @@ Choose **Import history** and a supported library source. OLC imports complete h
 
 ## Played-track marks
 
+BROWSE immediately shows a track playing on either deck in bright green. Previously played titles use softer green.
+
 BROWSE marks previously played tracks in green after more than 45 seconds of continuous playback, even without recording a set. These marks survive restarting OLC.
 
-Use **Clear played tracks** in SET HISTORY to reset them. This leaves saved sets intact; starting or finishing a set does not clear the marks.
+Use **Clear played tracks** in the SET HISTORY top banner to reset them. This leaves saved sets intact; starting or finishing a set does not clear the marks.
 
 ## Storage and backup
 

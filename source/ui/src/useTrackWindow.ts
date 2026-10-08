@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 // One continuous list; only rows near the viewport need DOM or artwork requests.
 export function useTrackWindow(
   count: number,
@@ -8,11 +8,16 @@ export function useTrackWindow(
 ) {
   const ref = useRef<HTMLDivElement>(null);
   const [top, setTop] = useState(0);
+  const savedTop = useRef(0);
   const [height, setHeight] = useState(500);
-  useEffect(() => {
+  useLayoutEffect(() => {
+    savedTop.current = 0;
     if (ref.current) ref.current.scrollTop = 0;
     setTop(0);
   }, [result, rowHeight]);
+  useLayoutEffect(() => {
+    if (active && ref.current) ref.current.scrollTop = savedTop.current;
+  }, [active]);
   useEffect(() => {
     const element = ref.current;
     if (!element || !active) return;
@@ -30,6 +35,10 @@ export function useTrackWindow(
     ref,
     start,
     end,
-    onScroll: () => setTop(ref.current?.scrollTop ?? 0),
+    onScroll: () => {
+      if (!active) return;
+      savedTop.current = ref.current?.scrollTop ?? 0;
+      setTop(savedTop.current);
+    },
   };
 }
