@@ -1,4 +1,8 @@
-# OneLibraryCompanion 0.2.2
+# OneLibraryCompanion 0.2.3
+
+## Menu cleanup
+
+- Removed Offline preview from MENU and the disconnected status screen.
 
 ## Browse refresh fixes
 
@@ -39,9 +43,9 @@ OLC also provides two-deck live status, three-band waveforms, playlist browsing,
 
 ## Downloads and setup
 
-- Apple Silicon: `OneLibraryCompanion-0.2.2-macos-arm64.dmg` or `.zip`.
-- Intel Mac: `OneLibraryCompanion-0.2.2-macos-x86_64.dmg` or `.zip`.
-- Raspberry Pi Desktop: install both `onelibrarycompanion-host_0.2.2_arm64.deb` and `onelibrarycompanion_0.2.2_arm64.deb`.
+- Apple Silicon: `OneLibraryCompanion-0.2.3-macos-arm64.dmg` or `.zip`.
+- Intel Mac: `OneLibraryCompanion-0.2.3-macos-x86_64.dmg` or `.zip`.
+- Raspberry Pi Desktop: install both `onelibrarycompanion-host_0.2.3_arm64.deb` and `onelibrarycompanion_0.2.3_arm64.deb`.
 - Pi headless: install the host package and enable its user service.
 
 Mac requires macOS 13+; Pi requires 64-bit Raspberry Pi OS Bookworm or later. Mac packages are ad-hoc signed and not notarized. On Mac, install **Local USB Support** from the application menu, then quit and reopen OLC. Reinstall this component after updating OLC. The Pi package grants the host its required port-binding capability.

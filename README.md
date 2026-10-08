@@ -12,7 +12,6 @@ Your library, both CDJs and your set history in one place. OLC runs on Mac or Ra
 - **Use more tracks on older CDJs:** built-in audio transcoding prepares supported files such as FLAC and ALAC as compatible WAV or AIFF when the destination needs it. No separate converter is required.
 - **Record and reuse sets:** capture your tracklist, edit it, import supported rekordbox histories, revisit past sets as playlists, and export text, CSV or PDF.
 - **Choose your setup:** use the standalone app or a browser on the same network, with mouse, keyboard or touch. Adjust the waveform display, visible filters and track-list size to suit you.
-- **Preview away from the decks:** inspect an exported waveform analysis file without connecting a CDJ.
 
 Use **CDJ STATUS / BROWSE** to switch between the two screens. Its text uses the same size as the other navigation buttons.
 

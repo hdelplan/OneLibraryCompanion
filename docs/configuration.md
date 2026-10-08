@@ -38,10 +38,6 @@ OLC shows conversion progress and offers cancellation during preparation. CDJ ST
 
 Open **Local USB** in MENU to check attached libraries, connected players and any loading messages directly in the panel. Select the library itself in BROWSE.
 
-## Offline preview
-
-Open an exported analysis file to inspect its waveform without loading a CDJ. Choose **Show live CDJs** to return to the players.
-
 ## Preference storage
 
 Display choices and filter presets are saved separately on each device or browser. Connections and transcoding settings apply to the shared host. History and host settings are stored in the [application data directory](distribution.md#data-and-backups).

@@ -16,7 +16,6 @@ import { Library } from "./Library";
 import { activeMixKey } from "./keyCompatibility";
 import { SetHistory } from "./SetHistory";
 import { Configuration } from "./Configuration";
-import { OfflinePreview } from "./OfflinePreview";
 import { HostSettings } from "./HostSettings";
 const Experiments = __OLC_EXPERIMENTS__
   ? lazy(() => import("./Experiments"))
@@ -269,16 +268,7 @@ function App() {
             players={live.decks.flatMap((deck) =>
               deck?.live ? [deck.live] : [],
             )}
-            desktopTools={
-              !__OLC_EXPERIMENTS__ ? (
-                <>
-                  <HostSettings />
-                  <OfflinePreview
-                    {...{ previewDeck, setPreviewDeck, busy, load, error }}
-                  />
-                </>
-              ) : null
-            }
+            desktopTools={!__OLC_EXPERIMENTS__ ? <HostSettings /> : null}
             directPeers={live.directPeers}
             onConnected={(id) => {
               if (id) {
@@ -356,13 +346,11 @@ function App() {
                   <span>
                     CDJ status will appear when a live source is connected.
                   </span>
-                  <button
-                    onClick={() =>
-                      setPage(__OLC_EXPERIMENTS__ ? "test" : "config")
-                    }
-                  >
-                    Open offline preview
-                  </button>
+                  {__OLC_EXPERIMENTS__ && (
+                    <button onClick={() => setPage("test")}>
+                      Open offline preview
+                    </button>
+                  )}
                 </>
               )}
             </footer>
