@@ -198,7 +198,6 @@ function LibraryView({
     showSetHistory,
     showSetHistory ? currentSet?.id : null,
     filters,
-    density,
   ]);
   useEffect(() => {
     setPage(null);
