@@ -8,6 +8,7 @@
 //! servers over it, and the dbserver that makes it browsable.
 
 pub mod dbserver;
+pub mod diagnostics;
 pub mod medium;
 pub mod nfs;
 pub mod player;

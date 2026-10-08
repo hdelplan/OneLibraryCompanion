@@ -68,12 +68,19 @@ export type TrackPage = {
 };
 export type Filters = Record<string, string>;
 export const emptyFilters: Filters = { sort: "playlist", tagMode: "any" };
+export function clearTrackFilters(filters: Filters): Filters {
+  return Object.fromEntries(
+    Object.entries(filters).filter(([key]) =>
+      ["playlist", "set", "sort", "direction", "tagMode"].includes(key),
+    ),
+  );
+}
 export function filterCount(filters: Filters) {
   return Object.entries(filters).filter(
     ([key, value]) =>
       value &&
       value !== "[]" &&
-      !["sort", "direction", "tagMode"].includes(key) &&
+      !["playlist", "set", "sort", "direction", "tagMode"].includes(key) &&
       !key.endsWith(":mode"),
   ).length;
 }

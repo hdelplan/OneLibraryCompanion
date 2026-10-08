@@ -58,6 +58,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
         let app = NSMenu(title: "OneLibraryCompanion")
         app.addItem(withTitle: "About OneLibraryCompanion", action: #selector(about), keyEquivalent: "")
         app.addItem(.separator())
+        app.addItem(withTitle: "Local USB Support…", action: #selector(localUsbSupport), keyEquivalent: "")
         app.addItem(withTitle: "Show OLC", action: #selector(showWindow), keyEquivalent: "0")
         loginItem = app.addItem(withTitle: "Open at Login", action: #selector(toggleLogin), keyEquivalent: "")
         loginItem.state = SMAppService.mainApp.status == .enabled ? .on : .off
@@ -148,8 +149,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
         alert.runModal()
         NSApp.terminate(nil)
     }
+    @objc private func localUsbSupport() {
+        let alert = NSAlert()
+        alert.messageText = "Local USB Support"
+        alert.informativeText = "Install the networking component to load music from USB drives connected to this Mac onto your CDJs. macOS Installer requests administrator approval. Quit and reopen OLC after installation.\n\nTo remove it, first stop playback and quit OLC, then run Remove Local USB Support.command from the app's Contents/Resources folder."
+        alert.addButton(withTitle: "Open Installer")
+        alert.addButton(withTitle: "Cancel")
+        if alert.runModal() == .alertFirstButtonReturn,
+           let package = Bundle.main.resourceURL?.appendingPathComponent("OLC Local USB Support.pkg") {
+            NSWorkspace.shared.open(package)
+        }
+    }
     @objc private func about() {
-        NSApp.orderFrontStandardAboutPanel(options: [.applicationName: "OneLibraryCompanion", .applicationVersion: "0.1.2", .credits: NSAttributedString(string: "OLC · Shared CDJ companion\nGPL-3.0-only")])
+        NSApp.orderFrontStandardAboutPanel(options: [.applicationName: "OneLibraryCompanion", .applicationVersion: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "", .credits: NSAttributedString(string: "OLC · Shared CDJ companion\nGPL-3.0-only")])
     }
     @objc func showWindow() { window?.makeKeyAndOrderFront(nil); NSApp.activate(ignoringOtherApps: true) }
     @objc private func reload() { if !starting { web.load(URLRequest(url: origin, cachePolicy: .reloadIgnoringLocalCacheData)) } }

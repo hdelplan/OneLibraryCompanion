@@ -63,6 +63,7 @@ export type Deck = {
 } | null;
 export type LivePlayer = {
   loadProtected?: boolean;
+  loadBlockedReason?: string | null;
   playing?: boolean;
   manualMotion?: boolean;
   currentCue?: number | null;

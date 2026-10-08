@@ -2968,7 +2968,7 @@ mod tests {
         // the same medium, which reports exactly these.
         assert_eq!(parsed.track_count, 692);
         assert_eq!(parsed.playlist_count, 35);
-        assert_eq!(parsed.total_bytes, 0x28ca_8000);
+        assert_eq!(parsed.total_bytes, 0x7_28ca_8000);
 
         // And ours is byte-identical to the deck's, unknown words included.
         assert_eq!(parsed.encode(), body, "we must send what a deck sends");
@@ -3073,6 +3073,39 @@ mod tests {
         assert_eq!("\u{1f3b5}".chars().count(), 1);
         assert_eq!(string_characters("\u{1f3b5}"), 3);
         assert_eq!(encode_string("\u{1f3b5}").len(), 4 + 6);
+    }
+
+    #[test]
+    fn accented_metadata_lengths_and_following_messages_remain_aligned() {
+        for text in [
+            "Isolée",
+            "Isol馥",
+            "Beau Mot Plage",
+            "Monologue (JØRD Remix)",
+            "e\u{301}",
+            "音楽 🎵",
+        ] {
+            let mut item = MenuItem::named(1162, ItemType::ARTIST, text);
+            item.label2 = text.into();
+            let message = item.to_message(1);
+            let expected_bytes = ((text.encode_utf16().count() + 1) * 2) as u32;
+            assert_eq!(message.number(2), Some(expected_bytes));
+            assert_eq!(message.number(4), Some(expected_bytes));
+            let first = message.encode();
+            let next = MenuItem::named(1, ItemType::PATH, "/OLC/1/1162/audio.aiff")
+                .to_message(2)
+                .encode();
+            let mut stream = first.clone();
+            stream.extend(&next);
+            let (decoded, used) = Message::decode(&stream).unwrap();
+            assert_eq!(used, first.len());
+            assert_eq!(decoded.text(3), Some(text));
+            assert_eq!(decoded.text(5), Some(text));
+            let (following, consumed) = Message::decode(&stream[used..]).unwrap();
+            assert_eq!(consumed, next.len());
+            assert_eq!(following.text(3), Some("/OLC/1/1162/audio.aiff"));
+        }
+        assert_eq!(encode_string("é"), [0, 0, 0, 2, 0, 0xe9, 0, 0]);
     }
 
     #[test]
@@ -3571,10 +3604,10 @@ mod tests {
 /// 0x78  u32 LE         track count                       692
 /// 0x7c  u32 LE         unknown, 0x01010000 observed
 /// 0x80  u32 LE         playlist count                    35
-/// 0x84  u32 LE         unknown, 7 observed
-/// 0x88  u32 LE         total bytes
-/// 0x8c  u32 LE         unknown, 5 observed
-/// 0x90  u32 LE         free bytes
+/// 0x84  u32 LE         total bytes, high word
+/// 0x88  u32 LE         total bytes, low word
+/// 0x8c  u32 LE         free bytes, high word
+/// 0x90  u32 LE         free bytes, low word
 /// ```
 ///
 /// The two counts and the two sizes are what tie it to the UDP reply: the
@@ -3583,8 +3616,9 @@ mod tests {
 /// both — big-endian there, little-endian here. **Note the endianness**: every
 /// other string in this protocol is UTF-16 *big*-endian, and this one is not.
 ///
-/// The four unknown words are reproduced as observed. Substituting a plausible
-/// zero is what this codebase does not do.
+/// Capacity fields store the high word first, with each word little-endian.
+/// The high words (7 and 5 in the reference capture) are part of the sizes.
+/// Unidentified fields elsewhere remain as observed.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct MediaInfo {
     /// The volume label, as the DJ formatted it.
@@ -3596,9 +3630,9 @@ pub struct MediaInfo {
     /// How many playlists it holds.
     pub playlist_count: u32,
     /// Capacity in bytes.
-    pub total_bytes: u32,
+    pub total_bytes: u64,
     /// Free space in bytes.
-    pub free_bytes: u32,
+    pub free_bytes: u64,
 }
 
 impl MediaInfo {
@@ -3635,10 +3669,18 @@ impl MediaInfo {
         put_u32le(&mut body, Self::OFF_TRACKS, self.track_count);
         put_u32le(&mut body, Self::OFF_TRACKS + 4, 0x0101_0000);
         put_u32le(&mut body, Self::OFF_PLAYLISTS, self.playlist_count);
-        put_u32le(&mut body, Self::OFF_PLAYLISTS + 4, 7);
-        put_u32le(&mut body, Self::OFF_TOTAL, self.total_bytes);
-        put_u32le(&mut body, Self::OFF_TOTAL + 4, 5);
-        put_u32le(&mut body, Self::OFF_FREE, self.free_bytes);
+        put_u32le(
+            &mut body,
+            Self::OFF_TOTAL - 4,
+            (self.total_bytes >> 32) as u32,
+        );
+        put_u32le(&mut body, Self::OFF_TOTAL, self.total_bytes as u32);
+        put_u32le(
+            &mut body,
+            Self::OFF_FREE - 4,
+            (self.free_bytes >> 32) as u32,
+        );
+        put_u32le(&mut body, Self::OFF_FREE, self.free_bytes as u32);
         body
     }
 
@@ -3652,8 +3694,10 @@ impl MediaInfo {
             created: utf16le(body, Self::OFF_CREATED, Self::LEN_CREATED),
             track_count: u32le(body, Self::OFF_TRACKS),
             playlist_count: u32le(body, Self::OFF_PLAYLISTS),
-            total_bytes: u32le(body, Self::OFF_TOTAL),
-            free_bytes: u32le(body, Self::OFF_FREE),
+            total_bytes: (u64::from(u32le(body, Self::OFF_TOTAL - 4)) << 32)
+                | u64::from(u32le(body, Self::OFF_TOTAL)),
+            free_bytes: (u64::from(u32le(body, Self::OFF_FREE - 4)) << 32)
+                | u64::from(u32le(body, Self::OFF_FREE)),
         })
     }
 }

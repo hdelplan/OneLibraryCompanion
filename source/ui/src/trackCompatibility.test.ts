@@ -20,7 +20,7 @@ test("mixed decks warn only for the incompatible target", () => {
   assert.equal(unsupportedReason(track("mp3"), decks[0]), null);
 });
 test("sample rates and lossless bit depths follow each model", () => {
-  for (const name of ["CDJ-2000NXS", "CDJ-2000nexus"]) {
+  for (const name of ["CDJ-2000", "CDJ-2000NXS", "CDJ-2000nexus"]) {
     assert.ok(unsupportedReason(track("wav", 96000), player(name)));
     assert.equal(
       unsupportedReason(track("aiff", 48000, 24), player(name)),
@@ -66,4 +66,47 @@ test("model changes refresh memoized rows", () => {
     sameLoadPlayers([player("CDJ-2000nexus")], [player("CDJ-2000NXS2")]),
     false,
   );
+});
+
+test("only a known local destination enables the transcoding route", async () => {
+  const { canTranscode } = await import("./trackCompatibility");
+  assert.equal(
+    canTranscode(track("flac"), "local-usb:1", player("CDJ-2000nexus")),
+    true,
+  );
+  assert.equal(
+    canTranscode(track("flac"), "cdj:1:usb", player("CDJ-2000nexus")),
+    false,
+  );
+  assert.equal(
+    canTranscode(track("flac"), "local-usb:1", player("Unknown")),
+    false,
+  );
+  assert.equal(
+    canTranscode(track("unknown"), "local-usb:1", player("CDJ-2000nexus")),
+    false,
+  );
+  assert.equal(
+    canTranscode(track("flac"), "local-usb:1", {
+      ...player("CDJ-2000nexus"),
+      connection: "disconnected",
+    }),
+    false,
+  );
+});
+
+test("original CDJ-2000 flags FLAC and ALAC and offers local conversion", async () => {
+  const { canTranscode } = await import("./trackCompatibility");
+  for (const format of ["flac", "alac"]) {
+    assert.ok(unsupportedReason(track(format), player("CDJ-2000")));
+    assert.equal(
+      canTranscode(track(format), "local-usb:1", player("CDJ-2000")),
+      true,
+    );
+    assert.equal(
+      canTranscode(track(format), "cdj:1:usb", player("CDJ-2000")),
+      false,
+    );
+  }
+  assert.equal(unsupportedReason(track("mp3"), player("CDJ-2000")), null);
 });

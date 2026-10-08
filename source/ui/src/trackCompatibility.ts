@@ -9,7 +9,7 @@ export function unsupportedReason(
 ): string | null {
   if (player?.connection !== "connected") return null;
   const model = player.name.toUpperCase().replace(/[^A-Z0-9]/g, "");
-  const nexus = ["CDJ2000NEXUS", "CDJ2000NXS"].includes(model);
+  const nexus = ["CDJ2000", "CDJ2000NEXUS", "CDJ2000NXS"].includes(model);
   const nxs2 = ["CDJ2000NXS2", "CDJ2000NEXUS2"].includes(model);
   const cdj3000 = model === "CDJ3000";
   if (!nexus && !nxs2 && !cdj3000) return null;
@@ -49,4 +49,28 @@ export function incompatiblePlayers(
   players: LivePlayer[],
 ) {
   return players.filter((player) => unsupportedReason(track, player) !== null);
+}
+
+// Conversion is available only for host-attached media and known destinations.
+export function canTranscode(
+  track: LibraryTrack,
+  sourceId: string | undefined,
+  player?: LivePlayer,
+): boolean {
+  const model = player?.name.toUpperCase().replace(/[^A-Z0-9]/g, "") ?? "";
+  return (
+    !!sourceId?.startsWith("local-usb:") &&
+    player?.connection === "connected" &&
+    [
+      "CDJ2000",
+      "CDJ2000NEXUS",
+      "CDJ2000NXS",
+      "CDJ2000NXS2",
+      "CDJ2000NEXUS2",
+      "CDJ3000",
+    ].includes(model) &&
+    ["wav", "aiff", "flac", "alac", "mp3", "aac"].includes(
+      String(track.format).toLowerCase(),
+    )
+  );
 }

@@ -1213,8 +1213,8 @@ impl MediaResponse {
     const LEN_CREATED: usize = 0x18;
     const OFF_TRACK_COUNT: usize = 0xa4;
     const OFF_PLAYLIST_COUNT: usize = 0xac;
-    const OFF_TOTAL_BYTES: usize = 0xb4;
-    const OFF_FREE_BYTES: usize = 0xbc;
+    const OFF_TOTAL_BYTES: usize = 0xb0;
+    const OFF_FREE_BYTES: usize = 0xb8;
 
     /// Parse a media response.
     pub fn parse(data: &[u8]) -> Result<Self> {
@@ -1266,13 +1266,23 @@ impl MediaResponse {
     }
 
     /// The medium's capacity in bytes.
-    pub fn total_bytes(&self) -> Option<u32> {
-        be_u32_at(&self.raw, Self::OFF_TOTAL_BYTES)
+    pub fn total_bytes(&self) -> Option<u64> {
+        Some(u64::from_be_bytes(
+            self.raw
+                .get(Self::OFF_TOTAL_BYTES..Self::OFF_TOTAL_BYTES + 8)?
+                .try_into()
+                .ok()?,
+        ))
     }
 
     /// Free space in bytes.
-    pub fn free_bytes(&self) -> Option<u32> {
-        be_u32_at(&self.raw, Self::OFF_FREE_BYTES)
+    pub fn free_bytes(&self) -> Option<u64> {
+        Some(u64::from_be_bytes(
+            self.raw
+                .get(Self::OFF_FREE_BYTES..Self::OFF_FREE_BYTES + 8)?
+                .try_into()
+                .ok()?,
+        ))
     }
 }
 
@@ -1297,8 +1307,10 @@ pub struct MediaResponseBuilder {
     volume_name: String,
     track_count: u32,
     playlist_count: u32,
-    total_bytes: Option<u32>,
-    free_bytes: Option<u32>,
+    total_bytes: Option<u64>,
+    free_bytes: Option<u64>,
+    created: String,
+    has_settings: bool,
 }
 
 impl MediaResponseBuilder {
@@ -1338,9 +1350,23 @@ impl MediaResponseBuilder {
         self
     }
 
-    /// Capacity and free space. Left as the skeleton's values when not set.
+    /// Creation date from the medium, or empty when unknown.
     #[must_use]
-    pub fn size(mut self, total_bytes: u32, free_bytes: u32) -> Self {
+    pub fn created(mut self, created: &str) -> Self {
+        self.created = created.to_owned();
+        self
+    }
+
+    /// Whether the medium has a valid saved settings block.
+    #[must_use]
+    pub fn has_settings(mut self, available: bool) -> Self {
+        self.has_settings = available;
+        self
+    }
+
+    /// Capacity and free space. Zero means unavailable when not supplied.
+    #[must_use]
+    pub fn size(mut self, total_bytes: u64, free_bytes: u64) -> Self {
         self.total_bytes = Some(total_bytes);
         self.free_bytes = Some(free_bytes);
         self
@@ -1365,12 +1391,19 @@ impl MediaResponseBuilder {
             put_u32(MediaResponse::OFF_SLOT, u32::from(self.slot));
             put_u32(MediaResponse::OFF_TRACK_COUNT, self.track_count);
             put_u32(MediaResponse::OFF_PLAYLIST_COUNT, self.playlist_count);
-            if let Some(total) = self.total_bytes {
-                put_u32(MediaResponse::OFF_TOTAL_BYTES, total);
-            }
-            if let Some(free) = self.free_bytes {
-                put_u32(MediaResponse::OFF_FREE_BYTES, free);
-            }
+        }
+        // Capacities are 64-bit BE, including the high word: never reuse
+        // the captured USB's high words (see beat-link MediaDetails).
+        raw[MediaResponse::OFF_TOTAL_BYTES..MediaResponse::OFF_TOTAL_BYTES + 8]
+            .copy_from_slice(&self.total_bytes.unwrap_or(0).to_be_bytes());
+        raw[MediaResponse::OFF_FREE_BYTES..MediaResponse::OFF_FREE_BYTES + 8]
+            .copy_from_slice(&self.free_bytes.unwrap_or(0).to_be_bytes());
+        raw[0xab] = u8::from(self.has_settings);
+        let created = &mut raw
+            [MediaResponse::OFF_CREATED..MediaResponse::OFF_CREATED + MediaResponse::LEN_CREATED];
+        created.fill(0);
+        for (pair, unit) in created.chunks_exact_mut(2).zip(self.created.encode_utf16()) {
+            pair.copy_from_slice(&unit.to_be_bytes());
         }
 
         if let Some(field) = raw.get_mut(
@@ -1899,6 +1932,32 @@ mod tests {
         // Bytes following 0x24: the address, the target and the slot.
         assert_eq!(be_u16_at(&raw, OFF_BODY_LEN), Some(0x0c));
         assert_eq!(MediaQuery::parse(&raw).unwrap(), query);
+    }
+
+    #[test]
+    fn media_capacity_uses_all_eight_bytes_and_unknown_facts_do_not_leak() {
+        let empty = MediaResponse::builder().build();
+        assert_eq!(empty.created(), "");
+        assert_eq!(empty.total_bytes(), Some(0));
+        assert_eq!(empty.free_bytes(), Some(0));
+        assert_eq!(empty.as_bytes()[0xab], 0);
+        let reply = MediaResponse::builder()
+            .size(0x12_3456_789a, 0x9_8765_4321)
+            .created("2026-10-08")
+            .has_settings(true)
+            .build();
+        assert_eq!(
+            &reply.as_bytes()[0xb0..0xb8],
+            &0x12_3456_789au64.to_be_bytes()
+        );
+        assert_eq!(
+            &reply.as_bytes()[0xb8..0xc0],
+            &0x9_8765_4321u64.to_be_bytes()
+        );
+        assert_eq!(reply.total_bytes(), Some(0x12_3456_789a));
+        assert_eq!(reply.free_bytes(), Some(0x9_8765_4321));
+        assert_eq!(reply.created(), "2026-10-08");
+        assert_eq!(reply.as_bytes()[0xab], 1);
     }
 
     #[test]

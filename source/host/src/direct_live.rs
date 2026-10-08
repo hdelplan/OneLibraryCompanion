@@ -262,6 +262,18 @@ impl Peer {
                 }
                 self.usb = usb;
             }
+            if self.observed.as_ref().is_none_or(|(old, _)| {
+                old.track_id() != s.track_id()
+                    || old.source_player() != s.source_player()
+                    || old.play_state() != s.play_state()
+            }) {
+                prolink::serve::diagnostics::record(format!(
+                    "player_state target={number} source={:?} track={} state={:?}",
+                    s.source_player(),
+                    s.track_id(),
+                    s.play_state()
+                ));
+            }
             self.observed = Some((s, at));
         }
     }
@@ -283,6 +295,12 @@ impl Peer {
     }
 }
 fn unknown(p: Pending) {
+    prolink::serve::diagnostics::record(format!(
+        "load_unknown source={} track={} elapsed_ms={}",
+        p.source,
+        p.track,
+        p.sent.elapsed().as_millis()
+    ));
     let _ = p.reply.send(json!({"outcome":"unknown","message":"Load outcome unknown. Check the CDJ; no automatic retry was sent."}));
 }
 fn validate_load(s: &status::CdjStatus, age: Duration) -> Result<u8, String> {
@@ -291,16 +309,11 @@ fn validate_load(s: &status::CdjStatus, age: Duration) -> Result<u8, String> {
         .filter(|n| n.is_player())
         .ok_or("Unknown player identity")?
         .get();
-    crate::cdj_usb_load::TargetStatus {
-        age_ms: age.as_millis() as u64,
-        playing: prolink::monitor::PlayerStatus::from_packet(s).is_playing,
-        play_state: s.play_state().ok_or("Missing play state")?,
-    }
-    .check()
-    .map_err(str::to_owned)?;
+    crate::loading::check_load_allowed(prolink::monitor::PlayerStatus::from_packet(s), age)?;
     s.flags().ok_or("Missing play flags")?;
     Ok(number)
 }
+
 fn load_selection(
     body: &Value,
     peers: &BTreeMap<u8, Peer>,
@@ -418,6 +431,8 @@ async fn observe_direct(
     let mut requested = std::collections::BTreeSet::new();
     let mut asset_tasks = BTreeMap::new();
     let mut local_server: Option<crate::local_serving::Server> = None;
+    let mut prewarm_at = Instant::now();
+    crate::local_serving::publish_status(json!({"active":false}));
     let mut local_prepares: tokio::task::JoinSet<(
         u8,
         crate::loading::Command,
@@ -457,6 +472,7 @@ async fn observe_direct(
                             crate::handoff_capture::validate(players,true)?;
                             crate::jog_trace::start_handoff(players.map(|p|crate::handoff_capture::evidence(p.unwrap())));
                         }
+                        local_server = None;
                         return Ok(());
                     }
                     if control.bridge {
@@ -473,23 +489,27 @@ async fn observe_direct(
                         assets.abort_all();
                         asset_tasks.clear(); requested.clear();
                         crate::library::invalidate_direct(&catalogs);
+                        local_server = None;
                         bridge = Some(crate::bridge_probe::Probe::start());
                         for p in peers.values() { crate::jog_trace::event(crate::bridge_probe::details(p.local,p.ip)); }
                         let mut state = shared.lock().unwrap();
                         state.decks.clear(); state.assets.clear(); publish(&state);
                         return Ok(());
                     }
+                    if let Some(server) = &mut local_server && let Some(old) = peers.get(&control.number) { server.forget_peer(old.ip); }
                     if let Some(ip) = control.ip {
                         if peers.iter().any(|(n,p)| *n != control.number && p.ip == ip) {return Err("This IP is already assigned to the other CDJ".into());}
                         if peers.get(&control.number).is_some_and(|p|p.ip == ip && p.error.is_none()) {return Ok(());}
                         let route = UdpSocket::bind((Ipv4Addr::UNSPECIFIED,0)).await.map_err(|e|e.to_string())?;
                         route.connect((ip,discovery_port)).await.map_err(|e|e.to_string())?;
                         let std::net::IpAddr::V4(local) = route.local_addr().map_err(|e|e.to_string())?.ip() else {return Err("No IPv4 route".into());};
+                        if local_server.as_ref().is_some_and(|server|server.local != local) { return Err("Local USB serving requires both CDJs on the same network interface".into()); }
                         if let Some(mut old) = peers.remove(&control.number) {old.fail(&catalogs,"Reconnecting".into());}
                         crate::library::invalidate_direct_peer(&catalogs,ip);
                         epoch += 1;
                         peers.insert(control.number, Peer {ip,started:Instant::now(),epoch:epoch<<32,local,sent:0,next_send:Instant::now(),observed:None,order:Default::default(),usb:false,error:None,pending:None,bar:Default::default(),beat_tracker:Default::default(),pulse:None,loops:Default::default(),loop_at:None,loop_pulse_at:None,current_loop:None});
                     } else if let Some(mut old) = peers.remove(&control.number) {old.fail(&catalogs,"Disconnected".into());}
+                    if peers.is_empty() { local_server = None; }
                     Ok(())
                 }.await;
                 let _ = control.reply.send(result);
@@ -525,6 +545,7 @@ async fn observe_direct(
                 // Hardware replies may use an ephemeral source port; dispatch by IP only.
                 if let Some((&number,peer)) = peers.iter_mut().find(|(_,p)| from.ip() == std::net::IpAddr::V4(p.ip) && p.error.is_none()) {
                     crate::jog_trace::packet(50002,from,&status_buffer[..n]);
+                    if status_buffer.get(10)==Some(&0x1a) { prolink::serve::diagnostics::record(format!("load_reply peer={from} bytes={:02x?}",&status_buffer[..n.min(100)])); }
                     if bridge.is_none() && let Ok(status::Packet::CdjStatus(s)) = status::decode(&status_buffer[..n]) {peer.observe(number,s,&catalogs,received_at);}
                 }
             }
@@ -544,6 +565,7 @@ async fn observe_direct(
             Some(Ok((target, command, result))) = local_prepares.join_next(), if !local_prepares.is_empty() => {
                 let result = async {
                     let prepared = result?;
+                    prolink::serve::diagnostics::record(format!("load_prepared target={target} track={}", prepared.key.track));
                     if command.reply.is_closed() {return Err("Load request cancelled".to_owned());}
                     let peer=peers.get(&target).ok_or("Target disconnected")?;
                     let ip=peer.ip;
@@ -554,7 +576,7 @@ async fn observe_direct(
                 }.await;
                 match result {
                     Ok((key,id,ip))=>{local_queue.insert(target,(command,key,id,ip,Instant::now()));},
-                    Err(message)=>{local_busy.remove(&target);let _=command.reply.send(json!({"outcome":"error","message":message}));}
+                    Err(message)=>{prolink::serve::diagnostics::record(format!("load_prepare_error target={target} error={message}"));local_busy.remove(&target);let _=command.reply.send(json!({"outcome":"error","message":message}));}
                 }
             }
             Some(command) = commands.recv() => {
@@ -566,16 +588,22 @@ async fn observe_direct(
                         if local_busy.contains(&target) || peer.pending.is_some() {return Err("A load is already pending on this CDJ".into());}
                         let observed=peer.observed.as_ref().ok_or("Waiting for target status")?;
                         validate_load(peer.fresh().ok_or("Waiting for fresh target status")?,observed.1.elapsed())?;
-                        Ok((target,crate::local_serving::key(&command.body)?))
+                        let key=crate::local_serving::key(&command.body)?;
+                        if let Some(server)=&local_server {server.validate_source(&key)?;}
+                        Ok((target,key))
                     })();
                     match validation {
                         Ok((target,key))=>{
+                            prolink::serve::diagnostics::record(format!("load_preparing target={target} source={} generation={} track={}",key.source,key.generation,key.track));
                             local_busy.insert(target);
                             let catalogs=catalogs.clone();
+                            let model=peers[&target].fresh().unwrap().name().as_str().to_owned();
+                            let job=crate::transcoding::job_id(&command.body);
                             local_prepares.spawn(async move {
-                                let result=tokio::time::timeout(Duration::from_secs(12), tokio::task::spawn_blocking(move ||crate::local_serving::prepare(&catalogs,key)))
+                                let guard=crate::transcoding::register(&job);
+                                let result=match guard { Err(e)=>Err(e), Ok(scope)=>{let cancel=scope.flag.clone(); tokio::time::timeout(Duration::from_secs(130), tokio::task::spawn_blocking(move ||crate::transcoding::prepare_load(&catalogs,key,&model,&job,cancel)))
                                     .await.map_err(|_| "Local USB preparation timed out; no load command was sent".to_owned())
-                                    .and_then(|r|r.map_err(|e|e.to_string())).and_then(|r|r);
+                                    .and_then(|r|r.map_err(|e|e.to_string())).and_then(|r|r)}};
                                 (target,command,result)
                             });
                         },
@@ -607,10 +635,45 @@ async fn observe_direct(
             scheduled = tick.tick() => { wake_ms = Some(scheduled.elapsed().as_secs_f64()*1000.0); }
         }
         let work_started = Instant::now();
+        // Pre-register as soon as a validated USB and a live Direct-IP peer coexist.
+        // Do not send a track-load or play command here. Failed binds are throttled.
+        if Instant::now() >= prewarm_at {
+            prewarm_at = Instant::now() + Duration::from_secs(1);
+            if local_server.is_none()
+                && crate::mac_networking::available()
+                && bridge.is_none()
+                && !crate::jog_trace::guided_active()
+                && crate::library::has_local_usb(&catalogs)
+                && peers
+                    .values()
+                    .filter(|p| p.error.is_none())
+                    .map(|p| p.local)
+                    .collect::<std::collections::BTreeSet<_>>()
+                    .len()
+                    == 1
+                && let Some(peer) = peers.values().find(|p| p.fresh().is_some())
+            {
+                match crate::local_serving::Server::start(peer.local).await {
+                    Ok(server) => {
+                        local_server = Some(server);
+                    }
+                    Err(error) => {
+                        prolink::serve::diagnostics::record(format!(
+                            "prewarm_failed error={error}"
+                        ));
+                        crate::local_serving::publish_status(json!({"active":false,"error":error}));
+                        prewarm_at = Instant::now() + Duration::from_secs(30);
+                    }
+                }
+            }
+            if let Some(server) = &local_server {
+                crate::local_serving::publish_status(server.diagnostics());
+            }
+        }
         if let Some(server) = &mut local_server {
             let destinations: Vec<_> = peers
                 .values()
-                .filter(|p| p.error.is_none())
+                .filter(|p| p.fresh().is_some())
                 .map(|p| (p.ip, p.local))
                 .collect();
             server.tick(&destinations, &discovery, &socket)?;
@@ -634,7 +697,7 @@ async fn observe_direct(
                         .ok_or("Target changed or disconnected")?;
                     if !server.ready(ip) {
                         return Err(format!(
-                            "CDJ {target} has not discovered the local USB yet. Press LINK on CDJ {target}, wait for OLC LOCAL USB to appear, then load again. No load command was sent."
+                            "CDJ {target} has not discovered the local USB yet. Press LINK on CDJ {target}, wait for your local USB to appear, then load again. No load command was sent."
                         ));
                     }
                     if !crate::local_serving::current(&catalogs, &key) {
@@ -666,6 +729,9 @@ async fn observe_direct(
                 })();
                 match result {
                     Ok(()) => {
+                        prolink::serve::diagnostics::record(format!(
+                            "load_sent target={target} peer={ip} served={track}"
+                        ));
                         peers.get_mut(&target).unwrap().pending = Some(Pending {
                             source: key.source,
                             generation: key.generation,
@@ -678,6 +744,9 @@ async fn observe_direct(
                         })
                     }
                     Err(message) => {
+                        prolink::serve::diagnostics::record(format!(
+                            "load_not_sent target={target} error={message}"
+                        ));
                         let _ = command
                             .reply
                             .send(json!({"outcome":"error","message":message}));
@@ -859,6 +928,14 @@ async fn observe_direct(
                     .is_some_and(|t| t.elapsed() > Duration::from_millis(500));
                 if confirmed || !source_valid || p.sent.elapsed() > Duration::from_secs(12) {
                     let p = peer.pending.take().unwrap();
+                    if p.source_number == crate::local_serving::NUMBER {
+                        prolink::serve::diagnostics::record(format!(
+                            "load_finished peer={} served={} confirmed={confirmed} source_valid={source_valid} elapsed_ms={}",
+                            peer.ip,
+                            p.track,
+                            p.sent.elapsed().as_millis()
+                        ));
+                    }
                     if confirmed {
                         let _ = p.reply.send(json!({"outcome":"confirmed","message":"CDJ status confirms the selected track is loaded"}));
                     } else {
@@ -1014,7 +1091,7 @@ fn render_peer(
         });
     let playing = decoded.is_playing;
     let play_state = play_state_label(decoded);
-    json!({"number":number,"name":s.name().as_str(),"ip":peer.ip.to_string(),"connection":if at.elapsed()<Duration::from_secs(1) {"connected"} else {"stale"},"statusAgeMs":at.elapsed().as_secs_f64()*1000.0,"observationId":format!("{session}:{}:{}:{}",peer.epoch,at.duration_since(peer.started).as_nanos(),tracked.map_or(0,|p|p.at.duration_since(peer.started).as_nanos())),"positionAgeMs":tracked.map(|p|p.at).or_else(||fine_position.and_then(|_|peer.bar.observed_at())).map(|at|at.elapsed().as_secs_f64()*1000.0),"motionRate":tracked.map(|p|p.rate),"beatAnchorNumber":tracked.map(|p|p.beat_number),"beatCorrectionMs":tracked.map(|p|p.correction_seconds*1000.0),"beatArrivalResidualMs":tracked.map(|p|p.arrival_residual_seconds*1000.0),"observationTimeMs":at.duration_since(peer.started).as_secs_f64()*1000.0,"packetCounter":s.packet_counter(),"playState":play_state,"playing":playing,"loadProtected":validate_load(s,at.elapsed()).is_err(),"bpm":s.effective_bpm(),"pitch":s.pitch().map(|p|(p.multiplier()-1.0)*100.0),"master":s.flags().map(|f|f.is_tempo_master()),"sync":s.flags().map(|f|f.is_synced()),"trackId":s.track_id(),"trackKey":key,"assetReady":asset.is_some(),"beatNumber":s.beat_number(),"loop":peer.current_loop,"currentCue":if decoded.play_state.0 == 6 {fine_position.map(|p|p.seconds).or(saved_cue)} else {None},"position":position,"positionSource":if tracked.is_some() {"beat-motion"} else if fine_position.is_some() {"bar-phase"} else if saved_cue.is_some() {"saved-cue-estimate"} else {"status-beat-estimate"},"positionQuality":if tracked.is_some() {"beat"} else {fine_position.map_or(if position.is_some() {"coarse"} else {"unavailable"},|p|p.quality())},"manualMotion":tracked.is_none() && decoded.position_requires_direct_updates(),"reverse":decoded.reverse,"sourceLabel":if s.source_player().map(|n|n.get())==Some(crate::local_serving::NUMBER) {"Local USB"} else {"Direct IP · USB"},"qualifyingPlayback":at.elapsed() < Duration::from_secs(2) && qualifies_for_set(decoded),"warning":asset.and_then(|a|a.warning.clone()).unwrap_or_else(||if tracked.is_some() {"Direct IP: beat and motion-speed tracking; loop boundaries estimated".into()} else {"Direct IP: status-based position; waiting for fresh forward beat events".into()})})
+    json!({"number":number,"name":s.name().as_str(),"ip":peer.ip.to_string(),"connection":if at.elapsed()<Duration::from_secs(1) {"connected"} else {"stale"},"statusAgeMs":at.elapsed().as_secs_f64()*1000.0,"observationId":format!("{session}:{}:{}:{}",peer.epoch,at.duration_since(peer.started).as_nanos(),tracked.map_or(0,|p|p.at.duration_since(peer.started).as_nanos())),"positionAgeMs":tracked.map(|p|p.at).or_else(||fine_position.and_then(|_|peer.bar.observed_at())).map(|at|at.elapsed().as_secs_f64()*1000.0),"motionRate":tracked.map(|p|p.rate),"beatAnchorNumber":tracked.map(|p|p.beat_number),"beatCorrectionMs":tracked.map(|p|p.correction_seconds*1000.0),"beatArrivalResidualMs":tracked.map(|p|p.arrival_residual_seconds*1000.0),"observationTimeMs":at.duration_since(peer.started).as_secs_f64()*1000.0,"packetCounter":s.packet_counter(),"playState":play_state,"playing":playing,"loadProtected":validate_load(s,at.elapsed()).is_err(),"loadBlockedReason":validate_load(s,at.elapsed()).err(),"bpm":s.effective_bpm(),"pitch":s.pitch().map(|p|(p.multiplier()-1.0)*100.0),"master":s.flags().map(|f|f.is_tempo_master()),"sync":s.flags().map(|f|f.is_synced()),"trackId":s.track_id(),"trackKey":key,"assetReady":asset.is_some(),"beatNumber":s.beat_number(),"loop":peer.current_loop,"currentCue":if decoded.play_state.0 == 6 {fine_position.map(|p|p.seconds).or(saved_cue)} else {None},"position":position,"positionSource":if tracked.is_some() {"beat-motion"} else if fine_position.is_some() {"bar-phase"} else if saved_cue.is_some() {"saved-cue-estimate"} else {"status-beat-estimate"},"positionQuality":if tracked.is_some() {"beat"} else {fine_position.map_or(if position.is_some() {"coarse"} else {"unavailable"},|p|p.quality())},"manualMotion":tracked.is_none() && decoded.position_requires_direct_updates(),"reverse":decoded.reverse,"sourceLabel":if s.source_player().map(|n|n.get())==Some(crate::local_serving::NUMBER) {"Local USB"} else {"Direct IP · USB"},"qualifyingPlayback":at.elapsed() < Duration::from_secs(2) && qualifies_for_set(decoded),"warning":asset.and_then(|a|a.warning.clone()).unwrap_or_else(||if tracked.is_some() {"Direct IP: beat and motion-speed tracking; loop boundaries estimated".into()} else {"Direct IP: status-based position; waiting for fresh forward beat events".into()})})
 }
 
 #[cfg(test)]
@@ -1366,7 +1443,7 @@ mod tests {
     }
     #[test]
     fn loading_requires_fresh_idle_target_but_not_a_local_usb() {
-        for raw in [0, 5, 6] {
+        for raw in [0, 5, 6, 14] {
             assert!(
                 validate_load(
                     &status(raw, false, status::MediaState::LOADED),

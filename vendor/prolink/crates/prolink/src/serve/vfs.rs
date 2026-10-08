@@ -59,15 +59,12 @@
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
-use prolink_proto::rpc::nfs2::{FType, Fattr, FileHandle, FileHandleKey};
+use prolink_proto::rpc::nfs2::{FType, Fattr, FileHandle, FileHandleKey, FsStat};
 use sha2::{Digest, Sha256};
 use unicode_normalization::UnicodeNormalization;
 
-/// Fixed timestamp for synthesised attributes.
-///
-/// Deterministic on purpose: byte-identical replies across runs make a capture
-/// diff meaningful.
-const EPOCH: u32 = 1_600_000_000;
+/// Unknown timestamp for entries without a source filesystem object.
+const EPOCH: u32 = 0;
 
 /// A file or a directory in the served tree.
 #[derive(Clone, Debug)]
@@ -126,12 +123,14 @@ struct Entry {
     /// The path this entry's handle was derived from.
     path: String,
     node: Node,
+    times: [u32; 3],
 }
 
 /// A read-only tree addressable by filehandle.
 #[derive(Debug, Default)]
 pub struct Vfs {
     entries: BTreeMap<FileHandleKey, Entry>,
+    filesystem_stats: BTreeMap<String, FsStat>,
 }
 
 impl Vfs {
@@ -139,6 +138,7 @@ impl Vfs {
     pub fn new() -> Self {
         let mut vfs = Self {
             entries: BTreeMap::new(),
+            filesystem_stats: BTreeMap::new(),
         };
         vfs.insert(
             "/",
@@ -339,6 +339,11 @@ impl Vfs {
         }
     }
 
+    /// Publish an empty export before tracks are selected.
+    pub fn add_directory(&mut self, path: &str) {
+        self.ensure_parents(&format!("{}/.placeholder", path.trim_end_matches('/')));
+    }
+
     /// Add a file held in memory, creating any directories it needs.
     pub fn add_file(&mut self, path: &str, data: Vec<u8>) {
         self.ensure_parents(path);
@@ -442,7 +447,8 @@ impl Vfs {
     /// there — true in every observed reply, so deriving it this way is
     /// consistent with the hardware for free.
     pub fn attributes(&self, handle: FileHandle) -> Option<Fattr> {
-        let node = self.resolve(handle)?;
+        let entry = self.entries.get(&handle.key())?;
+        let node = &entry.node;
         let size = u32::try_from(node.size()).unwrap_or(u32::MAX);
         Some(Fattr {
             ftype: if node.is_dir() {
@@ -460,11 +466,11 @@ impl Vfs {
             blocks: size / 512 + u32::from(size % 512 != 0),
             fsid: 1,
             fileid: handle.fileid(),
-            atime_sec: EPOCH,
+            atime_sec: entry.times[0],
             atime_usec: 0,
-            mtime_sec: EPOCH,
+            mtime_sec: entry.times[1],
             mtime_usec: 0,
-            ctime_sec: EPOCH,
+            ctime_sec: entry.times[2],
             ctime_usec: 0,
         })
     }
@@ -479,13 +485,54 @@ impl Vfs {
         self.entries.len() <= 1
     }
 
+    /// Supply a mounted medium's real block counts for its NFS export.
+    pub fn set_filesystem_stats(&mut self, prefix: &str, stats: FsStat) {
+        self.filesystem_stats
+            .insert(prefix.trim_end_matches('/').to_owned(), stats);
+    }
+
+    /// Statistics for the export containing this handle.
+    pub fn filesystem_stats(&self, handle: FileHandle) -> Option<FsStat> {
+        let path = self.path_of(handle)?;
+        self.filesystem_stats
+            .iter()
+            .rev()
+            .find(|(prefix, _)| {
+                path == prefix.as_str()
+                    || path
+                        .strip_prefix(prefix.as_str())
+                        .is_some_and(|tail| tail.starts_with('/'))
+            })
+            .map(|(_, stats)| *stats)
+    }
+
     fn insert(&mut self, path: &str, node: Node) {
+        let mut times = [EPOCH; 3];
+        if let Node::Disk { path, .. } = &node {
+            if let Ok(metadata) = path.metadata() {
+                let seconds = |time: std::io::Result<std::time::SystemTime>| {
+                    time.ok()
+                        .and_then(|time| time.duration_since(std::time::UNIX_EPOCH).ok())
+                        .map(|time| time.as_secs().min(u64::from(u32::MAX)) as u32)
+                        .unwrap_or(0)
+                };
+                times[0] = seconds(metadata.accessed());
+                times[1] = seconds(metadata.modified());
+                // NFS ctime means inode change time, not file creation time.
+                #[cfg(unix)]
+                {
+                    use std::os::unix::fs::MetadataExt;
+                    times[2] = metadata.ctime().clamp(0, i64::from(u32::MAX)) as u32;
+                }
+            }
+        }
         let handle = Self::handle_for(path);
         self.entries.insert(
             handle.key(),
             Entry {
                 path: path.to_owned(),
                 node,
+                times,
             },
         );
     }

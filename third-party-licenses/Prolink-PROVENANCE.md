@@ -8,6 +8,8 @@ The Rekordbox reader, protocol, networking and capture crates are included. The 
 
 ## Local modifications
 
+- Expose the existing cue encoder through an offline diagnostic entry point, so native CDJ replies can be compared with OLC without publishing or sending a generated reply.
+
 - Expose beat number, mounted USB/SD status, bar position and timing fields through `PlayerStatus`.
 - Normalize cue playback and classify forward, held and reverse transport conservatively. Reverse classification requires ordinary play; loop direction can remain ambiguous. Effective synced tempo and local fader tempo are distinguished.
 - Expose receive instants and packet counters. Shared ordering rejects duplicate or reordered packets, handles wrapping counters and permits recovery after a receive gap.
@@ -25,3 +27,13 @@ Cue metadata reference: https://djl-analysis.deepsymmetry.org/djl-analysis/track
 Protocol reference: https://djl-analysis.deepsymmetry.org/djl-analysis/vcdj.html (Deep Symmetry).
 
 Review an explicit upstream commit when updating this subset, retain notices, and run application checks. Upstream tests requiring omitted fixtures are not part of the application suite.
+
+## Serving behavior
+
+- Keep original USB track IDs, compatible audio paths and metadata references in a single-library serving session.
+- Read hot/memory categories independently from USB analysis, using extended tags per category and basic tags as fallback.
+- Encode the legacy reply as memory entries in stored order followed by A/B/C in letter order, retaining original times, loop ends and co-located entries. Native CDJ-2000nexus replies provide binary regression expectations.
+- Accept a caller-supplied portmapper socket for authorized desktop socket handoff; validate its bound address and own its lifetime.
+- Supply available USB capacity/settings and filesystem audio timestamps, and keep a bounded serving event log without recording audio payloads.
+
+The host supplies converted PCM only for eligible unsupported local audio; the protocol library serves the supplied files and exported analysis.

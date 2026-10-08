@@ -118,17 +118,14 @@ const MAX_MOUNTS: usize = 16;
 
 /// Filesystem statistics, which no player has ever asked for.
 ///
-/// RFC 1094 as written and the numbers the reference server answered with; no
-/// capture in the corpus contains a `STATFS` in either direction, so there is
-/// nothing to reproduce. A medium we serve is read-only to the player reading
-/// it, and a deck's Link Info panel takes its free-space figure from the
-/// dbserver media response rather than from here.
+/// Unknown capacity for an empty or purely virtual export. Mounted USB facts
+/// supplied through Vfs replace these values for every handle in that export.
 const STATFS: FsStat = FsStat {
     tsize: 8192,
     bsize: 512,
-    blocks: 1_000_000,
-    bfree: 500_000,
-    bavail: 500_000,
+    blocks: 0,
+    bfree: 0,
+    bavail: 0,
 };
 
 /// Which of the three programs a socket answers for.
@@ -257,7 +254,7 @@ impl Dispatcher {
         let answered = match service {
             Service::Portmap => self.portmap(&call),
             Service::Mount => self.mountd(&call, peer),
-            Service::Nfs => self.nfsd(&call),
+            Service::Nfs => self.nfsd(&call, peer),
         };
         Some(match answered {
             Ok(results) => Reply::success(call.xid, &results).encode(),
@@ -299,6 +296,10 @@ impl Dispatcher {
             mount::Request::Mnt(path) => {
                 let path = path.to_string_lossy();
                 let result = self.root_of(&path).ok_or(ErrorStatus::NOENT);
+                super::super::diagnostics::record(format!(
+                    "nfs_mount peer={peer} path={path} ok={}",
+                    result.is_ok()
+                ));
                 if let Ok(handle) = &result {
                     debug!(%peer, %path, ?handle, "MNT");
                     self.remember_mount(peer, &path);
@@ -331,7 +332,7 @@ impl Dispatcher {
     }
 
     /// Program 100003: the files themselves.
-    fn nfsd(&self, call: &Call<'_>) -> Result<Vec<u8>, FailureStat> {
+    fn nfsd(&self, call: &Call<'_>, peer: Ipv4Addr) -> Result<Vec<u8>, FailureStat> {
         let procedure = nfs2::Proc(call.procedure);
         let request = nfs2::Request::parse(procedure, call.arguments)
             .map_err(|_| FailureStat::GARBAGE_ARGS)?;
@@ -344,11 +345,31 @@ impl Dispatcher {
             nfs2::Request::Lookup { dir, name } => {
                 let name = name.to_string_lossy();
                 let found = lookup(&vfs, dir, &name);
+                super::super::diagnostics::record(format!(
+                    "nfs_lookup name={name} ok={}",
+                    found.is_ok()
+                ));
                 trace!(?dir, %name, status = %nfs2::Response::Lookup(found).status(), "LOOKUP");
                 nfs2::Response::Lookup(found).encode()
             }
             nfs2::Request::Read(args) => {
                 let read = read(&vfs, args);
+                super::super::diagnostics::record_read(
+                    &peer.to_string(),
+                    vfs.path_of(args.handle).unwrap_or("unknown"),
+                    args.offset,
+                    args.count,
+                    read.as_ref().map(|(_, data)| data.len()).ok(),
+                );
+                if args.offset == 0 || read.is_err() {
+                    super::super::diagnostics::record(format!(
+                        "nfs_read path={} offset={} requested={} returned={:?}",
+                        vfs.path_of(args.handle).unwrap_or("unknown"),
+                        args.offset,
+                        args.count,
+                        read.as_ref().map(|(_, data)| data.len()).ok()
+                    ));
+                }
                 match &read {
                     Ok((attr, data)) => nfs2::Response::Read(Ok(FileData {
                         attr: *attr,
@@ -361,7 +382,7 @@ impl Dispatcher {
             nfs2::Request::ReadDir(args) => nfs2::Response::ReadDir(listing(&vfs, args)).encode(),
             nfs2::Request::StatFs(handle) => nfs2::Response::StatFs(
                 vfs.resolve(handle)
-                    .map(|_| STATFS)
+                    .map(|_| vfs.filesystem_stats(handle).unwrap_or(STATFS))
                     .ok_or(ErrorStatus::STALE),
             )
             .encode(),
@@ -1520,10 +1541,10 @@ mod tests {
 
     /// A whole load and thirty seconds of playback went through these, so they
     /// are not a plausible reading of RFC 1094 — they are what a CDJ-2000NXS
-    /// has been observed to accept, and byte-identical replies keep a capture
-    /// of this server diffable against that session.
+    /// has been observed to accept. Identity and dates describe our own source;
+    /// the remaining attribute layout stays identical to that captured reply.
     #[test]
-    fn our_attributes_are_the_ones_a_deck_played_from_word_for_word() {
+    fn attributes_keep_captured_layout_with_source_specific_identity_and_dates() {
         let root = std::env::temp_dir().join(format!("prolink-nfs-attr-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&root);
         std::fs::create_dir_all(root.join("Contents")).unwrap();
@@ -1550,7 +1571,22 @@ mod tests {
                 captured.get(..40),
                 "{what}, before the fileid"
             );
-            assert_eq!(ours.get(48..), captured.get(44..), "{what}, after it");
+            // Timestamps now describe the file, not the reference capture's
+            // fixed date. Virtual directories have no source timestamp.
+            if path.ends_with(".mp3") {
+                let modified = root
+                    .join("Contents/track.mp3")
+                    .metadata()
+                    .unwrap()
+                    .modified()
+                    .unwrap()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .unwrap()
+                    .as_secs() as u32;
+                assert_eq!(&ours[56..60], &modified.to_be_bytes());
+            } else {
+                assert_eq!(&ours[48..], &[0; 24]);
+            }
             let nfs2::Response::Attr(Ok(attr)) = response else {
                 panic!("{what}: expected attributes");
             };

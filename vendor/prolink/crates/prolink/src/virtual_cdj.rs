@@ -1159,6 +1159,8 @@ fn answer_media_query(
         .slot(query.slot)
         .name(name)
         .volume_name(&description.volume_name)
+        .created(&description.created)
+        .has_settings(!media.settings(query.slot).is_empty())
         .counts(description.track_count, description.playlist_count);
     if let (Some(total), Some(free)) = (description.total_bytes, description.free_bytes) {
         builder = builder.size(total, free);

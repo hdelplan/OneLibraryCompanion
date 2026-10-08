@@ -314,12 +314,21 @@ pub fn load_source(
         .ok_or("Selected track is no longer in the catalog")?;
     Ok((ip, track.title.clone()))
 }
+/// Only validated, available local OneLibrary catalogs trigger pre-registration.
+pub(crate) fn has_local_usb(shared: &Shared) -> bool {
+    shared.lock().unwrap().sources.iter().any(|(id, s)| {
+        id.starts_with("local-usb:")
+            && s.available
+            && s.catalog.is_some()
+            && matches!(s.location, Location::Local(_))
+    })
+}
 pub fn sources(shared: &Shared) -> Value {
     let state = shared.lock().unwrap();
     json!({"sources":state.sources.iter().map(|(id,s)| {
         let local = id.starts_with("local-usb:") && matches!(s.location, Location::Local(_));
-        let load_unavailable = if local && cfg!(target_os = "macos") {
-            Some("Local USB playback is unavailable in this Mac package: a privileged networking helper is required. Browse here or load from a USB attached to a CDJ.")
+        let load_unavailable = if local && !crate::mac_networking::available() {
+            Some("Local USB support needs installation. In the Mac application menu, choose Local USB Support and approve the installer, then quit and reopen OLC.")
         } else if local && state.interface.is_some() {
             Some("Local USB loading requires Manual IP connections in MENU.")
         } else {

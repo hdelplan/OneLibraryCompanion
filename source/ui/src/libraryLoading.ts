@@ -24,6 +24,7 @@ export function sameLoadPlayers(a: LivePlayer[], b: LivePlayer[]) {
         p.name === q.name &&
         p.sourceLabel === q.sourceLabel &&
         p.connection === q.connection &&
+        p.loadBlockedReason === q.loadBlockedReason &&
         loadBlocked(p) === loadBlocked(q)
       );
     })

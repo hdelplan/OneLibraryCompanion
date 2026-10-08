@@ -8,11 +8,6 @@ Do not rely on OLC’s waveform for precise cue positioning in this state; use t
 
 **Practical workaround:** temporarily make the paused player the tempo master while cueing. This can improve waveform coupling during fine jog movements. Make the change on the physical CDJ, then restore the intended master when cueing is complete. The paused non-master limitation still applies after the player relinquishes master; OLC does not switch master automatically.
 
-## Unresolved track-loading issues
-
-- **First local USB load:** the initial request may not load the track because the CDJ has not discovered OLC’s local source. Pressing **LINK**, waiting for **OLC LOCAL USB** to appear and then making a new explicit request may help. Check the player’s selection before retrying an uncertain request. This is a workaround, not a resolved issue.
-- **Incorrect start position:** after loading, the player can land at an unexpected position, including a saved cue, instead of the intended start. OLC does not reliably establish the intended starting position. Check and set the cue position on the physical CDJ before playback. This issue remains unresolved.
-
 ## Platforms
 
 | Platform | Package baseline | Validation status |
@@ -28,11 +23,13 @@ Mac packages are ad-hoc signed and not notarized. Windows, 32-bit Pi OS and oper
 
 ## Players and media
 
-OLC displays two decks and exposes load controls for players numbered 1 and 2. The player model and firmware determine available status and audio-format support. Known format checks cover CDJ-2000nexus, CDJ-2000NXS2 and CDJ-3000; they are not a certification of all files or models.
+OLC displays two decks and exposes load controls for players numbered 1 and 2. The player model and firmware determine available status and audio-format support. Known format checks cover CDJ-2000, CDJ-2000nexus, CDJ-2000NXS2 and CDJ-3000; they are not a certification of all files or models.
 
 Three-band waveforms require the corresponding exported analysis. Missing analysis is shown as unavailable. Beat-grid time and some loop positions are estimates, particularly on older players; precise sub-beat scratching is not guaranteed. Phrase sections and cues require those records in the export.
 
-Linked CDJ libraries read legacy Rekordbox exports. Host-attached libraries read OneLibrary databases. The Pi package supports local USB loading using Manual IP connections and virtual source number 4. The Mac package supports local browsing but cannot serve local audio; see [local USB usage](local-usb.md). First-load discovery and incorrect starting positions remain unresolved, as described above.
+Linked CDJ libraries read legacy Rekordbox exports. Host-attached libraries read OneLibrary databases. Both packages support local USB loading using Manual IP connections and virtual source number 4. Mac local audio serving requires the included Local USB Support component, installed with administrator approval; see [local USB usage](local-usb.md). One local USB library is served per connection session, retaining its original track IDs and compatible audio paths.
+
+Built-in transcoding prepares eligible unsupported local audio as 16-/24-bit PCM WAV or AIFF at 44.1/48 kHz. Conversion destinations are CDJ-2000, CDJ-2000nexus, CDJ-2000NXS2 and CDJ-3000. Unsupported decoders and unknown destination models remain unavailable for conversion. Linked CDJ USBs are not transcoded. Compatible files are served unchanged.
 
 Loading requires fresh telemetry and a stopped target. Playing, looping, busy, stale and disconnected states block requests. A load confirmation reflects the player's reported selection, not proof of audible playback. There is no automatic retry or remote play command.
 

@@ -53,7 +53,7 @@ with tempfile.TemporaryDirectory(prefix='olc-release-smoke-') as directory:
                 raise
         try:
             child = start()
-            for path in ['/diagnostics/local-usb', '/diagnostics/direct-ip', '/api/diagnostics/local-usb', '/api/diagnostics/cue-window', '/api/diagnostics/cue-window/reports', '/api/diagnostics/jog', '/api/diagnostics/jog/state', '/api/diagnostics/direct-ip', '/api/diagnostics/direct-status']:
+            for path in ['/diagnostics/local-usb', '/diagnostics/direct-ip', '/api/diagnostics/local-usb', '/api/diagnostics/cue-window', '/api/diagnostics/cue-window/reports', '/api/diagnostics/native-cues', '/api/diagnostics/jog', '/api/diagnostics/jog/state', '/api/diagnostics/direct-ip', '/api/diagnostics/direct-status']:
                 for method in ['GET', 'POST']:
                     try:
                         urllib.request.urlopen(urllib.request.Request(url + path, method=method), timeout=3)

@@ -9,6 +9,8 @@ case "$arch" in
   *) echo 'Usage: scripts/build-macos.sh [arm64|x86_64]' >&2; exit 1 ;;
 esac
 node_bin="${NODE:-node}"
+mac_sdk="$(xcrun --sdk macosx --show-sdk-path)"
+swift_cache="$repo_root/target/swift-macos-$arch-cache"
 if ! rustup target list --installed | grep -qx "$rust_target"; then
   echo "Install the Rust target first: rustup target add $rust_target" >&2; exit 1
 fi
@@ -21,7 +23,7 @@ stage="$repo_root/builds/macos-$arch"
 mkdir -p "$stage"
 app="$stage/OneLibraryCompanion.app"
 mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources"
-xcrun swiftc -parse-as-library -O -target "$arch-apple-macos13.0" -module-cache-path "$repo_root/target/swift-cache" \
+xcrun swiftc -parse-as-library -O -sdk "$mac_sdk" -target "$arch-apple-macos13.0" -module-cache-path "$swift_cache" \
   -framework Cocoa -framework WebKit -framework ServiceManagement source/desktop/macos/OLC.swift -o "$app/Contents/MacOS/OLC"
 cp source/desktop/macos/Info.plist "$app/Contents/Info.plist"
 cp "target/$rust_target/release/pioneer-companion-host" "$app/Contents/Resources/olc-host"
@@ -33,9 +35,11 @@ resources=Path(sys.argv[1])/'Contents/Resources'
 if (resources/'dist').exists(): shutil.rmtree(resources/'dist')
 shutil.copytree('source/ui/dist',resources/'dist')
 for name in ['LICENSE','THIRD_PARTY_NOTICES.md']: shutil.copy2(name,resources/name)
+manifest=Path('SOURCE-MANIFEST.sha256')
+if manifest.is_file(): shutil.copy2(manifest,resources/manifest.name)
 shutil.copytree('third-party-licenses',resources/'third-party-licenses',dirs_exist_ok=True)
 PY
-xcrun swiftc -module-cache-path "$repo_root/target/swift-cache" source/desktop/macos/MakeIcon.swift -o "$stage/make-icon"
+xcrun swiftc -sdk "$mac_sdk" -module-cache-path "$swift_cache" source/desktop/macos/MakeIcon.swift -o "$stage/make-icon"
 "$stage/make-icon" "$stage/icon.png"
 icons="$stage/OLC.iconset"
 mkdir -p "$icons"
@@ -45,7 +49,8 @@ for size in 16 32 128 256 512; do
   sips -z "$double" "$double" "$stage/icon.png" --out "$icons/icon_${size}x${size}@2x.png" >/dev/null
 done
 iconutil -c icns "$icons" -o "$app/Contents/Resources/OLC.icns"
-codesign --force --sign - "$app/Contents/Resources/olc-host"
+codesign --force --options runtime --sign - "$app/Contents/Resources/olc-host"
+./scripts/package-mac-networking.sh "$app" "$arch" "$stage/networking"
 codesign --force --sign - "$app"
 codesign --verify --deep --strict "$app"
 version=$(/usr/libexec/PlistBuddy -c 'Print CFBundleShortVersionString' "$app/Contents/Info.plist")

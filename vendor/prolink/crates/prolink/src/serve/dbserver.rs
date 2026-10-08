@@ -79,6 +79,12 @@
 //! ```
 
 mod analysis;
+
+/// Build the current legacy cue reply offline for a diagnostic comparison.
+/// This does not publish a track, start a server, or send a network message.
+pub fn diagnostic_cue_reply(parsed: &crate::serve::Analysis) -> Message {
+    analysis::cue_reply(1, &analysis::independent_cues(parsed))
+}
 mod keys;
 mod menu;
 
@@ -434,6 +440,7 @@ fn spawn_port_query(listener: TcpListener, port: u16) -> JoinHandle<()> {
                     .is_ok()
                 {
                     debug!(%peer, port, "told a peer where our dbserver is");
+                    super::diagnostics::record(format!("db_port peer={peer} port={port}"));
                 }
                 let _ = stream.shutdown().await;
             });
@@ -451,10 +458,13 @@ fn spawn_dbserver(listener: TcpListener, shared: Arc<Shared>) -> JoinHandle<()> 
             let shared = Arc::clone(&shared);
             tokio::spawn(async move {
                 info!(%peer, "dbserver client connected");
+                super::diagnostics::record(format!("db_connected peer={peer}"));
                 if let Err(error) = serve(stream, &shared).await {
                     debug!(%peer, %error, "dbserver connection ended");
+                    super::diagnostics::record(format!("db_error peer={peer} error={error}"));
                 }
                 info!(%peer, "dbserver client disconnected");
+                super::diagnostics::record(format!("db_disconnected peer={peer}"));
             });
         }
     })
@@ -486,6 +496,7 @@ async fn serve(mut stream: TcpStream, shared: &Shared) -> Result<()> {
         .await
         .map_err(Error::io("answering the dbserver preamble"))?;
 
+    super::diagnostics::record(format!("db_handshake peer={:?}", stream.peer_addr().ok()));
     let mut session = Session::default();
     let mut out = Vec::new();
     loop {
@@ -497,7 +508,25 @@ async fn serve(mut stream: TcpStream, shared: &Shared) -> Result<()> {
                 Ok((message, used)) => {
                     consumed += used;
                     debug!(?message, "dbserver request");
-                    if session.handle(shared, &message, &mut out) == Flow::Close {
+                    let began = Instant::now();
+                    let before = out.len();
+                    let flow = session.handle(shared, &message, &mut out);
+                    let reply_kind = out
+                        .get(before..)
+                        .and_then(|b| Message::decode(b).ok())
+                        .map(|(m, _)| m.kind.0);
+                    super::diagnostics::record(format!(
+                        "db_request peer={:?} tx={} kind={:04x} args={:?} reply={reply_kind:?} bytes={} elapsed_us={}",
+                        stream.peer_addr().ok(),
+                        message.transaction_id,
+                        message.kind.0,
+                        (0..message.args.len())
+                            .map(|i| message.args.number(i))
+                            .collect::<Vec<_>>(),
+                        out.len() - before,
+                        began.elapsed().as_micros()
+                    ));
+                    if flow == Flow::Close {
                         closing = true;
                         break;
                     }

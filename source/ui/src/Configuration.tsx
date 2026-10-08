@@ -1,9 +1,12 @@
+import { TranscodingSettings } from "./Transcoding";
+import type { LivePlayer } from "./model";
 import type { ReactNode } from "react";
 import { ManualLibrary, type DirectPeer } from "./ManualLibrary";
 import { LibraryFilterConfiguration } from "./LibraryFilterConfiguration";
 import type { Settings } from "./settings";
 import { defaults } from "./settings";
 type Props = {
+  players: LivePlayer[];
   desktopTools?: ReactNode;
   directPeers: DirectPeer[];
   onConnected: (source?: string) => void;
@@ -17,6 +20,7 @@ type Props = {
   selectLive: () => void;
 };
 export function Configuration({
+  players,
   desktopTools,
   directPeers,
   onConnected,
@@ -52,6 +56,7 @@ export function Configuration({
       )}
       <div className="settings-grid">
         {desktopTools}
+        <TranscodingSettings players={players} />
         <section className="settings-panel">
           <h2>Waveforms</h2>
           <label>

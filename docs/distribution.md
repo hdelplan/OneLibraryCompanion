@@ -15,7 +15,7 @@ Closing the window keeps the service and LAN access running. Click its Dock icon
 Use 64-bit Raspberry Pi OS Bookworm or later. Download both ARM64 packages into the same directory, then install them together:
 
 ```sh
-sudo apt install ./onelibrarycompanion-host_0.1.2_arm64.deb ./onelibrarycompanion_0.1.2_arm64.deb
+sudo apt install ./onelibrarycompanion-host_0.2.0_arm64.deb ./onelibrarycompanion_0.2.0_arm64.deb
 ```
 
 Open OneLibraryCompanion from the applications menu or run `olc`. The native window uses GTK and WebKit; it does not open the local browser. Its menu includes **Full Screen**, **Open at Login** and **Quit**. Closing the window leaves OLC running; opening OLC again restores it.
@@ -27,7 +27,7 @@ Use an OS-supported touchscreen and the desktop's on-screen keyboard for text fi
 On 64-bit Raspberry Pi OS Lite, install only the host package, then enable the user service:
 
 ```sh
-sudo apt install ./onelibrarycompanion-host_0.1.2_arm64.deb
+sudo apt install ./onelibrarycompanion-host_0.2.0_arm64.deb
 systemctl --user enable --now olc-host.service
 ```
 
@@ -45,9 +45,9 @@ OLC listens on `0.0.0.0:8787` by default. MENU lists LAN URLs such as `http://19
 
 The host and CDJs need working local-network connectivity; firewalls, VPN routing and Wi-Fi client isolation can prevent it. Keep the service on a trusted LAN and do not forward its port to the internet. The host must remain awake while recording a set or serving music.
 
-For Pi local USB loading, use **Manual IP connections** and physical players 1 and 2. Automatic discovery on a selected adapter is available for linked-CDJ operation. Connection-mode changes require saving and restarting OLC. See [connections and preferences](configuration.md) and [local USB usage](local-usb.md).
+For local USB loading, use **Manual IP connections** and physical players 1 and 2. Automatic discovery on a selected adapter is available for linked-CDJ operation. Connection-mode changes require saving and restarting OLC. See [connections and preferences](configuration.md) and [local USB usage](local-usb.md).
 
-Mac-hosted local audio is unavailable in this package because it does not have the required access to UDP port 111. Local browsing and loading from CDJ-mounted USBs remain available.
+For Mac-hosted local audio, install **Local USB Support** from the OneLibraryCompanion application menu, approve the macOS Installer prompt, then quit and reopen OLC. Repeat this setup after an OLC update. It installs the networking service and the matching host signature under `/Library`, without changing your music or saved sets. See [local USB usage](local-usb.md) for removal and operating limits.
 
 ## Data and backups
 

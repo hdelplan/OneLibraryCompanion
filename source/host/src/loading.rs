@@ -70,7 +70,7 @@ pub fn check_load_allowed(status: PlayerStatus, age: Duration) -> Result<(), Str
         },
     }
     .check()
-    .map_err(str::to_owned)
+    .map_err(|reason| format!("{reason} (player state {raw})"))
 }
 fn selection(body: &Value) -> Result<Selection, String> {
     let source = body["source"]

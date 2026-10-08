@@ -19,6 +19,7 @@ import {
   colorPalette,
   duration,
   emptyFilters,
+  clearTrackFilters,
   filterCount,
   folderPath,
   type Filters,
@@ -33,7 +34,7 @@ import { nextColumnSort } from "./libraryPreferences";
 import type { Analysis, LivePlayer } from "./model";
 import { LibraryArtwork } from "./LibraryArtwork";
 import { LoadControls, useTrackLoader } from "./LoadControls";
-import { incompatiblePlayers } from "./trackCompatibility";
+import { canTranscode, incompatiblePlayers } from "./trackCompatibility";
 import { sameLoadPlayers } from "./libraryLoading";
 import { keyCompatibility } from "./keyCompatibility";
 import { useTrackWindow } from "./useTrackWindow";
@@ -520,9 +521,21 @@ function LibraryView({
           </div>,
           toolbarTarget,
         )}
+      {players
+        .filter((p) => p.connection === "connected" && p.loadBlockedReason)
+        .map((p) => (
+          <p className="library-load-message" key={p.number} role="status">
+            CDJ{p.number}: {p.loadBlockedReason}
+          </p>
+        ))}
       {loader.message && (
         <p className="library-load-message" role="status">
           {loader.message}
+          {loader.cancelJob && (
+            <button onClick={() => void loader.cancel()}>
+              Cancel conversion
+            </button>
+          )}
         </p>
       )}
       <div className="library-body">
@@ -654,11 +667,7 @@ function LibraryView({
               value={filters.q ?? ""}
               onChange={(e) => change("q", e.target.value)}
             />
-            <button
-              onClick={() => {
-                setFilters({ ...emptyFilters });
-              }}
-            >
+            <button onClick={() => setFilters(clearTrackFilters)}>
               Clear filters{count ? ` (${count})` : ""}
             </button>
           </div>
@@ -849,7 +858,7 @@ function LibraryView({
                             </span>
                             {incompatiblePlayers(track, players).length > 0 && (
                               <span
-                                className="library-unsupported"
+                                className={`library-unsupported ${incompatiblePlayers(track, players).every((p) => canTranscode(track, source?.id, p)) ? "library-transcode-needed" : ""}`}
                                 title={`Unsupported on ${incompatiblePlayers(
                                   track,
                                   players,
@@ -857,7 +866,11 @@ function LibraryView({
                                   .map((p) => `CDJ${p.number} (${p.name})`)
                                   .join(", ")}`}
                               >
-                                UNSUPPORTED FORMAT
+                                {incompatiblePlayers(track, players).every(
+                                  (p) => canTranscode(track, source?.id, p),
+                                )
+                                  ? "TRANSCODE NEEDED"
+                                  : "UNSUPPORTED FORMAT"}
                               </span>
                             )}
                           </span>

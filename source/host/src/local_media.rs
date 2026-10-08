@@ -15,7 +15,11 @@ static STATUS: Mutex<Value> = Mutex::new(Value::Null);
 static NAMES: LazyLock<Mutex<BTreeMap<String, String>>> =
     LazyLock::new(|| Mutex::new(BTreeMap::new()));
 pub fn status() -> Value {
-    STATUS.lock().unwrap().clone()
+    let mut value = STATUS.lock().unwrap().clone();
+    if value.is_object() {
+        value["serving"] = crate::local_serving::status();
+    }
+    value
 }
 #[cfg(target_os = "ios")]
 pub fn register(id: &str, path: &Path, label: &str) -> Result<(), String> {

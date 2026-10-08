@@ -5,11 +5,24 @@ type Volume = {
   state: string;
   error?: string | null;
 };
-type Status = { count: number; volumes: Volume[]; needsFolderAccess: boolean };
+type Status = {
+  count: number;
+  volumes: Volume[];
+  needsFolderAccess: boolean;
+  serving?: {
+    active?: boolean;
+    source?: string | null;
+    error?: string;
+    peers?: { ip: string; announced: boolean; mediaQueried: boolean }[];
+  };
+};
 export function LocalUsb() {
   const [open, setOpen] = useState(false);
   const [status, setStatus] = useState<Status | null>(null);
   const [error, setError] = useState("");
+  const [report, setReport] = useState<File | null>(null);
+  const [preparing, setPreparing] = useState(false);
+  const [pollError, setPollError] = useState("");
   const bridge = (
     window as unknown as {
       webkit?: {
@@ -28,10 +41,10 @@ export function LocalUsb() {
         const result = (await response.json()) as Status | null;
         if (!cancelled) {
           setStatus(result);
-          setError("");
+          setPollError("");
         }
       } catch (e) {
-        if (!cancelled) setError(String(e));
+        if (!cancelled) setPollError(String(e));
       }
       if (!cancelled) timer = setTimeout(() => void poll(), 1500);
     }
@@ -55,16 +68,97 @@ export function LocalUsb() {
           <button onClick={() => setOpen(false)} aria-label="Close local USB">
             Close
           </button>
-          <strong>Local USB libraries · {status?.count ?? 0}/3</strong>
+          <strong>Mounted USB libraries: {status?.count ?? 0}</strong>
           <p>
             OLC checks mounted USBs every 5 seconds. Valid OneLibrary libraries
             appear automatically in the USB selector.
           </p>
           <p>
-            CDJ loading uses Direct IP connections and player number 4 as the
-            OLC source. Keep physical players on numbers 1 and 2, keep OLC open,
-            and leave the USB connected. Audio is served without transcoding.
+            OLC serves one local USB library per connection session. The first
+            track loaded selects that library. To switch libraries, stop both
+            CDJs, disconnect both in OLC, then reconnect. Compatible tracks use
+            their original USB track IDs, paths and audio.
           </p>
+          <p>
+            {status?.serving?.active
+              ? "Local source running; tracks are prepared when selected."
+              : "Local source waiting for USB and a live Direct IP connection."}
+          </p>
+          {status?.serving?.source && (
+            <p>
+              Serving USB:{" "}
+              {status.volumes.find(
+                (v) => `local-usb:${v.id}` === status.serving?.source,
+              )?.label ?? "Selected library"}
+            </p>
+          )}
+          <strong>Connected CDJs</strong>
+          {status?.serving?.peers?.map((peer) => (
+            <p key={peer.ip}>
+              {peer.ip}:{" "}
+              {peer.mediaQueried && peer.announced
+                ? "Connected to OLC’s local source"
+                : "Discovering OLC’s local source…"}
+            </p>
+          ))}
+          {status?.serving?.error && <p role="alert">{status.serving.error}</p>}
+          <strong>Load diagnostics</strong>
+          <button
+            disabled={preparing}
+            onClick={() => {
+              setPreparing(true);
+              setError("");
+              setReport(null);
+              void fetch("/api/library/local/trace")
+                .then((r) => {
+                  if (!r.ok) throw new Error("Cannot read load diagnostics");
+                  return r.json();
+                })
+                .then((value) => {
+                  setReport(
+                    new File(
+                      [JSON.stringify(value, null, 2)],
+                      "olc-local-load-trace.json",
+                      { type: "application/json" },
+                    ),
+                  );
+                })
+                .catch((e) => setError(String(e)))
+                .finally(() => setPreparing(false));
+            }}
+          >
+            {preparing ? "Preparing diagnostics…" : "Prepare load diagnostics"}
+          </button>
+          {report && (
+            <button
+              onClick={async () => {
+                try {
+                  setError("");
+                  if (bridge) {
+                    bridge.postMessage({
+                      shareDiagnostics: await report.text(),
+                    });
+                  } else if (navigator.canShare?.({ files: [report] })) {
+                    await navigator.share({
+                      files: [report],
+                      title: "OLC local load diagnostics",
+                    });
+                  } else {
+                    const url = URL.createObjectURL(report);
+                    const link = document.createElement("a");
+                    link.href = url;
+                    link.download = report.name;
+                    link.click();
+                    setTimeout(() => URL.revokeObjectURL(url), 60000);
+                  }
+                } catch (e) {
+                  setError(String(e));
+                }
+              }}
+            >
+              Share / save diagnostics
+            </button>
+          )}
           {bridge && (
             <>
               <p>
@@ -92,6 +186,7 @@ export function LocalUsb() {
             </div>
           ))}
           {!status?.volumes.length && <p>No local USB library detected.</p>}
+          {pollError && <p role="alert">{pollError}</p>}
           {error && <p role="alert">{error}</p>}
         </div>
       )}

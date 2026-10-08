@@ -1,11 +1,13 @@
 //! HTTP serves the companion UI, never a CDJ protocol service.
 pub const EXPERIMENTS: bool = cfg!(any(target_os = "ios", feature = "experiments"));
 mod artwork;
+mod audio_conversion;
 mod audio_header;
 mod bar_position;
 pub mod beat_position;
 mod bridge_probe;
 mod cdj_usb_load;
+mod cue_diagnostics;
 mod cue_window;
 mod cues;
 mod direct_ip;
@@ -22,6 +24,7 @@ mod local_media;
 mod local_serving;
 pub mod local_usb_probe;
 mod loop_region;
+pub mod mac_networking;
 mod musical_key;
 mod offline;
 mod onelibrary;
@@ -30,6 +33,7 @@ pub mod set_history;
 mod set_history_import;
 mod subnet_search;
 mod sync_tap;
+mod transcoding;
 use axum::{
     Json, Router,
     body::Bytes,
@@ -50,7 +54,12 @@ struct App {
     history: set_history::Shared,
 }
 async fn load_track(State(app): State<Arc<App>>, Json(body): Json<Value>) -> Json<Value> {
-    Json(live::load(&app.live, body).await)
+    let started = std::time::Instant::now();
+    let id = body["conversionJob"].as_str().unwrap_or("").to_owned();
+    let mut result = live::load(&app.live, body).await;
+    result["elapsedSeconds"] = json!(started.elapsed().as_secs_f64());
+    result["conversion"] = transcoding::load_finished(&id, &result);
+    Json(result)
 }
 async fn library_artwork(
     State(app): State<Arc<App>>,
@@ -84,6 +93,9 @@ async fn manual_library(State(app): State<Arc<App>>, Json(body): Json<Value>) ->
     Ok(Json(library::sources(&app.library)))
 }
 async fn usb_probe_command(State(app): State<Arc<App>>, Json(body): Json<Value>) -> ApiResult {
+    if cue_diagnostics::active() {
+        return Err((StatusCode::CONFLICT, "Stop the cue capture first".into()));
+    }
     if body["stop"] == true {
         local_usb_probe::stop();
     } else {
@@ -152,6 +164,12 @@ async fn jog_command(State(app): State<Arc<App>>, Json(body): Json<Value>) -> Ap
     }
 }
 async fn direct_live_connect(State(app): State<Arc<App>>, Json(body): Json<Value>) -> ApiResult {
+    if cue_diagnostics::active() {
+        return Err((
+            StatusCode::CONFLICT,
+            "Wait for the cue capture to finish or stop it first".into(),
+        ));
+    }
     if local_usb_probe::active() {
         return Err((
             StatusCode::CONFLICT,
@@ -352,6 +370,7 @@ fn app_router(
     library_path: Option<PathBuf>,
     data_dir: PathBuf,
 ) -> Router {
+    transcoding::init(&data_dir);
     let library = library::with_local_path(interface.clone(), library_path);
     local_media::start(library.clone());
     let live = live::start(interface, library.clone());
@@ -359,6 +378,10 @@ fn app_router(
     let router = Router::new();
     let router = if EXPERIMENTS {
         router
+            .route(
+                "/api/diagnostics/native-cues",
+                get(|| async { Json(cue_diagnostics::report()) }).post(native_cues_command),
+            )
             .route(
                 "/diagnostics/local-usb",
                 get(|| async { axum::response::Html(include_str!("local_usb_probe.html")) }),
@@ -397,6 +420,9 @@ fn app_router(
         router
     };
     router
+        .route("/api/transcoding", get(||async {Json(transcoding::snapshot())}).post(transcoding_settings))
+        .route("/api/transcoding/benchmark", post(transcoding_benchmark))
+        .route("/api/transcoding/cancel", post(transcoding_cancel))
         .route("/api/health", get(health))
         .route(
             "/api/network/search",
@@ -411,6 +437,7 @@ fn app_router(
             "/api/library/local",
             get(|| async { Json(local_media::status()) }),
         )
+        .route("/api/library/local/trace", get(|| async { Json(serde_json::json!({"serving":local_serving::status(),"events":prolink::serve::diagnostics::snapshot()})) }))
         .route("/api/library/manual", post(manual_library))
         .route("/api/live/direct", post(direct_live_connect))
         .route("/api/library/{id}/preview/{track}", get(library_preview))
@@ -532,4 +559,68 @@ async fn set_artwork(
             .into_response();
     }
     StatusCode::NOT_FOUND.into_response()
+}
+
+async fn transcoding_settings(Json(body): Json<Value>) -> ApiResult {
+    transcoding::configure(&body).map_err(|e| (StatusCode::BAD_REQUEST, e))?;
+    Ok(Json(transcoding::snapshot()))
+}
+async fn transcoding_cancel(Json(body): Json<Value>) -> Json<Value> {
+    if let Some(id) = body["id"].as_str() {
+        transcoding::cancel(id);
+    }
+    Json(transcoding::snapshot())
+}
+async fn transcoding_benchmark(State(app): State<Arc<App>>, Json(body): Json<Value>) -> ApiResult {
+    let key = local_serving::key(&body).map_err(|e| (StatusCode::BAD_REQUEST, e))?;
+    let profile: transcoding::Profile = serde_json::from_value(body["profile"].clone())
+        .map_err(|e| (StatusCode::BAD_REQUEST, e.to_string()))?;
+    let id = transcoding::job_id(&body);
+    let cancel = transcoding::register(&id).map_err(|e| (StatusCode::CONFLICT, e))?;
+    transcoding::benchmark_queued(&id);
+    let response = json!({"id":id});
+    tokio::spawn(async move {
+        let _cancel = cancel;
+        let task_id = id.clone();
+        let token = _cancel.flag.clone();
+        let result = tokio::task::spawn_blocking(move || {
+            let prepared = local_serving::prepare(&app.library, key)?;
+            transcoding::run(&prepared, profile, &task_id, true, token).map(|_| ())
+        })
+        .await;
+        if let Err(error) = result.unwrap_or_else(|e| Err(e.to_string())) {
+            transcoding::benchmark_error(&id, &error);
+        }
+    });
+    Ok(Json(response))
+}
+
+async fn native_cues_command(State(app): State<Arc<App>>, Json(body): Json<Value>) -> ApiResult {
+    if body["stop"] == true {
+        cue_diagnostics::stop();
+    } else {
+        if local_usb_probe::active()
+            || jog_trace::state()["active"] == true
+            || cue_window::occupied()
+        {
+            return Err((
+                StatusCode::CONFLICT,
+                "Stop other diagnostics before capturing cues".into(),
+            ));
+        }
+        let ip = direct_ip::validate_ip(body["ip"].as_str().unwrap_or(""))
+            .map_err(|e| (StatusCode::BAD_REQUEST, e))?;
+        let number = body["number"]
+            .as_u64()
+            .and_then(|n| u8::try_from(n).ok())
+            .unwrap_or(0);
+        if !(1..=2).contains(&number) {
+            return Err((StatusCode::BAD_REQUEST, "Choose CDJ 1 or CDJ 2".into()));
+        }
+        live::direct::release_idle_transport(&app.live)
+            .await
+            .map_err(|e| (StatusCode::CONFLICT, e))?;
+        cue_diagnostics::start(ip, number).map_err(|e| (StatusCode::CONFLICT, e))?;
+    }
+    Ok(Json(cue_diagnostics::report()))
 }

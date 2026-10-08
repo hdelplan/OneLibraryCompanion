@@ -97,7 +97,7 @@ pub async fn load(shared: &Shared, body: Value) -> Value {
         .as_str()
         .is_some_and(|s| s.starts_with("local-usb:"))
     {
-        Duration::from_secs(40)
+        Duration::from_secs(155)
     } else {
         Duration::from_secs(16)
     };

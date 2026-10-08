@@ -1,0 +1,61 @@
+realfft 3.5.0
+Author declared by upstream: HEnquist <henrik.enquist@gmail.com>
+Repository: https://github.com/HEnquist/realfft
+Pinned source commit: d0d4eee0525fd27c96c8a046d6d107acd5ed84a6
+
+The upstream Cargo.toml and README declare the MIT license. Neither the
+published crate nor its tagged repository includes a separate LICENSE file.
+The standard MIT permission/disclaimer text is reproduced below; no missing
+upstream copyright year is inferred.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+Upstream package declaration:
+[package]
+name = "realfft"
+version = "3.5.0"
+authors = ["HEnquist <henrik.enquist@gmail.com>"]
+edition = "2018"
+description = "Real-to-complex forward FFT and complex-to-real inverse FFT for Rust"
+license = "MIT"
+repository = "https://github.com/HEnquist/realfft"
+keywords = ["fft", "dft", "discrete", "fourier", "transform"]
+categories = ["algorithms", "compression", "multimedia::encoding", "science"]
+readme = "README.md"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[features]
+# Map RealFFT's features one-to-one with RustFFT's. For more information, refer
+# to the Feature Flags section at https://docs.rs/rustfft/latest/rustfft/
+default = ["rustfft/default"]
+avx = ["rustfft/avx"]
+sse = ["rustfft/sse"]
+neon = ["rustfft/neon"]
+wasm_simd = ["rustfft/wasm_simd"]
+
+[dependencies]
+rustfft = { version = "6.4.0", default-features = false }
+
+[dev-dependencies]
+criterion = "0.6"
+rand = "0.9"
+
+[[bench]]
+name = "realfft"
+harness = false

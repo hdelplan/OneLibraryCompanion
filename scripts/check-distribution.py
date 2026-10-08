@@ -18,7 +18,7 @@ for folder in (prod,):
         bundled = folder / 'licenses' / source.relative_to(root)
         assert bundled.is_file() and bundled.read_bytes() == source.read_bytes(), f'Missing or stale bundled notice: {bundled}'
 text = '\n'.join(p.read_text() for p in prod.rglob('*.js'))
-for marker in ['DIAGNOSTICS & EXPERIMENTS', '/api/diagnostics/cue-window', '/diagnostics/local-usb', 'Choose an offline preview in TEST', 'PIONEERCOMPANION / SET HISTORY']:
+for marker in ['DIAGNOSTICS & EXPERIMENTS', '/api/diagnostics/cue-window', '/api/diagnostics/native-cues', '/diagnostics/local-usb', 'Choose an offline preview in TEST', 'PIONEERCOMPANION / SET HISTORY']:
     assert marker not in text, f'Production asset leaked: {marker}'
 assert not list(prod.glob('assets/Experiments-*.js')), 'Production included the experiments chunk'
 if args.url:
@@ -30,7 +30,7 @@ if args.url:
     assert health['live'] is False, 'Use an isolated offline smoke-test host'
     info = request('/api/app')
     assert info['authentication'] == 'none'
-    for path in ['/diagnostics/local-usb', '/diagnostics/direct-ip', '/api/diagnostics/local-usb', '/api/diagnostics/cue-window', '/api/diagnostics/cue-window/reports', '/api/diagnostics/jog', '/api/diagnostics/jog/state', '/api/diagnostics/direct-ip', '/api/diagnostics/direct-status']:
+    for path in ['/diagnostics/local-usb', '/diagnostics/direct-ip', '/api/diagnostics/local-usb', '/api/diagnostics/cue-window', '/api/diagnostics/cue-window/reports', '/api/diagnostics/native-cues', '/api/diagnostics/jog', '/api/diagnostics/jog/state', '/api/diagnostics/direct-ip', '/api/diagnostics/direct-status']:
         for method in ['GET', 'POST']:
             try:
                 with urllib.request.urlopen(urllib.request.Request(args.url + path, method=method), timeout=3):

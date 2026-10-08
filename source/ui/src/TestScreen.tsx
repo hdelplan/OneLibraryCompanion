@@ -1,9 +1,11 @@
 import { OfflinePreview } from "./OfflinePreview";
 import type { ReactNode } from "react";
 import { JogDiagnostics } from "./JogDiagnostics";
+import { CueDiagnostics } from "./CueDiagnostics";
 
 type Props = {
   active: boolean;
+  liveEnabled: boolean;
   cueWindow: ReactNode;
   selectLive: () => void;
   zeroSmoothing: () => void;
@@ -16,6 +18,7 @@ type Props = {
 
 export function TestScreen({
   active,
+  liveEnabled,
   cueWindow,
   selectLive,
   zeroSmoothing,
@@ -35,6 +38,11 @@ export function TestScreen({
               <h1>TEST</h1>
             </div>
           </header>
+          {active && (
+            <div className="settings-grid test-tools">
+              <CueDiagnostics liveEnabled={liveEnabled} />
+            </div>
+          )}
         </div>
         {cueWindow}
         <div hidden={!active}>

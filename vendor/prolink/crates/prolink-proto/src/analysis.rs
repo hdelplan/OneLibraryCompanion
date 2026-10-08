@@ -19,7 +19,7 @@
 //! | `GET_BEAT_GRID` | `0x4602` | 20-byte prefix, then 16-byte entries from the file's 8-byte ones |
 //! | `GET_WAVEFORM_PREVIEW` | `0x4402` | each packed byte split in two, then the tiny waveform appended |
 //! | `GET_WAVEFORM_DETAIL` | `0x4a02` | 20-byte prefix, then the payload verbatim |
-//! | `GET_CUE_POINTS` | `0x4702` | two blobs, sorted by time |
+//! | `GET_CUE_POINTS` | `0x4702` | two blobs, preserving supplied protocol order |
 //!
 //! # Why this module takes bytes rather than a parsed file
 //!
@@ -246,15 +246,12 @@ pub struct CueBlobs {
 /// A record starts with loop/cue flags and the hot cue number. Cue and
 /// loop-end positions occupy offsets 12 and 16 in 150 Hz frame units.
 ///
-/// Cues go out **sorted by time**, not in the order the file stores them —
-/// rekordbox had written the reference track's three cues newest-first.
+/// Preserve the supplied protocol order. Encoding the network representation
+/// must not sort, merge or deduplicate cue records.
 pub fn cue_points(cues: &[Cue]) -> CueBlobs {
-    let mut sorted = cues.to_vec();
-    sorted.sort_by_key(|cue| cue.time_ms);
-
-    let mut records = Vec::with_capacity(sorted.len() * CUE_ENTRY_LEN);
-    let mut times = Vec::with_capacity(sorted.len() * 8);
-    for cue in &sorted {
+    let mut records = Vec::with_capacity(cues.len() * CUE_ENTRY_LEN);
+    let mut times = Vec::with_capacity(cues.len() * 8);
+    for cue in cues {
         records.extend_from_slice(&cue.order.to_le_bytes());
         records.extend_from_slice(&cue.hot_cue.to_le_bytes());
         records.extend_from_slice(&0u32.to_le_bytes());
@@ -274,7 +271,7 @@ pub fn cue_points(cues: &[Cue]) -> CueBlobs {
     }
     CueBlobs {
         records,
-        count: u32::try_from(sorted.len()).unwrap_or(u32::MAX),
+        count: u32::try_from(cues.len()).unwrap_or(u32::MAX),
         times,
     }
 }
@@ -427,8 +424,8 @@ mod tests {
     }
 
     #[test]
-    fn cues_go_out_sorted_by_time_not_in_file_order() {
-        // rekordbox had written the reference track's cues newest-first.
+    fn cues_keep_usb_order_in_both_wire_blobs() {
+        // Non-chronological input must reach the deck in the same order.
         let cues = [
             Cue {
                 order: 3,
@@ -456,11 +453,11 @@ mod tests {
 
         let first_time = u32::from_le_bytes(blobs.times[0..4].try_into().unwrap());
         let second_time = u32::from_le_bytes(blobs.times[8..12].try_into().unwrap());
-        assert_eq!((first_time, second_time), (271, 4000));
+        assert_eq!((first_time, second_time), (9000, 271));
 
-        // The first record's frame is the earliest cue's.
+        // The first record stays paired with the first supplied timestamp.
         let frame = u32::from_le_bytes(blobs.records[12..16].try_into().unwrap());
-        assert_eq!(frame, 40);
+        assert_eq!(frame, 1350);
     }
 
     #[test]

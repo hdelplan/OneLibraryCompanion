@@ -4,6 +4,7 @@ import type { OfflinePreviewProps } from "./OfflinePreview";
 export default function Experiments(
   props: OfflinePreviewProps & {
     page: string;
+    liveEnabled: boolean;
     selectLive: () => void;
     zeroSmoothing: () => void;
   },

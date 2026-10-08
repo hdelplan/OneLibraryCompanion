@@ -1,0 +1,4 @@
+#!/bin/sh
+set -eu
+/bin/launchctl bootout system/org.onelibrarycompanion.networking 2>/dev/null || true
+/bin/launchctl bootstrap system /Library/LaunchDaemons/org.onelibrarycompanion.networking.plist

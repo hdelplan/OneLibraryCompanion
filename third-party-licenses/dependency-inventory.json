@@ -38,6 +38,18 @@
   },
   {
     "ecosystem": "cargo",
+    "name": "autocfg",
+    "version": "1.5.1",
+    "license": "Apache-2.0 OR MIT",
+    "repository": "https://github.com/cuviper/autocfg",
+    "notice_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
     "name": "axum",
     "version": "0.8.9",
     "license": "MIT",
@@ -209,6 +221,17 @@
     "notice_files": [
       "LICENSE-APACHE",
       "LICENSE-MIT"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "extended",
+    "version": "0.1.0",
+    "license": "MIT",
+    "repository": "https://github.com/depp/extended-rs",
+    "notice_files": [
+      "LICENSE.txt"
     ],
     "provenance": "Files from the pinned crate source."
   },
@@ -460,6 +483,18 @@
   },
   {
     "ecosystem": "cargo",
+    "name": "lazy_static",
+    "version": "1.5.1",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/rust-lang-nursery/lazy-static.rs",
+    "notice_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
     "name": "libc",
     "version": "0.2.189",
     "license": "MIT OR Apache-2.0",
@@ -566,6 +601,42 @@
   },
   {
     "ecosystem": "cargo",
+    "name": "num-complex",
+    "version": "0.4.6",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/rust-num/num-complex",
+    "notice_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "num-integer",
+    "version": "0.1.47",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/rust-num/num-integer",
+    "notice_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "num-traits",
+    "version": "0.2.19",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/rust-num/num-traits",
+    "notice_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
     "name": "once_cell",
     "version": "1.21.4",
     "license": "MIT OR Apache-2.0",
@@ -648,6 +719,18 @@
   },
   {
     "ecosystem": "cargo",
+    "name": "primal-check",
+    "version": "0.3.4",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/huonw/primal",
+    "notice_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
     "name": "proc-macro2",
     "version": "1.0.107",
     "license": "MIT OR Apache-2.0",
@@ -705,12 +788,58 @@
   },
   {
     "ecosystem": "cargo",
+    "name": "realfft",
+    "version": "3.5.0",
+    "license": "MIT",
+    "repository": "https://github.com/HEnquist/realfft",
+    "notice_files": [
+      "realfft-NOTICE.txt"
+    ],
+    "provenance": "Pinned upstream MIT declaration and author; standard MIT permission text."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "regex-lite",
+    "version": "0.1.9",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/rust-lang/regex",
+    "notice_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "rubato",
+    "version": "0.16.2",
+    "license": "MIT",
+    "repository": "https://github.com/HEnquist/rubato",
+    "notice_files": [
+      "LICENSE.txt"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
     "name": "rusqlite",
     "version": "0.32.1",
     "license": "MIT",
     "repository": "https://github.com/rusqlite/rusqlite",
     "notice_files": [
       "LICENSE"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "rustfft",
+    "version": "6.4.1",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/ejmahler/RustFFT",
+    "notice_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
     ],
     "provenance": "Files from the pinned crate source."
   },
@@ -866,6 +995,194 @@
     "notice_files": [
       "LICENSE-APACHE",
       "LICENSE-MIT"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "strength_reduce",
+    "version": "0.2.4",
+    "license": "MIT OR Apache-2.0",
+    "repository": "http://github.com/ejmahler/strength_reduce",
+    "notice_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "symphonia",
+    "version": "0.6.1",
+    "license": "MPL-2.0",
+    "repository": "https://github.com/pdeljanov/Symphonia",
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "symphonia-bundle-flac",
+    "version": "0.6.1",
+    "license": "MPL-2.0",
+    "repository": "https://github.com/pdeljanov/Symphonia",
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "symphonia-bundle-mp3",
+    "version": "0.6.1",
+    "license": "MPL-2.0",
+    "repository": "https://github.com/pdeljanov/Symphonia",
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "symphonia-codec-aac",
+    "version": "0.6.1",
+    "license": "MPL-2.0",
+    "repository": "https://github.com/pdeljanov/Symphonia",
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "symphonia-codec-adpcm",
+    "version": "0.6.1",
+    "license": "MPL-2.0",
+    "repository": "https://github.com/pdeljanov/Symphonia",
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "symphonia-codec-alac",
+    "version": "0.6.1",
+    "license": "MPL-2.0",
+    "repository": "https://github.com/pdeljanov/Symphonia",
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "symphonia-codec-pcm",
+    "version": "0.6.1",
+    "license": "MPL-2.0",
+    "repository": "https://github.com/pdeljanov/Symphonia",
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "symphonia-codec-vorbis",
+    "version": "0.6.1",
+    "license": "MPL-2.0",
+    "repository": "https://github.com/pdeljanov/Symphonia",
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "symphonia-common",
+    "version": "0.6.1",
+    "license": "MPL-2.0",
+    "repository": "https://github.com/pdeljanov/Symphonia",
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "symphonia-core",
+    "version": "0.6.1",
+    "license": "MPL-2.0",
+    "repository": "https://github.com/pdeljanov/Symphonia",
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "symphonia-format-caf",
+    "version": "0.6.1",
+    "license": "MPL-2.0",
+    "repository": "https://github.com/pdeljanov/Symphonia",
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "symphonia-format-isomp4",
+    "version": "0.6.1",
+    "license": "MPL-2.0",
+    "repository": "https://github.com/pdeljanov/Symphonia",
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "symphonia-format-mkv",
+    "version": "0.6.1",
+    "license": "MPL-2.0",
+    "repository": "https://github.com/pdeljanov/Symphonia",
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "symphonia-format-ogg",
+    "version": "0.6.1",
+    "license": "MPL-2.0",
+    "repository": "https://github.com/pdeljanov/Symphonia",
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "symphonia-format-riff",
+    "version": "0.6.1",
+    "license": "MPL-2.0",
+    "repository": "https://github.com/pdeljanov/Symphonia",
+    "notice_files": [
+      "LICENSE"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "symphonia-metadata",
+    "version": "0.6.1",
+    "license": "MPL-2.0",
+    "repository": "https://github.com/pdeljanov/Symphonia",
+    "notice_files": [
+      "LICENSE"
     ],
     "provenance": "Files from the pinned crate source."
   },
@@ -1048,6 +1365,18 @@
     "repository": "https://github.com/tokio-rs/tracing",
     "notice_files": [
       "LICENSE"
+    ],
+    "provenance": "Files from the pinned crate source."
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "transpose",
+    "version": "0.2.3",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/ejmahler/transpose",
+    "notice_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
     ],
     "provenance": "Files from the pinned crate source."
   },

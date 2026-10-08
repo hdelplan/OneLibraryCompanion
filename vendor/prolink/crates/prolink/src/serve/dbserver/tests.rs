@@ -2697,3 +2697,245 @@ fn a_medium_is_not_a_phantom_until_it_is_told_it_is() {
     medium.go_phantom();
     assert!(medium.is_phantom());
 }
+
+// No external PDB/audio fixtures: exercise the actual session/menu/ANLZ path.
+#[test]
+fn load_response_metadata_cue_matrix() {
+    use super::analysis::cue_reply_tests::category_fixture;
+    let hot: Vec<_> = (1..=8)
+        .rev()
+        .map(|slot| (slot, (slot - 1) * 1000, u32::MAX))
+        .collect();
+    let memory = vec![(0, 0, u32::MAX), (0, 1000, 2000)];
+    let mut together = memory.clone();
+    together.extend(&hot);
+    let cases = [vec![], memory.clone(), hot.clone(), together];
+    let texts = [
+        "Isolee",
+        "Isolée",
+        "Isole\u{301}e",
+        "Isol馥",
+        "IsolÃ©e",
+        "東京 🎵",
+    ];
+    let d = descriptor(Slot::USB, MenuTarget::MAIN);
+    for (case, entries) in cases.iter().enumerate() {
+        let mut baseline_cues = None;
+        for text in texts {
+            let track = prolink_rekordbox::Track {
+                id: 1162,
+                title: format!("Beau Mot Plage {text}"),
+                artist: text.into(),
+                album: format!("Rest {text}"),
+                comment: format!("Comment {text}"),
+                file_path: format!("/C/Contents/{text}/audio.wav"),
+                container: prolink_rekordbox::pdb::Container::WAV,
+                file_size: 71_691_356,
+                duration: 406,
+                sample_rate: 44100,
+                sample_depth: 16,
+                bitrate: 1411,
+                tempo: 12000,
+                ..Default::default()
+            };
+            // Audio identity/technical metadata are held constant; no audio is decoded here.
+            let mut library = Library::default();
+            library.tracks.insert(track.id, track.clone());
+            let medium = Arc::new(Medium::synthetic(ServedSlot::USB, library, "OLC"));
+            medium.seed_assets(
+                BTreeMap::from([(
+                    1162,
+                    Arc::new(crate::serve::Analysis {
+                        dat: Some(category_fixture(entries)),
+                        ext: None,
+                    }),
+                )]),
+                BTreeMap::new(),
+            );
+            let shared = shared([medium]);
+            let mut session = Session::default();
+            let mut stream = Vec::new();
+            let requests = [
+                Message::menu_request(1, MessageKind::GET_METADATA, d, &[1162]).unwrap(),
+                Message::render_of(2, d, 0, 13, 13),
+                Message::menu_request(3, MessageKind::GET_TRACK_INFO, d, &[1162]).unwrap(),
+                Message::render_of(4, d, 0, 6, 6),
+                Message::menu_request(5, MessageKind::GET_CUE_POINTS, d, &[1162]).unwrap(),
+                // Return to metadata after cue response and track-info on the same descriptor.
+                Message::render_of(6, d, 0, 1, 13),
+            ];
+            for request in requests {
+                let wire = request.encode();
+                let (request, used) = Message::decode(&wire).unwrap();
+                assert_eq!(used, wire.len());
+                session.handle(&shared, &request, &mut stream);
+            }
+            let mut messages = Vec::new();
+            let mut pos = 0;
+            while pos < stream.len() {
+                let (message, used) = Message::decode(&stream[pos..]).unwrap();
+                assert_eq!(message.encode(), stream[pos..pos + used]);
+                // Independent menu byte-layout checks, beyond encoder/decoder agreement.
+                if message.kind == MessageKind::MENU_ITEM {
+                    let wire = &stream[pos..pos + used];
+                    let label = message.text(3).unwrap();
+                    let units: Vec<_> = label.encode_utf16().chain([0]).collect();
+                    assert_eq!(message.number(2), Some((units.len() * 2) as u32));
+                    assert_eq!(wire[47], 0x26);
+                    assert_eq!(
+                        u32::from_be_bytes(wire[48..52].try_into().unwrap()),
+                        units.len() as u32
+                    );
+                    let expected: Vec<_> = units.iter().flat_map(|u| u.to_be_bytes()).collect();
+                    assert_eq!(&wire[52..52 + expected.len()], expected);
+                }
+                messages.push(message);
+                pos += used;
+            }
+            assert_eq!(messages.len(), 29);
+            assert_eq!(messages[0].number(1), Some(13));
+            assert_eq!(messages[16].number(1), Some(6));
+            let rows = |tx| {
+                messages
+                    .iter()
+                    .filter(|m| m.transaction_id == tx)
+                    .filter_map(MenuItem::from_message)
+                    .collect::<Vec<_>>()
+            };
+            let metadata = rows(2);
+            assert_eq!(metadata.len(), 13);
+            for (kind, expected) in [
+                (ItemType::TRACK_TITLE, &track.title),
+                (ItemType::ARTIST, &track.artist),
+                (ItemType::ALBUM, &track.album),
+                (ItemType::COMMENT, &track.comment),
+            ] {
+                assert_eq!(
+                    &metadata
+                        .iter()
+                        .find(|r| r.item_type == kind)
+                        .unwrap()
+                        .label1,
+                    expected
+                );
+            }
+            let info = rows(4);
+            assert_eq!(info.len(), 6);
+            assert_eq!(info[0].id, u32::from(track.container.0));
+            assert_eq!(info[4].argument0, track.file_size);
+            assert_eq!(info[4].label1, track.file_path);
+            assert_eq!(rows(6)[0].label1, track.title);
+            let cue = messages
+                .iter()
+                .find(|m| m.kind == MessageKind::CUE_POINTS)
+                .unwrap();
+            let bytes = cue.encode();
+            // This older response carries A-C; D-H remain in the USB analysis.
+            let mut stored: Vec<_> = entries.iter().copied().filter(|e| e.0 <= 3).collect();
+            assert_eq!(
+                bytes.len(),
+                if stored.is_empty() {
+                    67
+                } else {
+                    77 + 44 * stored.len()
+                }
+            );
+            assert_eq!(
+                cue.number(5),
+                Some(stored.iter().filter(|e| e.0 != 0).count() as u32)
+            );
+            assert_eq!(
+                cue.number(6),
+                Some(stored.iter().filter(|e| e.0 == 0).count() as u32)
+            );
+            // Native legacy replies keep memory order, then hot letters.
+            stored.sort_by_key(|e| e.0);
+            let records = cue.blob(3).unwrap();
+            let times = cue.blob(8).unwrap();
+            assert_eq!(records.len(), 36 * stored.len());
+            assert_eq!(times.len(), 8 * stored.len());
+            for (i, &(slot, time, end)) in stored.iter().enumerate() {
+                let record = &records[i * 36..(i + 1) * 36];
+                assert_eq!(&record[..2], &[u8::from(end != u32::MAX), 1]);
+                assert_eq!(
+                    u16::from_le_bytes(record[2..4].try_into().unwrap()),
+                    slot as u16
+                );
+                assert_eq!(
+                    u32::from_le_bytes(record[12..16].try_into().unwrap()),
+                    time * 150 / 1000
+                );
+                assert_eq!(
+                    u32::from_le_bytes(record[16..20].try_into().unwrap()),
+                    if end == u32::MAX { 0 } else { end * 150 / 1000 }
+                );
+                assert!(record[20..].iter().all(|&b| b == 0));
+                assert_eq!(&times[i * 8..i * 8 + 4], time.to_le_bytes());
+                assert_eq!(&times[i * 8 + 4..i * 8 + 8], end.to_le_bytes());
+            }
+            if let Some(ref baseline) = baseline_cues {
+                assert_eq!(&bytes, baseline);
+            } else {
+                baseline_cues = Some(bytes);
+            }
+            eprintln!(
+                "matrix case={case} text={text:?}: 13 metadata, 6 info, {} cues, aligned one-row follow-up",
+                entries.len()
+            );
+        }
+    }
+}
+
+#[test]
+fn load_response_selects_usb_cue_categories_independently() {
+    use super::analysis::cue_reply_tests::fixture;
+    let d = descriptor(Slot::USB, MenuTarget::MAIN);
+    // Memory in DAT cannot mask hot cues in EXT; either file can carry either tag.
+    for (dat, ext, expected_hot, expected_memory) in [
+        (
+            Some(fixture(false, 0, &[(0, 0, u32::MAX)])),
+            Some(fixture(true, 1, &[(1, 0, u32::MAX)])),
+            1,
+            1,
+        ),
+        (
+            Some(fixture(false, 0, &[])),
+            Some(fixture(true, 1, &[(1, 0, u32::MAX)])),
+            1,
+            0,
+        ),
+        (Some(fixture(true, 1, &[(1, 0, u32::MAX)])), None, 1, 0),
+        (None, Some(fixture(false, 1, &[(1, 0, u32::MAX)])), 1, 0),
+    ] {
+        let medium = Arc::new(Medium::synthetic(ServedSlot::USB, other_library(), "OLC"));
+        medium.seed_assets(
+            BTreeMap::from([(1, Arc::new(crate::serve::Analysis { dat, ext }))]),
+            BTreeMap::new(),
+        );
+        let replies = ask(
+            &mut Session::default(),
+            &shared([medium]),
+            &Message::menu_request(1, MessageKind::GET_CUE_POINTS, d, &[1]).unwrap(),
+        );
+        assert_eq!(replies[0].number(5), Some(expected_hot));
+        assert_eq!(replies[0].number(6), Some(expected_memory));
+    }
+}
+
+#[test]
+fn load_response_extended_cue_request_is_currently_unimplemented() {
+    let replies = ask(
+        &mut Session::default(),
+        &shared([]),
+        &Message::menu_request(
+            1,
+            MessageKind::GET_CUE_POINTS_EXT,
+            descriptor(Slot::USB, MenuTarget::MAIN),
+            &[1],
+        )
+        .unwrap(),
+    );
+    // This is a limitation, not certification of A–H support on newer hardware.
+    assert_eq!(replies[0].kind, MessageKind::SUCCESS);
+    assert_ne!(replies[0].kind, MessageKind::CUE_POINTS_EXT);
+}

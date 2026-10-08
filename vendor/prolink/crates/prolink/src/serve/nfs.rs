@@ -116,7 +116,7 @@ const NOT_PERMITTED: &str = if cfg!(target_os = "linux") {
     "run as root, grant this binary CAP_NET_BIND_SERVICE, or lower the privileged range with \
      `sysctl -w net.ipv4.ip_unprivileged_port_start=111`"
 } else if cfg!(target_os = "macos") {
-    "macOS has no unprivileged-port setting, so serving files to a player requires running as root"
+    "use an administrator-installed socket broker to supply port 111"
 } else {
     "ports below 1024 usually require elevated privileges"
 };
@@ -205,12 +205,21 @@ impl NfsServer {
     ///
     /// Fails if the portmapper cannot be bound, which is the one failure that
     /// makes everything else pointless — see the module documentation.
+    pub async fn start(vfs: Arc<RwLock<Vfs>>, config: NfsConfig) -> Result<Self> {
+        Self::start_with_portmapper(vfs, config, None).await
+    }
+
+    /// Use an already authorized portmapper socket. The caller owns platform setup.
     #[expect(
         clippy::unused_async,
         reason = "spawns tasks, so it needs a tokio runtime; async is how that is documented \
                   at the call site, and keeps the signature stable if setup later awaits"
     )]
-    pub async fn start(vfs: Arc<RwLock<Vfs>>, config: NfsConfig) -> Result<Self> {
+    pub async fn start_with_portmapper(
+        vfs: Arc<RwLock<Vfs>>,
+        config: NfsConfig,
+        portmapper: Option<UdpSocket>,
+    ) -> Result<Self> {
         let interface = config.interface.as_ref();
         // The unprivileged two first: if they cannot be had at all there is
         // nothing for a portmapper to publish, and finding that out is cheap.
@@ -223,7 +232,23 @@ impl NfsServer {
         let (mount, mount_port) = bind_preferred(config.mount_port, interface, "mountd")?;
         // And 111 last, because it is the only one that can fail for want of
         // privilege and the only one whose failure is worth an error.
-        let portmap = bind_portmapper(config.portmap_port, interface)?;
+        let portmap = match portmapper {
+            Some(socket) => {
+                let address = socket
+                    .local_addr()
+                    .map_err(Error::io("reading authorized socket address"))?;
+                if !address.is_ipv4() || address.port() != config.portmap_port {
+                    return Err(Error::io("validating authorized portmapper socket")(
+                        std::io::Error::new(
+                            std::io::ErrorKind::InvalidInput,
+                            "unexpected portmapper address",
+                        ),
+                    ));
+                }
+                socket
+            }
+            None => bind_portmapper(config.portmap_port, interface)?,
+        };
         let portmap_port = port_of(&portmap)?;
 
         let ports = Ports {
@@ -338,6 +363,9 @@ fn listen(
                     Ok(Some(reply)) => {
                         if let Err(error) = socket.send_to(&reply, SocketAddr::V4(from)).await {
                             warn!(%error, %from, "reply not sent");
+                            super::diagnostics::record(format!(
+                                "nfs_send_error peer={from} error={error}"
+                            ));
                         }
                     }
                     Ok(None) => {}

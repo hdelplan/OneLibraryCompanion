@@ -1,22 +1,31 @@
-# OneLibraryCompanion 0.1.2
+# OneLibraryCompanion 0.2.0
 
-OLC provides two-deck live status with three-band waveforms, library browsing and filtering, protected track loading, Pi-hosted OneLibrary USB playback, and persistent set history with text, CSV and PDF exports. Mac and Raspberry Pi desktop windows and LAN browsers share the same host.
+## More music for older CDJs
 
-## Installers
+**Built-in audio transcoding lets older players such as the CDJ-2000nexus play supported local files they cannot decode directly, including FLAC and ALAC.** Attach your OneLibrary USB to the Mac or Raspberry Pi, choose a track marked **TRANSCODE NEEDED**, and load it onto a stopped player. OLC prepares a compatible WAV or AIFF file before sending the load request.
 
-- Apple Silicon: `OneLibraryCompanion-0.1.2-macos-arm64.dmg`.
-- Intel Mac: `OneLibraryCompanion-0.1.2-macos-x86_64.dmg`.
-- Raspberry Pi Desktop: install both `onelibrarycompanion-host_0.1.2_arm64.deb` and `onelibrarycompanion_0.1.2_arm64.deb`.
+- Automatic quality preservation or selectable 16-/24-bit WAV and AIFF output.
+- Sample-rate conversion to 44.1 or 48 kHz when needed.
+- Conversion progress, cancellation, prepared-file caching and conversion benchmarks.
+- Original USB files remain untouched; compatible tracks are sent as-is.
+- Exported artwork, waveforms, beat grids, hot cues and memory cues accompany the track.
+- Conversion runs inside OLC without additional audio software. It applies to host-attached USBs; linked CDJ USBs use their original files.
+
+## One library, two players
+
+Serve one local OneLibrary USB per connection session to physical players 1 and 2, with original track IDs and compatible audio paths. Different tracks remain available to both decks. OLC checks the destination is connected, fresh and stopped before loading. Use Manual IP connections and leave player number 4 free for OLC.
+
+OLC also provides two-deck live status, three-band waveforms, playlist browsing, combined metadata filters, harmonic key highlighting, and reusable set history with text, CSV and PDF exports. Native windows and LAN browsers share the same host.
+
+## Downloads and setup
+
+- Apple Silicon: `OneLibraryCompanion-0.2.0-macos-arm64.dmg` or `.zip`.
+- Intel Mac: `OneLibraryCompanion-0.2.0-macos-x86_64.dmg` or `.zip`.
+- Raspberry Pi Desktop: install both `onelibrarycompanion-host_0.2.0_arm64.deb` and `onelibrarycompanion_0.2.0_arm64.deb`.
 - Pi headless: install the host package and enable its user service.
 
-Mac ZIP alternatives, matching source and `SHA256SUMS.txt` accompany the installers. Mac requires macOS 13+; Pi requires 64-bit Raspberry Pi OS Bookworm or later. Mac packages are ad-hoc signed and not notarized. Physical Pi, Intel and minimum-OS validation remains incomplete.
+Mac requires macOS 13+; Pi requires 64-bit Raspberry Pi OS Bookworm or later. Mac packages are ad-hoc signed and not notarized. On Mac, install **Local USB Support** from the application menu, then quit and reopen OLC. Reinstall this component after updating OLC. The Pi package grants the host its required port-binding capability.
 
-## Local USB operation
+Keep the host awake, OLC running and the USB attached throughout playback. Playback and cue controls remain on the physical CDJs. One local library can be served at a time; stop both players and reconnect OLC before switching libraries.
 
-Local browsing is available on Mac and Pi. Local playback is available on Pi, whose installer grants the host executable the port-binding capability needed for UDP 111. Mac-hosted playback is unavailable because the package lacks the required access to UDP 111.
-
-Use Manual IP connections to physical players 1 and 2, leaving player number 4 free for OLC. Up to three mounted OneLibrary USBs are available. OLC serves original audio and exported metadata/analysis, keeps independent tracks available to both decks, and returns complete audio reads within the network payload limit.
-
-Keep the host awake, OLC running and the USB connected during playback. First-load discovery may require LINK on the target player. Check the displayed load result and physical cue position; OLC does not force a start position or retry an uncertain load automatically.
-
-See the README for features and `docs/distribution.md`, `docs/local-usb.md` and `docs/compatibility.md` for usage and limits. License notices and source credits are included in source and application packages.
+Matching source, license notices and SHA256 checksums accompany the installers. See the [installation guide](https://github.com/hdelplan/OneLibraryCompanion/blob/main/docs/distribution.md) and [compatibility](https://github.com/hdelplan/OneLibraryCompanion/blob/main/docs/compatibility.md) for platform coverage and operating limits.

@@ -81,3 +81,15 @@ with the dependency sources and in third-party-licenses/.
 The macOS shell uses Apple AppKit, WebKit and ServiceManagement. These frameworks are supplied by the operating system. The Linux desktop uses Python, PyGObject, GTK 3 and WebKitGTK 4.1, installed by Raspberry Pi OS/Debian packages with their own notices. Rust/Cargo, Swift/Xcode, Node.js/npm, cargo-zigbuild and Zig are build tools, not copied application source. See `third-party-licenses/SOURCE-CREDITS.md` for links and scope.
 
 The license inventory includes all resolved Cargo packages (including build and target-specific dependencies) and the installed npm production and development packages. Uninstalled optional npm build executables for other platforms are excluded; they are not bundled in the app. Native OpenSSL and SQLCipher notices are included separately. Regenerate dependency notices after lockfile updates with `python3 scripts/collect-third-party-notices.py`.
+
+
+## Shared audio conversion
+
+Local PCM conversion uses Symphonia 0.6.1 (MPL-2.0) and Rubato 0.16.2 (MIT),
+with their pinned transitive dependencies. Full bundled notices and source
+repositories are listed in `third-party-licenses/CARGO-NOTICES.txt` and the
+machine-readable inventory. The realfft package declares MIT but does not ship
+a separate license file; its upstream declaration, author and standard MIT
+permission text are recorded in `third-party-licenses/realfft-NOTICE.txt`.
+The small audio fixtures under `source/host/tests/fixtures/transcoding` are
+original synthetic signals generated for conversion regression tests.

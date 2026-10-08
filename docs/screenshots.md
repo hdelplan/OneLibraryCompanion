@@ -30,7 +30,7 @@ This archive is independent of the USB's history. Past sets can be selected insi
 
 ## Menu — connect players and other devices
 
-Choose Manual IP connections for explicit player addresses and Pi local USB loading, or select a network interface for automatic discovery. Use the LAN addresses to open the same OLC host from another device. Offline preview lets you inspect an exported analysis file without loading a player.
+Choose Manual IP connections for explicit player addresses and local USB loading, or select a network interface for automatic discovery. Use the LAN addresses to open the same OLC host from another device. Offline preview lets you inspect an exported analysis file without loading a player.
 
 ![Menu connections](screenshots/menu-connections.png)
 

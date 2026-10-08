@@ -112,6 +112,7 @@ pub struct Medium {
     volume_name: String,
     created: String,
     settings: Vec<u8>,
+    capacity: Option<(u64, u64)>,
     /// track id → its analysis. A load asks for four tags across two files
     /// within milliseconds, and asks again when the DJ reloads the same track.
     analysis: Mutex<BTreeMap<u32, std::sync::Arc<Analysis>>>,
@@ -159,6 +160,7 @@ impl Medium {
             volume_name,
             created: String::new(),
             settings,
+            capacity: None,
             analysis: Mutex::new(BTreeMap::new()),
             artwork: Mutex::new(BTreeMap::new()),
             phantom: AtomicBool::new(false),
@@ -175,10 +177,18 @@ impl Medium {
             volume_name: volume_name.to_owned(),
             created: String::new(),
             settings: Vec::new(),
+            capacity: None,
             analysis: Mutex::new(BTreeMap::new()),
             artwork: Mutex::new(BTreeMap::new()),
             phantom: AtomicBool::new(false),
         }
+    }
+
+    /// Set USB facts read by the host without mounting or exposing extra files.
+    pub fn with_usb_details(mut self, settings: Vec<u8>, capacity: Option<(u64, u64)>) -> Self {
+        self.settings = settings;
+        self.capacity = capacity;
+        self
     }
 
     /// Preload assets for a synthetic catalog backed by separately authorized
@@ -237,8 +247,8 @@ impl Medium {
                     .count(),
             )
             .unwrap_or(u32::MAX),
-            total_bytes: None,
-            free_bytes: None,
+            total_bytes: self.capacity.map(|s| s.0),
+            free_bytes: self.capacity.map(|s| s.1),
         }
     }
 

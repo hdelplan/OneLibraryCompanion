@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   activeFilterParams,
+  clearTrackFilters,
   selectedLibrarySource,
   type LibrarySource,
   folderPath,
@@ -152,4 +153,23 @@ test("USB selection handles zero, one and two mounted sources without losing the
   );
   assert.equal(selectedLibrarySource(second.id, [first, second]), second.id);
   assert.equal(selectedLibrarySource("", [first, second]), first.id);
+});
+
+test("clearing track filters preserves collection selection and ordering", () => {
+  const navigation = {
+    playlist: "42",
+    set: "saved-set",
+    sort: "bpm",
+    direction: "desc",
+    tagMode: "all",
+  };
+  const cleared = clearTrackFilters({
+    ...navigation,
+    rating: "4",
+    genre: '["House"]',
+    bpmMin: "120",
+    q: "track",
+  });
+  assert.deepEqual(cleared, navigation);
+  assert.equal(filterCount(cleared), 0);
 });

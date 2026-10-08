@@ -159,6 +159,9 @@ pub fn read(path: &Path) -> Result<(Library, Option<MyTags>, String), String> {
             label: lookup(&library.labels, label_id),
             color: lookup(&colors, color_id),
             artwork_path: lookup(&library.artwork, artwork_id),
+            remixer_id: number(r, "artist_id_remixer"),
+            composer_id: number(r, "artist_id_composer"),
+            original_artist_id: number(r, "artist_id_originalArtist"),
             remixer: lookup(&library.artists, number(r, "artist_id_remixer")),
             composer: lookup(&library.artists, number(r, "artist_id_composer")),
             original_artist: lookup(&library.artists, number(r, "artist_id_originalArtist")),
@@ -182,7 +185,6 @@ pub fn read(path: &Path) -> Result<(Library, Option<MyTags>, String), String> {
             year: number(r, "releaseYear").min(u16::MAX as u32) as u16,
             play_count: number(r, "djPlayCount").min(u16::MAX as u32) as u16,
             container,
-            ..Track::default()
         };
         library.tracks.insert(id, track);
     }
@@ -301,10 +303,10 @@ pub(crate) mod tests {
         assert!(!version.is_empty());
         db.pragma_update(None, "key", KEY).unwrap();
         db.execute_batch("CREATE TABLE property(deviceName TEXT,dbVersion TEXT); INSERT INTO property VALUES('Test USB','1');
-            CREATE TABLE content(content_id INTEGER,title TEXT,path TEXT,bpmx100 INTEGER,length INTEGER,artist_id_artist INTEGER,genre_id INTEGER,rating INTEGER,samplingRate INTEGER,bitDepth INTEGER);
-            INSERT INTO content VALUES(1,'Track One','/Contents/one.wav',12500,240,10,20,4,44100,24);
-            INSERT INTO content VALUES(2,'Track Two','/Contents/two.flac',12800,180,10,20,3,48000,16);
-            CREATE TABLE artist(artist_id INTEGER,name TEXT); INSERT INTO artist VALUES(10,'Test Artist');
+            CREATE TABLE content(content_id INTEGER,title TEXT,path TEXT,bpmx100 INTEGER,length INTEGER,artist_id_artist INTEGER,genre_id INTEGER,rating INTEGER,samplingRate INTEGER,bitDepth INTEGER,artist_id_composer INTEGER,artist_id_remixer INTEGER,artist_id_originalArtist INTEGER);
+            INSERT INTO content VALUES(1,'Track One','/Contents/one.wav',12500,240,10,20,4,44100,24,11,12,13);
+            INSERT INTO content VALUES(2,'Track Two','/Contents/two.flac',12800,180,10,20,3,48000,16,NULL,NULL,NULL);
+            CREATE TABLE artist(artist_id INTEGER,name TEXT); INSERT INTO artist VALUES(10,'Test Artist'),(11,'Composer'),(12,'Remixer'),(13,'Original Artist');
             CREATE TABLE genre(genre_id INTEGER,name TEXT); INSERT INTO genre VALUES(20,'House');
             CREATE TABLE playlist(playlist_id INTEGER,name TEXT,attribute INTEGER,playlist_id_parent INTEGER,sequenceNo INTEGER);
             INSERT INTO playlist VALUES(5,'Test playlist',0,NULL,1);
@@ -324,6 +326,22 @@ pub(crate) mod tests {
         let (lib, tags, _) = read(&path).unwrap();
         assert_eq!(lib.tracks.len(), 2);
         assert_eq!(lib.tracks[&1].artist, "Test Artist");
+        assert_eq!(
+            (lib.tracks[&1].composer_id, lib.tracks[&1].composer.as_str()),
+            (11, "Composer")
+        );
+        assert_eq!(
+            (lib.tracks[&1].remixer_id, lib.tracks[&1].remixer.as_str()),
+            (12, "Remixer")
+        );
+        assert_eq!(
+            (
+                lib.tracks[&1].original_artist_id,
+                lib.tracks[&1].original_artist.as_str()
+            ),
+            (13, "Original Artist")
+        );
+        assert_eq!(lib.tracks[&2].composer_id, 0);
         assert_eq!(lib.tracks[&1].genre, "House");
         assert_eq!(lib.tracks[&1].bpm(), 125.0);
         assert_eq!(lib.tracks[&1].sample_depth, 24);

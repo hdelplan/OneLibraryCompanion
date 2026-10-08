@@ -76,6 +76,7 @@ impl Drop for Server {
             // Abort network tasks before returning to the native lifecycle.
             runtime.shutdown_timeout(std::time::Duration::from_millis(250));
             super::local_usb_probe::reset();
+            super::cue_diagnostics::reset();
             super::local_media::reset();
         }
     }

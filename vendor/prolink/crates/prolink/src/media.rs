@@ -49,10 +49,10 @@ pub struct MediaDescription {
     pub track_count: u32,
     /// How many playlists the medium holds. Must be the true count.
     pub playlist_count: u32,
-    /// Capacity in bytes, if known. NFSv2 is a 32-bit protocol, so this is too.
-    pub total_bytes: Option<u32>,
+    /// Capacity in bytes, if known. Media replies carry a full 64-bit size.
+    pub total_bytes: Option<u64>,
     /// Free space in bytes, if known.
-    pub free_bytes: Option<u32>,
+    pub free_bytes: Option<u64>,
 }
 
 /// The media a virtual CDJ presents.
