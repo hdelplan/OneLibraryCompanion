@@ -1,56 +1,29 @@
 # Using OLC
 
-OLC combines live monitoring, music selection and set recording. The screenshots show illustrative active sessions at 1280 × 800; connection and playback states are illustrative. CDJ STATUS uses real exported three-band waveform and phrase data; the same captured track is shown at two different positions. Other screens use a simulated library.
+Follow the mix, choose your next track and keep a record of the set. Playback and cueing stay on your CDJs.
 
 ## CDJ Status — follow the mix
 
-Use CDJ STATUS while performing to compare the two decks' timing and track structure. Scrolling three-band waveforms show approaching beats and cues; the whole-track overview and phrase sections help plan a transition. The next-hot-cue countdown expresses the distance in bars and beats. BPM, pitch, master and sync status reflect the connected players.
+Use the two-deck view to compare timing and track structure. Zoom the waveforms, watch approaching cues and phrases, and tap the time display to switch between elapsed and remaining time. The information button opens more track details.
 
-Use the zoom controls or a two-finger pinch to change the visible time window, tap the time display to switch elapsed/remaining time, and open the information button for fuller track metadata. OLC follows the players; transport and cue controls remain on the CDJs. Waveforms and phrase sections require the corresponding exported analysis.
+![CDJ status](screenshots/cdj-status.png)
 
-Converted local tracks show their output format and bit depth on one line in the left panel; this capture shows an original track.
+Fine waveform tracking is limited on a paused non-master player. Use the CDJ's display and audio for precise cueing. [Tracking limits](compatibility.md#main-limitation-paused-non-master-waveform-coupling).
 
-**Current limitation:** a paused player that is not the tempo master does not provide reliable fine waveform tracking for jog movements or scratching. Use the CDJ’s own display and audio for precise cue positioning. As a practical workaround, temporarily make that player the tempo master while cueing for better waveform tracking, then restore the intended master when finished. See [waveform coupling limits](compatibility.md#main-limitation-paused-non-master-waveform-coupling).
+## Library — choose the next track
 
-![CDJ Status](screenshots/cdj-status.png)
+In BROWSE, choose a USB and playlist, then search or combine filters. Save useful filter combinations, use key highlighting to find compatible selections and check played-track marks before repeating a track. Press **CDJ1** or **CDJ2** to load a stopped player.
 
-## Browse — choose the next track
+![Library](screenshots/browse.png)
 
-Choose a USB source, then explore playlists or select a past set using the PLAYLISTS / SET HISTORY toggle. Search and combine genre, color, rating, key, BPM and My Tag filters to narrow your choices. Column headings sort the results. Save useful combinations as named filters for that export.
+A USB connected to the Mac/Pi can also supply music to both players, including supported tracks that need conversion. [Local USB and transcoding](local-usb.md).
 
-Key highlighting helps identify compatible choices, while played-track highlighting shows tracks already recorded in the active set. Select a track to inspect its details; press CDJ1 or CDJ2 to load a stopped connected player. A disabled load button means the player, source or format does not meet the loading requirements. [Local USB loading](local-usb.md) also requires OLC to keep serving the drive during playback.
+## Set History — record and reuse a set
 
-Played track titles turn green after more than 45 seconds of qualifying playback, independently of set recording. Marks persist until cleared in SET HISTORY. Conversion-capable load buttons stay white.
+Choose **Start set** before playing and **Finish & save** afterwards. Edit the tracklist, add notes and export text, CSV or PDF. In BROWSE, select **SET HISTORY** to use a past performance as a playlist. [Set history guide](set-history.md).
 
-![Browse](screenshots/browse.png)
+![Set history](screenshots/set-history.png)
 
-## Set History — keep a record and reuse it
+*These 1280 × 800 screenshots illustrate active sessions. CDJ status uses real exported waveform and phrase data, with the same track at two positions. Playback and connection states are illustrative; the library uses example data.*
 
-Start a set before performing. OLC adds each track after more than 45 seconds of continuous qualifying playback, then saves the set when you choose Finish & save. Add a name, location and comment; edit the track order or remove entries before exporting a tracklist as text, CSV or PDF.
-
-This archive is independent of the USB's history. Past sets can be selected inside BROWSE as playlists and matched against your connected library. Recording runs on the host even while another screen is open. [Set history guide](set-history.md).
-
-Use **Clear played tracks** in the top banner to reset green titles without changing your sets.
-
-![Set History](screenshots/set-history.png)
-
-## Menu — connect players and other devices
-
-Choose Manual IP connections for explicit player addresses and local USB loading, or select a network interface for automatic discovery. Use the LAN addresses to open the same OLC host from another device. Offline preview lets you inspect an exported analysis file without loading a player.
-
-Local USB status, connected CDJs, folder controls where available, and diagnostics appear directly in the Local USB panel. Audio transcoding retains target-format selection.
-
-![Menu connections](screenshots/menu-connections.png)
-
-## Menu — tailor the performance display
-
-Choose the waveform window, playhead placement and color, motion smoothing and band emphasis to suit your viewing position. Select your preferred time display and show or hide the overview, phrase sections and additional details. Preferences are saved on the device where you change them.
-
-![Menu display preferences](screenshots/menu-display.png)
-
-## Menu — tailor music selection
-
-Choose which filters appear in BROWSE and arrange them in the order you use them. Set the BPM options and include custom My Tag categories from the selected export. These choices affect how you find music; they do not change the USB or rekordbox library.
-
-![Menu library filters](screenshots/menu-library-filters.png)
-
+[Install OLC](distribution.md) · [Display and filter preferences](configuration.md)
