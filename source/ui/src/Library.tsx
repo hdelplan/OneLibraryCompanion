@@ -144,6 +144,7 @@ function LibraryView({
     .sort((a, b) => b.startedAt - a.startedAt);
   const currentSet =
     savedSets.find((set) => set.id === selectedSet) ?? savedSets[0];
+  const currentSetContent = showSetHistory ? JSON.stringify(currentSet) : "";
   useEffect(() => {
     if (!active) return;
     const controller = new AbortController();
@@ -367,7 +368,7 @@ function LibraryView({
     base,
     generation,
     showSetHistory,
-    showSetHistory ? currentSet : undefined,
+    currentSetContent,
     source?.available,
     state,
   ]);
