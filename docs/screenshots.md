@@ -1,6 +1,6 @@
 # Using OLC
 
-OLC combines live monitoring, music selection and set recording. The screenshots show illustrative active sessions at 1280 × 800; track and connection data are simulated.
+OLC combines live monitoring, music selection and set recording. The screenshots show illustrative active sessions at 1280 × 800; connection and playback states are illustrative. CDJ STATUS uses real exported three-band waveform and phrase data; the same captured track is shown at two different positions. Other screens use a simulated library.
 
 ## CDJ Status — follow the mix
 
@@ -8,7 +8,7 @@ Use CDJ STATUS while performing to compare the two decks' timing and track struc
 
 Use the zoom controls or a two-finger pinch to change the visible time window, tap the time display to switch elapsed/remaining time, and open the information button for fuller track metadata. OLC follows the players; transport and cue controls remain on the CDJs. Waveforms and phrase sections require the corresponding exported analysis.
 
-Converted local tracks show their output format and bit depth on one line in the left panel.
+Converted local tracks show their output format and bit depth on one line in the left panel; this capture shows an original track.
 
 **Current limitation:** a paused player that is not the tempo master does not provide reliable fine waveform tracking for jog movements or scratching. Use the CDJ’s own display and audio for precise cue positioning. As a practical workaround, temporarily make that player the tempo master while cueing for better waveform tracking, then restore the intended master when finished. See [waveform coupling limits](compatibility.md#main-limitation-paused-non-master-waveform-coupling).
 
@@ -53,3 +53,4 @@ Choose the waveform window, playhead placement and color, motion smoothing and b
 Choose which filters appear in BROWSE and arrange them in the order you use them. Set the BPM options and include custom My Tag categories from the selected export. These choices affect how you find music; they do not change the USB or rekordbox library.
 
 ![Menu library filters](screenshots/menu-library-filters.png)
+
