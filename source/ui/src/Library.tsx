@@ -367,7 +367,7 @@ function LibraryView({
     base,
     generation,
     showSetHistory,
-    currentSet,
+    showSetHistory ? currentSet : undefined,
     source?.available,
     state,
   ]);
