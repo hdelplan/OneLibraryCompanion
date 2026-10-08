@@ -25,3 +25,5 @@ Cue metadata reference: https://djl-analysis.deepsymmetry.org/djl-analysis/track
 Protocol reference: https://djl-analysis.deepsymmetry.org/djl-analysis/vcdj.html (Deep Symmetry).
 
 Review an explicit upstream commit when updating this subset, retain notices, and run application checks. Upstream tests requiring omitted fixtures are not part of the application suite.
+
+The NFS server accepts a caller-supplied portmapper socket for platform-authorized socket handoff, validating the address and retaining normal socket ownership and shutdown.

@@ -1,6 +1,6 @@
 [package]
 name = "pioneer-companion-host"
-version = "0.1.2"
+version = "0.1.3"
 edition = "2024"
 license = "GPL-3.0-only"
 [lib]
@@ -25,3 +25,6 @@ prolink-proto = { path = "../../vendor/prolink/crates/prolink-proto" }
 network-interface = "2.0.5"
 
 rusqlite = { version = "0.32.1", features = ["bundled-sqlcipher-vendored-openssl"] }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+libc = "0.2"

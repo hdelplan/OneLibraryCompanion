@@ -9,7 +9,7 @@ on:
       release_tag:
         description: Version tag matching source/host/Cargo.toml
         type: string
-        default: v0.1.2
+        default: v0.1.3
   push:
     tags: ['v*']
 permissions:
@@ -38,6 +38,7 @@ jobs:
       - run: rustup toolchain install 1.98.1 --profile minimal
       - run: rustup override set 1.98.1
       - run: npm --prefix source/ui ci
+      - run: python3 scripts/test-mac-networking.py
       - run: ./scripts/build-macos.sh ${{ matrix.arch }}
       - run: python3 scripts/smoke-host.py builds/macos-${{ matrix.arch }}/OneLibraryCompanion.app/Contents/Resources/olc-host --ui builds/macos-${{ matrix.arch }}/OneLibraryCompanion.app/Contents/Resources/dist
       - uses: actions/upload-artifact@v4

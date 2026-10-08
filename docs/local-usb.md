@@ -4,11 +4,13 @@ OLC reads up to three OneLibrary USBs attached to the Mac or Raspberry Pi host. 
 
 ## Platform availability
 
-Local browsing works on both platforms. **Local playback is available in the Pi package; it is unavailable in the Mac package.** macOS protects UDP port 111, which CDJs require for source discovery. The Mac package does not have access to this port for local audio serving. Mac users can load music from USBs attached to the CDJs.
+Local browsing and audio serving are included on both platforms. On Mac, choose **OneLibraryCompanion → Local USB Support… → Open Installer**, approve installation in macOS Installer, then quit and reopen OLC. The package installs a small system service that opens UDP port 111 for the matching OLC host executable. The host continues to run as the logged-in user and reads your USB with that user's permissions. Reinstall Local USB Support after updating OLC.
+
+The component authenticates the host using its code signature and provides only the fixed discovery socket; it does not read music or run arbitrary commands. An absent component disables local loading; authorization errors and port conflicts are reported when serving starts. After stopping playback and quitting OLC, run **Remove Local USB Support.command** in the app's `Contents/Resources` folder to uninstall the component. Removal requires administrator approval and preserves music and saved sets.
 
 The Pi host package grants its executable `CAP_NET_BIND_SERVICE` during installation so it can bind port 111 while running as the logged-in user. It does not change the system-wide privileged-port range. Another RPC/NFS service using port 111 prevents OLC from serving local music.
 
-## Browse and load on Pi
+## Browse and load
 
 1. In MENU, select **Manual IP connections**, save the connection mode and restart OLC if changing modes. Connect physical CDJs numbered **1** and **2** by their IP addresses. Both must use the same host network interface. Leave player number **4** unused: OLC uses it as the local music source.
 2. Attach the USB to the host. On Pi, mount it through the operating system first. Open **LOCAL USB** in BROWSE to check discovery or validation errors, then select the library in the USB selector.

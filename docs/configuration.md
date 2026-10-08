@@ -4,7 +4,7 @@ Open MENU to configure the host connection and the display. Host settings are sh
 
 ## CDJ connections
 
-**Manual IP connections** lets you connect players 1 and 2 by address. Subnet search helps find players on the chosen local subnet. Use this mode on Pi when loading from a host-attached OneLibrary USB. Mac local USBs are browse-only in this package.
+**Manual IP connections** lets you connect players 1 and 2 by address. Subnet search helps find players on the chosen local subnet. Use this mode when loading from a host-attached OneLibrary USB. Mac requires installing Local USB Support from the application menu.
 
 **CDJ discovery interface** selects a network adapter for automatic discovery. Save the mode and quit/reopen OLC to apply it. A configured `OLC_INTERFACE` takes precedence over this saved choice. Use the adapter connected to the CDJ network.
 

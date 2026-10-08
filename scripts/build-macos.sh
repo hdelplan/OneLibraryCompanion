@@ -45,7 +45,8 @@ for size in 16 32 128 256 512; do
   sips -z "$double" "$double" "$stage/icon.png" --out "$icons/icon_${size}x${size}@2x.png" >/dev/null
 done
 iconutil -c icns "$icons" -o "$app/Contents/Resources/OLC.icns"
-codesign --force --sign - "$app/Contents/Resources/olc-host"
+codesign --force --options runtime --sign - "$app/Contents/Resources/olc-host"
+./scripts/package-mac-networking.sh "$app" "$arch" "$stage/networking"
 codesign --force --sign - "$app"
 codesign --verify --deep --strict "$app"
 version=$(/usr/libexec/PlistBuddy -c 'Print CFBundleShortVersionString' "$app/Contents/Info.plist")

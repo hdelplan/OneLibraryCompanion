@@ -22,6 +22,7 @@ mod local_media;
 mod local_serving;
 pub mod local_usb_probe;
 mod loop_region;
+pub mod mac_networking;
 mod musical_key;
 mod offline;
 mod onelibrary;

@@ -222,7 +222,18 @@ impl Server {
         db_config: DbServerConfig,
     ) -> Result<Self, String> {
         let vfs = Arc::new(RwLock::new(Vfs::new()));
-        let nfs = NfsServer::start(vfs.clone(), nfs_config)
+        #[cfg(target_os = "macos")]
+        let portmapper = if nfs_config.portmap_port == 111 {
+            let socket = tokio::task::spawn_blocking(crate::mac_networking::acquire)
+                .await
+                .map_err(|e| e.to_string())??;
+            Some(UdpSocket::from_std(socket).map_err(|e| e.to_string())?)
+        } else {
+            None
+        };
+        #[cfg(not(target_os = "macos"))]
+        let portmapper = None;
+        let nfs = NfsServer::start_with_portmapper(vfs.clone(), nfs_config, portmapper)
             .await
             .map_err(|e| format!("Local USB NFS unavailable: {e}"))?;
         let media = Arc::new(MediaSet::new([]));
@@ -638,14 +649,14 @@ mod tests {
                 .as_array()
                 .unwrap()
                 .iter()
-                .all(|s| s["loadable"] == !cfg!(target_os = "macos"))
+                .all(|s| s["loadable"] == crate::mac_networking::available())
         );
-        if cfg!(target_os = "macos") {
+        if !crate::mac_networking::available() {
             assert!(
                 library::sources(&catalogs)["sources"][0]["loadUnavailableReason"]
                     .as_str()
                     .unwrap()
-                    .contains("privileged networking helper")
+                    .contains("Local USB Support")
             );
         }
     }
