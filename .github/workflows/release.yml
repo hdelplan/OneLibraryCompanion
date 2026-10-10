@@ -9,7 +9,7 @@ on:
       release_tag:
         description: Version tag matching source/host/Cargo.toml
         type: string
-        default: v0.2.3
+        default: v0.3.0
   push:
     tags: ['v*']
 permissions:
@@ -69,7 +69,7 @@ jobs:
         shell: bash
         run: |
           apt-get install -y ./builds/releases/onelibrarycompanion-host_*_arm64.deb
-          test "$(getcap /usr/lib/onelibrarycompanion/olc-host)" = "/usr/lib/onelibrarycompanion/olc-host cap_net_bind_service=ep"
+          test "$(getcap /usr/lib/onelibrarycompanion/olc-host)" = "/usr/lib/onelibrarycompanion/olc-host cap_net_bind_service,cap_net_raw=ep"
       - run: python3 scripts/smoke-host.py target/release/pioneer-companion-host
       - uses: actions/upload-artifact@v4
         with:

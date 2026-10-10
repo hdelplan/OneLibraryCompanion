@@ -59,13 +59,13 @@ export function LocalUsb() {
       <p>
         OLC serves one local USB library per connection session. The first track
         loaded selects that library. To switch libraries, stop both CDJs,
-        disconnect both in OLC, then reconnect. Compatible tracks use their
-        original USB track IDs, paths and audio.
+        restart OLC, or disconnect both manual connections and reconnect.
+        Compatible tracks use their original USB track IDs, paths and audio.
       </p>
       <p>
         {status?.serving?.active
           ? "Local source running; tracks are prepared when selected."
-          : "Local source waiting for USB and a live Direct IP connection."}
+          : "Local source waiting for USB and connected CDJs."}
       </p>
       {status?.serving?.source && (
         <p>

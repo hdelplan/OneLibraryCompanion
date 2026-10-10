@@ -1,3 +1,4 @@
+import { recordRenderPerformance } from "./renderPerformance";
 import { recordJogFrame } from "./jogTrace";
 import { useEffect, useRef } from "react";
 import type { Wave, LivePlayer, Analysis } from "./model";
@@ -123,7 +124,7 @@ export function Signal({
         );
       if (now - measuredAt > 1000 && intervals.length) {
         const sorted = [...intervals].sort((a, b) => a - b);
-        canvas.dataset.renderStats = JSON.stringify({
+        const stats = {
           longFrames,
           worstFrame,
           positionJumps,
@@ -134,7 +135,9 @@ export function Signal({
           drawMaxMs: Math.max(0, ...costs),
           playing: p.motion?.playing,
           direct: p.motion?.direct,
-        });
+        };
+        canvas.dataset.renderStats = JSON.stringify(stats);
+        if (!p.overview) recordRenderPerformance(canvas, stats);
         measuredAt = now;
       }
       frame = requestAnimationFrame(render);

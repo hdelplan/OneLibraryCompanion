@@ -27,7 +27,7 @@ OLC displays two decks and exposes load controls for players numbered 1 and 2. T
 
 Three-band waveforms require the corresponding exported analysis. Missing analysis is shown as unavailable. Beat-grid time and some loop positions are estimates, particularly on older players; precise sub-beat scratching is not guaranteed. Phrase sections and cues require those records in the export.
 
-Linked CDJ libraries read legacy Rekordbox exports. Host-attached libraries read OneLibrary databases. Both packages support local USB loading using Manual IP connections and virtual source number 4. Mac local audio serving requires the included Local USB Support component, installed with administrator approval; see [local USB usage](local-usb.md). One local USB library is served per connection session, retaining its original track IDs and compatible audio paths.
+Linked CDJ libraries read legacy Rekordbox exports. Host-attached libraries read OneLibrary databases. Both packages support local USB loading using automatic discovery or Manual IP connections and virtual source number 4. Mac local audio serving requires the included Local USB Support component, installed with administrator approval; see [local USB usage](local-usb.md). One local USB library is served per connection session, retaining its original track IDs and compatible audio paths.
 
 Built-in transcoding prepares eligible unsupported local audio as 16-/24-bit PCM WAV or AIFF at 44.1/48 kHz. Conversion destinations are CDJ-2000, CDJ-2000nexus, CDJ-2000NXS2 and CDJ-3000. Unsupported decoders and unknown destination models remain unavailable for conversion. Linked CDJ USBs are not transcoded. Compatible files are served unchanged.
 

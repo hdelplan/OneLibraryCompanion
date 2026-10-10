@@ -3,6 +3,7 @@ pub const EXPERIMENTS: bool = cfg!(any(target_os = "ios", feature = "experiments
 mod artwork;
 mod audio_conversion;
 mod audio_header;
+mod auto_discovery;
 mod bar_position;
 pub mod beat_position;
 mod bridge_probe;
@@ -12,10 +13,13 @@ mod cue_window;
 mod cues;
 mod direct_ip;
 mod direct_status;
+mod discovered_local;
 mod distribution;
 mod handoff_capture;
+mod host_controls;
 mod jog_trace;
 mod library;
+mod library_audio;
 mod library_mood;
 mod library_preview;
 mod live;
@@ -29,11 +33,13 @@ mod musical_key;
 mod offline;
 mod onelibrary;
 mod phrases;
+mod relative_phase;
 pub mod set_history;
 mod set_history_import;
 mod subnet_search;
 mod sync_tap;
 mod transcoding;
+mod waveform_transport;
 use axum::{
     Json, Router,
     body::Bytes,
@@ -207,6 +213,16 @@ async fn library_mood(
         .map(Json)
         .map_err(|e| (StatusCode::CONFLICT, e))
 }
+async fn library_audio(
+    State(app): State<Arc<App>>,
+    Path((id, track)): Path<(String, u32)>,
+    Query(query): Query<library::Query>,
+    headers: axum::http::HeaderMap,
+) -> Result<axum::response::Response, (StatusCode, String)> {
+    library_audio::get(&app.library, &id, track, &query, headers)
+        .await
+        .map_err(|e| (StatusCode::CONFLICT, e))
+}
 async fn library_preview(
     State(app): State<Arc<App>>,
     Path((id, track)): Path<(String, u32)>,
@@ -285,6 +301,15 @@ async fn health(State(app): State<Arc<App>>) -> Json<Value> {
         json!({"product":"OneLibraryCompanion","version":env!("CARGO_PKG_VERSION"),"experiments":EXPERIMENTS,"instance":distribution::instance_id(),"mode":if state.enabled {"live-monitor"} else {"offline-read-only"},"live":state.enabled,"error":state.error}),
     )
 }
+async fn host_action(
+    State(app): State<Arc<App>>,
+    headers: axum::http::HeaderMap,
+    request: Json<host_controls::Request>,
+) -> Result<Json<Value>, (StatusCode, String)> {
+    host_controls::playback_guard(&app.live.lock().unwrap().decks)
+        .map_err(|e| (StatusCode::CONFLICT, e))?;
+    host_controls::control(headers, request).await
+}
 async fn live_status(State(app): State<Arc<App>>) -> Json<Value> {
     Json(live::snapshot(&app.live))
 }
@@ -316,10 +341,17 @@ async fn live_events(
     );
     axum::response::Sse::new(stream).keep_alive(axum::response::sse::KeepAlive::default())
 }
-async fn live_analysis(State(app): State<Arc<App>>, Path(number): Path<u8>) -> ApiResult {
-    live::analysis(&app.live, number)
-        .map(Json)
-        .ok_or((StatusCode::NOT_FOUND, "Live analysis is not ready".into()))
+async fn live_analysis(
+    State(app): State<Arc<App>>,
+    Path(number): Path<u8>,
+    axum::extract::Query(query): axum::extract::Query<std::collections::BTreeMap<String, String>>,
+) -> ApiResult {
+    let mut response = live::analysis(&app.live, number)
+        .ok_or((StatusCode::NOT_FOUND, "Live analysis is not ready".into()))?;
+    if query.get("waveform").is_some_and(|v| v == "packed") {
+        waveform_transport::pack(&mut response);
+    }
+    Ok(Json(response))
 }
 async fn live_artwork(
     State(app): State<Arc<App>>,
@@ -424,6 +456,7 @@ fn app_router(
         .route("/api/transcoding/benchmark", post(transcoding_benchmark))
         .route("/api/transcoding/cancel", post(transcoding_cancel))
         .route("/api/health", get(health))
+        .route("/api/app/control", axum::routing::post(host_action))
         .route(
             "/api/network/search",
             get(subnet_search::list).post(subnet_search::search),
@@ -441,6 +474,7 @@ fn app_router(
         .route("/api/library/manual", post(manual_library))
         .route("/api/live/direct", post(direct_live_connect))
         .route("/api/library/{id}/preview/{track}", get(library_preview))
+        .route("/api/library/{id}/audio/{track}", get(library_audio))
         .route("/api/library/{id}/mood/{track}", get(library_mood))
         .route("/api/library/{id}/refresh", post(library_refresh))
         .route("/api/library/{id}", get(library_catalog))

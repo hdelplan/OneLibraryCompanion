@@ -2,15 +2,19 @@
 
 OLC records a tracklist while you perform. Saved sets stay on the Mac/Pi and can be edited, shared or used as playlists without changing your USB library.
 
-## Record a performance
+## Automatic capture
 
-1. Open SET HISTORY and choose **Start set** before playing.
-2. Perform on your CDJs. OLC adds a track after **more than 45 seconds of continuous playback or looping**. Brief cue auditions do not qualify.
-3. Choose **Finish & save** at the end, then add a name, location and notes.
+Keep OLC running while you perform. Playback is captured on the host automatically, without pressing Start set. Switching screens or closing a remote browser does not stop capture.
 
-Keep OLC running while recording. Switching screens or closing a remote browser does not stop the recording. After an interruption, use **Resume set** or **Finish & save**. **Cancel set** discards an unwanted recording.
+A track qualifies after **more than 45 seconds of continuous playback or looping**. Brief cue auditions do not qualify. A short pause (up to 15 seconds) after qualification continues the same entry; later replays can create another entry. Track entries retain observed start timestamps and repeats.
 
-The record follows CDJ playback; it cannot tell whether a track was audible through the mixer. Playback before you start the set is not recovered.
+A session saves after **more than five minutes without playback on any observed deck**. A track playing for six minutes, fifteen minutes, or longer keeps the same session open. The end time reflects last observed playback, excluding the waiting period. Empty sessions are discarded.
+
+Use **Split set here** to mark a DJ changeover or another boundary without silence. **Finish set** saves immediately and ignores the same continuing playback until it stops or changes. **Join previous set** joins adjacent captured sessions, preserving tracks and edits. Rename the set and add location or notes whenever convenient. Canceling a current session discards it; capture remains automatic for later playback.
+
+Sessions and playback activity are persisted. Capture resumes after a short host restart without duplicating the same still-playing track. A restart after a gap longer than five minutes closes the interrupted session. If deck observation disappears for more than five minutes, the saved session notes that its boundary is uncertain. OLC cannot recover playback that happened while the host was off.
+
+The record follows CDJ playback; it cannot tell whether a track was audible through the mixer. Headphone preparation, practice and sound checks can therefore appear in history. Browser audio preview is not CDJ playback and is excluded. Remove unwanted entries or sessions afterwards.
 
 ## Edit and manage sets
 
@@ -36,7 +40,7 @@ BROWSE immediately shows a track playing on either deck in bright green. Previou
 
 BROWSE marks previously played tracks in green after more than 45 seconds of continuous playback, even without recording a set. These marks survive restarting OLC.
 
-Use **Clear played tracks** in the SET HISTORY top banner to reset them. This leaves saved sets intact; starting or finishing a set does not clear the marks.
+Use **Clear played tracks** in the SET HISTORY top banner to reset them. This leaves saved sets intact; starting, automatically saving or finishing a set does not clear the marks.
 
 ## Storage and backup
 

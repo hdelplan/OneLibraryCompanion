@@ -473,7 +473,7 @@ test("manual reversals bypass coarse phase correction immediately", () => {
   assert.equal(clock.read(160), 10.6);
 });
 
-test("beat anchors apply immediately and motion speed responds without coarse phase slew", () => {
+test("initial beat anchors and tempo changes apply immediately; small steady corrections slew", () => {
   const clock = new PlaybackClock();
   clock.update({ ...sample, quality: "beat", observedAt: 0, receivedAt: 30 });
   assert.ok(Math.abs(clock.read(30) - 10.03) < 1e-9);
@@ -487,7 +487,7 @@ test("beat anchors apply immediately and motion speed responds without coarse ph
   });
   assert.ok(Math.abs(clock.read(130) - 10.124) < 1e-9);
   assert.ok(Math.abs(clock.read(230) - 10.204) < 1e-9);
-  // A real beat replaces the prior estimate; no gradual catch-up is introduced.
+  // A small correction during steady playback must not jump the visible position.
   clock.update({
     ...sample,
     quality: "beat",
@@ -496,7 +496,8 @@ test("beat anchors apply immediately and motion speed responds without coarse ph
     observedAt: 500,
     receivedAt: 530,
   });
-  assert.ok(Math.abs(clock.read(530) - 10.524) < 1e-9);
+  assert.ok(Math.abs(clock.read(530) - 10.444) < 1e-9);
+  assert.ok(Math.abs(clock.read(630) - 10.534) < 1e-9);
 });
 test("repeated beat observations cannot extend the motion timeout", () => {
   const clock = new PlaybackClock();
@@ -667,4 +668,63 @@ test("CUE overrides a held coarse position on the same beat on its first packet"
     cued: true,
   });
   assert.equal(clock.read(100), 15.66);
+});
+
+test("jittery beat deliveries preserve frame continuity while large seeks still snap", () => {
+  const clock = new PlaybackClock();
+  clock.update({ ...sample, quality: "beat", observedAt: 0 });
+  for (let now = 16; now <= 3200; now += 16) {
+    const before = clock.read(now);
+    if (now % 80 === 0) {
+      clock.update({
+        ...sample,
+        quality: "beat",
+        position: 10 + now / 1000 + (now % 160 === 0 ? 0.08 : -0.06),
+        receivedAt: now,
+        observedAt: now,
+      });
+      assert.ok(Math.abs(clock.read(now) - before) < 1e-9, `jump at ${now}`);
+    }
+    const after = clock.read(now + 16);
+    assert.ok(after - before >= 0.0143 && after - before <= 0.0177);
+  }
+  clock.update({
+    ...sample,
+    quality: "beat",
+    position: 30,
+    observedAt: 3300,
+    receivedAt: 3300,
+  });
+  assert.equal(clock.read(3300), 30);
+});
+
+test("measured loop positions smooth timing jitter across packets and wraps", () => {
+  const clock = new PlaybackClock();
+  const loop = { start: 10, end: 12 };
+  let previous = 10.35;
+  for (let now = 0; now < 6000; now += 20) {
+    const actual = 10 + ((0.35 + now / 1000) % 2);
+    if (now % 200 === 0) {
+      const jitter = now % 400 === 0 ? 0.012 : -0.012;
+      const position = 10 + ((actual - 10 + jitter + 2) % 2);
+      clock.update({
+        ...sample,
+        position,
+        receivedAt: now,
+        observedAt: now,
+        observationId: String(now),
+        quality: "beat",
+        loop,
+        beatNumber: Math.floor((position - 10) / 0.5) + 21,
+      });
+    }
+    const shown = clock.read(now);
+    const step = ((((shown - previous + 1) % 2) + 2) % 2) - 1;
+    if (now > 0)
+      assert.ok(
+        Math.abs(step - 0.02) < 0.003,
+        `packet/wrap timing jump at ${now}: ${step}`,
+      );
+    previous = shown;
+  }
 });

@@ -394,7 +394,7 @@ impl Server {
         if self.source.as_ref().is_some_and(|(source, generation)| {
             source != &key.source || *generation != key.generation
         }) {
-            return Err("OLC serves one local USB library per connection session. Stop both CDJs, disconnect both in OLC, then reconnect to use another or refreshed USB library.".into());
+            return Err("OLC serves one local USB library per connection session. Stop both CDJs, then restart OLC or reconnect both manual connections to use another or refreshed USB library.".into());
         }
         Ok(())
     }
@@ -510,6 +510,9 @@ impl Server {
     }
     pub fn track(&self, id: u32) -> Option<&Track> {
         self.library.tracks.get(&id)
+    }
+    pub fn track_source_label(&self, id: u32) -> Option<&str> {
+        self.track(id).map(|_| self.usb.label.as_str())
     }
     pub fn forget_peer(&mut self, ip: Ipv4Addr) {
         self.registrations.remove(&ip);

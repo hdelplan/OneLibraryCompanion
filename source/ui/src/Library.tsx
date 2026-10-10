@@ -1,3 +1,4 @@
+import { LibraryPlayer } from "./LibraryPlayer";
 import {
   type SetHistoryState,
   setDate,
@@ -173,6 +174,25 @@ function LibraryView({
   }, [active]);
   const playedTracks = playedTrackKeys(history);
   const playingTracks = new Set(playingTrackKeys);
+  const [playerTrack, setPlayerTrack] = useState<LibraryTrack | null>(null);
+  const titleHold = useRef<{
+    timer: ReturnType<typeof setTimeout> | null;
+    pointerId: number;
+    x: number;
+    y: number;
+    opened: boolean;
+  } | null>(null);
+  function cancelTitleHold() {
+    if (titleHold.current?.timer) clearTimeout(titleHold.current.timer);
+    if (titleHold.current) titleHold.current.timer = null;
+  }
+  useEffect(() => {
+    document.addEventListener("scroll", cancelTitleHold, true);
+    return () => {
+      cancelTitleHold();
+      document.removeEventListener("scroll", cancelTitleHold, true);
+    };
+  }, []);
   const [previewBusy, setPreviewBusy] = useState(false);
   const previewRequest = useRef<AbortController | null>(null);
   const [sources, setSources] = useState<LibrarySource[]>([]);
@@ -193,6 +213,11 @@ function LibraryView({
   const generation = source?.generation;
   const state = source?.state;
   const base = `/api/library/${encodeURIComponent(sourceId)}`;
+  useEffect(() => {
+    cancelTitleHold();
+    titleHold.current = null;
+    setPlayerTrack(null);
+  }, [base, generation, active]);
   const resultKey = JSON.stringify([
     sourceId,
     showSetHistory,
@@ -864,7 +889,58 @@ function LibraryView({
                       <td>
                         <button
                           className="library-track-title"
-                          onClick={() => setSelected(track)}
+                          onPointerDown={(event) => {
+                            cancelTitleHold();
+                            titleHold.current = null;
+                            if (
+                              !event.isPrimary ||
+                              event.button !== 0 ||
+                              track.available === false ||
+                              !source?.available
+                            )
+                              return;
+                            const hold = {
+                              timer: null as ReturnType<
+                                typeof setTimeout
+                              > | null,
+                              pointerId: event.pointerId,
+                              x: event.clientX,
+                              y: event.clientY,
+                              opened: false,
+                            };
+                            titleHold.current = hold;
+                            hold.timer = setTimeout(() => {
+                              hold.timer = null;
+                              hold.opened = true;
+                              setPlayerTrack(track);
+                            }, 550);
+                          }}
+                          onPointerMove={(event) => {
+                            const hold = titleHold.current;
+                            if (
+                              hold &&
+                              (event.pointerId !== hold.pointerId ||
+                                Math.hypot(
+                                  event.clientX - hold.x,
+                                  event.clientY - hold.y,
+                                ) > 10)
+                            )
+                              cancelTitleHold();
+                          }}
+                          onPointerUp={cancelTitleHold}
+                          onPointerCancel={cancelTitleHold}
+                          onPointerLeave={cancelTitleHold}
+                          onContextMenu={(event) => event.preventDefault()}
+                          onClick={(event) => {
+                            cancelTitleHold();
+                            const opened = titleHold.current?.opened;
+                            titleHold.current = null;
+                            if (opened && event.detail !== 0) {
+                              event.preventDefault();
+                              return;
+                            }
+                            setSelected(track);
+                          }}
                         >
                           <span className="library-title-line">
                             <span className="library-title-text">
@@ -997,6 +1073,15 @@ function LibraryView({
             "Local USB loading is unavailable in this connection mode."}
         </p>
       )}
+      {active && playerTrack && generation !== undefined && (
+        <LibraryPlayer
+          key={`${base}:${generation}:${playerTrack.id}`}
+          track={playerTrack}
+          base={base}
+          generation={generation}
+          onClose={() => setPlayerTrack(null)}
+        />
+      )}
       <div className="library-details">
         {active && selected ? (
           <div className="library-detail-layout">
@@ -1008,14 +1093,26 @@ function LibraryView({
               large
             />
             <div className="library-detail-content">
-              <div>
+              <div className="library-detail-header">
                 <strong>{selected.title}</strong>
                 <span>
                   {[selected.artist, selected.album]
                     .filter(Boolean)
                     .join(" · ")}
                 </span>
-                <button onClick={() => setSelected(null)}>Close details</button>
+                <div className="library-detail-actions">
+                  <button onClick={() => setSelected(null)}>
+                    Close details
+                  </button>
+                  <button
+                    disabled={
+                      selected.available === false || !source?.available
+                    }
+                    onClick={() => setPlayerTrack(selected)}
+                  >
+                    PLAY
+                  </button>
+                </div>
               </div>
               <dl>
                 <div>

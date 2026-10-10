@@ -57,6 +57,7 @@ fn make_set(
         .into_iter()
         .enumerate()
         .map(|(i, t)| Event {
+            played_at: None,
             id: format!("entry-{i}"),
             deck: None,
             source: "rekordbox-export".into(),

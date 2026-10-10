@@ -8,6 +8,7 @@ export type SetTrack = {
   artwork: string | null;
 };
 export type SetEvent = {
+  playedAt?: number | null;
   id: string;
   deck: number | null;
   source: string;
@@ -21,7 +22,7 @@ export type DJSet = {
   dateOnly: boolean;
   location: string;
   comment: string;
-  origin: "recorded" | "imported" | "sample";
+  origin: "recorded" | "automatic" | "recovered" | "imported" | "sample";
   recovered: boolean;
   events: SetEvent[];
   order: string[];
@@ -32,6 +33,7 @@ export type SetHistoryState = {
   sets: DJSet[];
   activeId: string | null;
   recording: boolean;
+  observationInterrupted?: boolean;
   error: string | null;
   importNote: string;
   playedTracks?: SetTrack[];

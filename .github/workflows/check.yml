@@ -21,4 +21,5 @@ jobs:
       - run: ./scripts/setup.sh
       - run: ./scripts/check-app.sh
       - run: cargo test --workspace --locked --features experiments
+      - run: python3 -m unittest discover -s scripts/tests
       - run: python3 scripts/check-distribution.py

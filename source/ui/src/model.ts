@@ -84,6 +84,9 @@ export type LivePlayer = {
   positionAgeMs?: number | null;
   motionRate?: number | null;
   beatAnchorNumber?: number | null;
+  relativePhaseBeats?: number | null;
+  relativePhaseMaster?: number | null;
+  relativePhaseCorrectionMs?: number | null;
   observationId?: string | null;
   observationTimeMs?: number | null;
   packetCounter?: number | null;

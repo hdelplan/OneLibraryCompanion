@@ -58,11 +58,108 @@ async fn info(State(state): State<Arc<Desktop>>) -> Json<Value> {
     Json(
         json!({"product":"OneLibraryCompanion","version":env!("CARGO_PKG_VERSION"),
         "experiments":crate::EXPERIMENTS,"addresses":addresses,"networks":networks,
-        "interface":state.interface,"authentication":"none","configPath":state.config}),
+        "interface":state.interface,"hostControls":crate::host_controls::available(),"authentication":"none","configPath":state.config}),
     )
+}
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct UsbRequest {
+    device: String,
+    confirmed: bool,
+}
+async fn usb_info() -> Result<Json<Value>, (StatusCode, String)> {
+    if !crate::host_controls::available() {
+        return Err((
+            StatusCode::FORBIDDEN,
+            "USB unmounting is unavailable on this installation".into(),
+        ));
+    }
+    tokio::task::spawn_blocking(|| {
+        let output = std::process::Command::new("/usr/bin/python3")
+            .args(["/usr/lib/onelibrarycompanion/olc-usb.py", "list"])
+            .output()
+            .map_err(|e| (StatusCode::CONFLICT, e.to_string()))?;
+        if !output.status.success() {
+            return Err((
+                StatusCode::CONFLICT,
+                String::from_utf8_lossy(&output.stderr).into_owned(),
+            ));
+        }
+        serde_json::from_slice(&output.stdout)
+            .map(Json)
+            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
+    })
+    .await
+    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
+}
+async fn usb_unmount(
+    State(state): State<Arc<Desktop>>,
+    headers: axum::http::HeaderMap,
+    Json(request): Json<UsbRequest>,
+) -> Result<Json<Value>, (StatusCode, String)> {
+    crate::host_controls::validate(&headers, request.confirmed)
+        .map_err(|e| (StatusCode::FORBIDDEN, e.into()))?;
+    let Json(inventory) = usb_info().await?;
+    if !inventory["volumes"].as_array().is_some_and(|volumes| {
+        volumes
+            .iter()
+            .any(|v| v["device"].as_str() == Some(&request.device))
+    }) {
+        return Err((
+            StatusCode::CONFLICT,
+            "Choose a currently mounted external USB volume".into(),
+        ));
+    }
+    let job = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_nanos()
+        .to_string();
+    let ip = if state.bind.ip().is_unspecified() {
+        if state.bind.is_ipv4() {
+            "127.0.0.1".to_string()
+        } else {
+            "[::1]".to_string()
+        }
+    } else if state.bind.is_ipv6() {
+        format!("[{}]", state.bind.ip())
+    } else {
+        state.bind.ip().to_string()
+    };
+    let url = format!("http://{ip}:{}/api/live", state.bind.port());
+    let next_job = job.clone();
+    let output = tokio::task::spawn_blocking(move || {
+        std::process::Command::new("/usr/bin/systemd-run")
+            .args([
+                "--user",
+                "--collect",
+                "--on-active=2s",
+                "--timer-property=AccuracySec=1ms",
+                "--timer-property=RemainAfterElapse=no",
+                "--unit=olc-request-usb",
+                "/usr/bin/python3",
+                "/usr/lib/onelibrarycompanion/olc-usb.py",
+                "unmount",
+                &request.device,
+                &url,
+                &next_job,
+            ])
+            .output()
+    })
+    .await
+    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
+    .map_err(|e| (StatusCode::CONFLICT, e.to_string()))?;
+    if !output.status.success() {
+        return Err((
+            StatusCode::CONFLICT,
+            String::from_utf8_lossy(&output.stderr).into_owned(),
+        ));
+    }
+    Ok(Json(json!({"job":job})))
 }
 fn validate(settings: &Settings, networks: &[Value]) -> Result<(), String> {
     if let Some(name) = &settings.interface
+        && name != "auto"
         && !networks.iter().any(|n| n["name"].as_str() == Some(name))
     {
         return Err("Choose an available network interface".into());
@@ -192,6 +289,7 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
     let bind = listener.local_addr()?;
     let desktop = Router::new()
         .route("/api/app", get(info).post(save))
+        .route("/api/app/usb", get(usb_info).post(usb_unmount))
         .with_state(Arc::new(Desktop {
             config,
             interface: interface.clone(),
@@ -251,6 +349,15 @@ mod tests {
     fn network_selection_accepts_direct_mode_and_rejects_unknown_interfaces() {
         let networks = vec![json!({"name":"eth0","ip":"192.168.1.4"})];
         assert!(validate(&Settings::default(), &networks).is_ok());
+        assert!(
+            validate(
+                &Settings {
+                    interface: Some("auto".into())
+                },
+                &[]
+            )
+            .is_ok()
+        );
         assert!(
             validate(
                 &Settings {

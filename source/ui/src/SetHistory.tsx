@@ -277,7 +277,7 @@ export function SetHistory({ active }: { active: boolean }) {
     }
   }
   async function start() {
-    await command({ action: "start" });
+    await command({ action: "new" });
     setSelected(null);
     setEdit(false);
   }
@@ -357,11 +357,13 @@ export function SetHistory({ active }: { active: boolean }) {
         </div>
         <span className={`set-recording ${state?.recording ? "on" : ""}`}>
           <i />
-          {state?.recording
-            ? "RECORDING"
-            : current
-              ? "RECOVERED SET"
-              : "READY FOR YOUR NEXT SET"}
+          {state?.observationInterrupted
+            ? "PLAYBACK UNAVAILABLE"
+            : state?.recording
+              ? "RECORDING"
+              : current
+                ? "RECOVERED SET"
+                : "AUTOMATIC CAPTURE READY"}
         </span>
         <button
           disabled={busy || !state?.playedTracks?.length}
@@ -381,29 +383,30 @@ export function SetHistory({ active }: { active: boolean }) {
             Cancel set
           </button>
         )}
-        {current ? (
+        {current && (
           <button
             className="set-primary"
             disabled={busy}
             onClick={() => {
               setSelected(current.id);
-              void command({
-                action: state?.recording ? "finish" : "resume",
-                id: current.id,
-              });
+              void command({ action: "finish", id: current.id });
             }}
           >
-            {state?.recording ? "Finish & save" : "Resume set"}
-          </button>
-        ) : (
-          <button
-            className="set-primary"
-            disabled={busy || !state || !!state.error}
-            onClick={() => void start()}
-          >
-            ＋ Start set
+            Finish set
           </button>
         )}
+        <div className="set-split-control">
+          <button
+            disabled={busy || !state || !!state.error}
+            aria-describedby="set-split-hint"
+            onClick={() => void start()}
+          >
+            Split set here
+          </button>
+          <small id="set-split-hint">
+            Recording is automatic. Use this to separate two performances.
+          </small>
+        </div>
       </header>
       {(error || connectionError || state?.error) && (
         <div className="set-alert" role="alert">
@@ -480,7 +483,8 @@ export function SetHistory({ active }: { active: boolean }) {
             </SwipeSet>
           ) : (
             <div className="set-sidebar-empty">
-              Start a set to capture your next session.
+              Playback is captured automatically. Sets save after five minutes
+              without playback.
             </div>
           )}
           <div className="set-past-label">
@@ -534,8 +538,8 @@ export function SetHistory({ active }: { active: boolean }) {
               />
               {set.recovered && (
                 <div className="set-recovery">
-                  This set was interrupted. Saved tracks are intact; resume to
-                  start fresh 45-second timers.{" "}
+                  This set was interrupted. Capture resumes automatically when
+                  playback returns.{" "}
                   <button
                     disabled={busy}
                     onClick={() =>
@@ -547,6 +551,36 @@ export function SetHistory({ active }: { active: boolean }) {
                 </div>
               )}
               <div className="set-track-toolbar">
+                {(() => {
+                  const previous = sorted.filter(
+                    (item) =>
+                      item.id !== set.id &&
+                      item.id !== current?.id &&
+                      item.startedAt <= set.startedAt,
+                  )[0];
+                  return previous &&
+                    !["imported", "sample"].includes(set.origin) &&
+                    !["imported", "sample"].includes(previous.origin) ? (
+                    <button
+                      disabled={busy}
+                      onClick={() => {
+                        if (
+                          window.confirm(
+                            `Join “${previous.title}” and “${set.title}” into one set? Both tracklists will be preserved.`,
+                          )
+                        ) {
+                          void command({
+                            action: "merge",
+                            id: set.id,
+                            previousId: previous.id,
+                          });
+                        }
+                      }}
+                    >
+                      Join previous set
+                    </button>
+                  ) : null;
+                })()}
                 <span>
                   TRACKLIST{" "}
                   <small>
@@ -744,17 +778,24 @@ export function SetHistory({ active }: { active: boolean }) {
               <span className="library-eyebrow">EVERY SET HAS A STORY</span>
               <h2>Your next set starts here.</h2>
               <p>
-                Capture the tracks you play, add a location and notes,
+                Playback is captured automatically. After five minutes without
+                playback, your set is saved. Add a location and notes,
                 <br />
                 then keep or share the finished tracklist.
               </p>
-              <button
-                className="set-primary"
-                disabled={busy || !state || !!state.error}
-                onClick={() => void start()}
-              >
-                ＋ Start set
-              </button>
+              <div className="set-split-control set-split-welcome">
+                <button
+                  className="set-primary"
+                  disabled={busy || !state || !!state.error}
+                  aria-describedby="set-split-welcome-hint"
+                  onClick={() => void start()}
+                >
+                  Split set here
+                </button>
+                <small id="set-split-welcome-hint">
+                  Recording is automatic. Use this to separate two performances.
+                </small>
+              </div>
               <p className="set-hint">
                 Or import histories from a USB library.
               </p>

@@ -94,6 +94,7 @@ def main():
             shutil.copy2('packaging/olc.svg', icons / 'onelibrarycompanion.svg')
             deps = f'onelibrarycompanion-host (= {version}), python3, python3-gi, gir1.2-gtk-3.0, gir1.2-webkit2-4.1'
         else:
+            shutil.copy2('packaging/olc-usb.py', lib / 'olc-usb.py')
             shutil.copy2(args.binary, lib / 'olc-host')
             (lib / 'olc-host').chmod(0o755)
             shutil.copytree('source/ui/dist', lib / 'dist')
@@ -103,7 +104,7 @@ def main():
             shutil.copy2('packaging/olc-host.service', units / 'olc-host.service')
             shutil.copy2('packaging/olc-host.postinst', root / 'DEBIAN/postinst')
             (root / 'DEBIAN/postinst').chmod(0o755)
-            deps = 'libc6 (>= 2.36), libgcc-s1, libcap2-bin'
+            deps = 'libc6 (>= 2.36), libgcc-s1, libcap2-bin, python3, udisks2, util-linux, sudo'
         (root / 'DEBIAN/control').write_text(f'Package: {name}\nVersion: {version}\nArchitecture: {args.arch}\nMaintainer: OLC maintainers <noreply@onelibrarycompanion.local>\nSection: sound\nPriority: optional\nDepends: {deps}\nDescription: OneLibraryCompanion CDJ companion\n Native and LAN interfaces for CDJ libraries, status and set history.\n')
         output = releases / f'{name}_{version}_{args.arch}.deb'
         if shutil.which('dpkg-deb'):

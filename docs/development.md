@@ -28,7 +28,7 @@ Format application packages with `cargo fmt -p pioneer-companion-core -p pioneer
 
 Mac apps are written under `builds/macos-<arch>`; DMGs, ZIPs, Debian packages and checksums go under `builds/releases`. `NODE` can select a compatible Node executable. `OLC_SKIP_DMG=1` skips disk-image creation while retaining the app and ZIP.
 
-The Pi package grants only `CAP_NET_BIND_SERVICE` to the installed host executable for CDJ portmapper access on UDP 111. Its install hook and capability are checked by CI. Mac builds include a Local USB Support installer that pins the hardened host executable signature. `scripts/test-mac-networking.py` checks live-process authentication without installing a system service. After administrator-approved installation, run the packaged `olc-host --check-local-usb-helper` to verify port handoff as an ordinary user.
+The Pi package grants `CAP_NET_BIND_SERVICE` for CDJ portmapper access on UDP 111 and `CAP_NET_RAW` for binding Pro DJ Link sockets to the selected network interface. Its install hook and capability are checked by CI. Mac builds include a Local USB Support installer that pins the hardened host executable signature. `scripts/test-mac-networking.py` checks live-process authentication without installing a system service. After administrator-approved installation, run the packaged `olc-host --check-local-usb-helper` to verify port handoff as an ordinary user.
 
 The GitHub distribution workflow builds both Mac architectures and ARM64 Debian packages, runs application checks and host smoke checks, and packages source and checksums. A version tag creates a draft prerelease. A manual run with **publish** selected publishes the completed prerelease. The chosen tag must match `source/host/Cargo.toml`; retain that version in the Mac bundle and release guide as well.
 
@@ -51,6 +51,7 @@ The cross-build targets glibc 2.36. Packaging verifies ELF architecture and requ
 | --- | --- |
 | `OLC_BIND` | HTTP listen address; default `0.0.0.0:8787`. Desktop launchers require a fixed nonzero port. |
 | `OLC_INTERFACE` | CDJ discovery adapter; overrides the saved setting. Without a selected adapter, use Manual IP connections. |
+| `OLC_HOST_CONTROLS` | `systemd-user` enables confirmed restart/shutdown controls on Linux; supplied by the packaged headless service. Shutdown requires passwordless permission for `/usr/bin/systemctl poweroff`. |
 | `OLC_DATA` | Persistent writable directory for history, artwork and host settings. |
 | `OLC_UI_ROOT` | Directory containing `index.html` and assets; desktop launchers supply the bundled location. |
 | `OLC_ROOT` | Development project root used to locate UI assets. |

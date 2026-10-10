@@ -52,6 +52,10 @@ pub fn saved_tracks(query: &Query, tracks: &[crate::set_history::Track]) -> Resu
     .tracks_for_set(0, query, Some(tracks))
 }
 
+pub(crate) fn set_interface(shared: &Shared, name: String) {
+    shared.lock().unwrap().interface = Some(name);
+}
+
 pub fn with_local_path(interface: Option<String>, local_path: Option<PathBuf>) -> Shared {
     let session = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
@@ -329,8 +333,6 @@ pub fn sources(shared: &Shared) -> Value {
         let local = id.starts_with("local-usb:") && matches!(s.location, Location::Local(_));
         let load_unavailable = if local && !crate::mac_networking::available() {
             Some("Local USB support needs installation. In the Mac application menu, choose Local USB Support and approve the installer, then quit and reopen OLC.")
-        } else if local && state.interface.is_some() {
-            Some("Local USB loading requires Manual IP connections in MENU.")
         } else {
             None
         };

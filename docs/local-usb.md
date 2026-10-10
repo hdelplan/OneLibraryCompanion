@@ -6,7 +6,7 @@ Connect a OneLibrary USB to your Mac or Raspberry Pi, browse it in OLC and load 
 
 - **Mac:** choose **OneLibraryCompanion → Local USB Support… → Open Installer**, approve the macOS installation, then quit and reopen OLC. Repeat after updating OLC.
 - **Raspberry Pi:** install both OLC desktop packages and make sure the USB is mounted and readable.
-- In MENU, use **Manual IP connections** for physical players **1** and **2**. Both must be on the same local network. Leave player number **4** free for OLC.
+- In MENU, select the CDJ network interface or **Automatic discovery** for physical players **1** and **2**. **Manual IP connections** remains available. Both players must be on the same local network. Leave player number **4** free for OLC; local serving refuses to start if that number is occupied.
 
 [Installation help](distribution.md).
 
@@ -30,12 +30,12 @@ Conversion is available for supported files and known destination models. It doe
 
 ## Switching libraries
 
-OLC can detect up to three attached libraries, but serves **one local library per connection session**. To switch libraries, refresh an export or change an already-loaded track's conversion format, stop both players, disconnect both in OLC and reconnect.
+OLC can detect up to three attached libraries, but serves **one local library per connection session**. To switch libraries, refresh an export or change an already-loaded track's conversion format, stop both players and restart OLC. In Manual IP mode, disconnecting both players in OLC and reconnecting also resets the session.
 
 ## Things to keep in mind
 
 - Attach the USB to the Mac/Pi running OLC, not to a device only viewing its web interface.
-- Local loading currently requires Manual IP connections. Automatic discovery can browse local libraries but cannot load from them.
+- Automatic discovery and Manual IP connections both support local USB loading. Discovery, monitoring and local serving share the same DJ Link sockets.
 - Use OneLibrary exports with their original music and analysis folders. Missing or unsupported files cannot be loaded.
 - A session supports up to 128 different requested selections. Use OLC to browse the full library; the CDJ's OLC source lists the tracks prepared in that session.
 - Conversions are limited to 512 MiB per track, a 2 GiB session cache and two minutes of preparation. OLC reports an error if a limit is reached.

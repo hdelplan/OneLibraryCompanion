@@ -1,3 +1,5 @@
+import { renderPerformanceReport } from "./renderPerformance";
+import { useState } from "react";
 import { LocalUsb } from "./LocalUsb";
 import { TranscodingSettings } from "./Transcoding";
 import type { LivePlayer } from "./model";
@@ -34,6 +36,7 @@ export function Configuration({
   showLive,
   selectLive,
 }: Props) {
+  const [performanceReport, setPerformanceReport] = useState("");
   return (
     <div className="config-page">
       <header className="page-heading">
@@ -64,6 +67,26 @@ export function Configuration({
         <TranscodingSettings players={players} />
         <section className="settings-panel">
           <h2>Waveforms</h2>
+          <p>
+            On iPad, open OLC in Safari, tap Share, then Add to Home Screen.
+            Launch that icon to hide Safari’s address bar and tabs.
+          </p>
+          <button
+            onClick={() => setPerformanceReport(renderPerformanceReport())}
+          >
+            Show waveform performance
+          </button>
+          {performanceReport && (
+            <>
+              <p>
+                These are the last waveform measurements before opening MENU.
+                Frame delays measure this device’s rendering; position jumps can
+                indicate timing corrections.
+              </p>
+              <pre style={{ overflowX: "auto" }}>{performanceReport}</pre>
+            </>
+          )}
+
           <label>
             Jog smoothing{" "}
             <select

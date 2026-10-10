@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import type { Deck } from "./model";
 import { durationOf } from "./model";
 import type { Settings } from "./settings";
@@ -9,11 +10,19 @@ export function TrackCard({
   i,
   settings,
   onToggleTime,
+  browserPlayer,
 }: {
   deck: Deck;
   i: number;
   settings: Settings;
   onToggleTime: () => void;
+  browserPlayer?: {
+    control: ReactNode;
+    artwork: ReactNode;
+    metadata: ReactNode;
+    titleId: string;
+    onSeek: (position: number) => void;
+  };
 }) {
   const track = deck?.analysis.track,
     duration = durationOf(deck),
@@ -23,15 +32,25 @@ export function TrackCard({
   return (
     <section
       className="track-card"
-      aria-label={`Deck ${i + 1} track information`}
+      aria-label={
+        browserPlayer
+          ? "Browser track information"
+          : `Deck ${i + 1} track information`
+      }
     >
       <header>
-        <div className="deck-number">
-          <small>DECK</small>
-          <b>{live?.number ?? i + 1}</b>
-        </div>
+        {browserPlayer ? (
+          <div className="deck-number">{browserPlayer.control}</div>
+        ) : (
+          <div className="deck-number">
+            <small>DECK</small>
+            <b>{live?.number ?? i + 1}</b>
+          </div>
+        )}
         <div className="track-title">
-          <strong>{track?.title || deck?.name || "No track loaded"}</strong>
+          <strong id={browserPlayer?.titleId}>
+            {track?.title || deck?.name || "No track loaded"}
+          </strong>
           <span>
             {track?.artist ||
               (deck
@@ -44,7 +63,9 @@ export function TrackCard({
       </header>
       <div className="track-metrics">
         <div className="artwork-box">
-          {deck?.analysis.artworkAvailable && live?.trackKey ? (
+          {browserPlayer ? (
+            browserPlayer.artwork
+          ) : deck?.analysis.artworkAvailable && live?.trackKey ? (
             <img
               key={live.trackKey}
               src={`/api/live/artwork/${live.number}?key=${encodeURIComponent(live.trackKey)}`}
@@ -87,12 +108,14 @@ export function TrackCard({
           <strong>{track?.bpm ? track.bpm.toFixed(2) : "—"}</strong>
         </div>
         <div className="pitch-box">
-          <small>PITCH</small>
+          <small>{browserPlayer ? "KEY" : "PITCH"}</small>
           <strong>
-            {live?.pitch == null
-              ? "—"
-              : `${live.pitch >= 0 ? "+" : ""}${live.pitch.toFixed(2)}`}
-            <em>%</em>
+            {browserPlayer
+              ? track?.key || "—"
+              : live?.pitch == null
+                ? "—"
+                : `${live.pitch >= 0 ? "+" : ""}${live.pitch.toFixed(2)}`}
+            {!browserPlayer && <em>%</em>}
           </strong>
         </div>
         <div className="bpm-box">
@@ -110,10 +133,30 @@ export function TrackCard({
           </span>
         </div>
       )}
+      {browserPlayer?.metadata}
       {settings.overview && (
-        <div className="overview">
+        <div
+          className={`overview${browserPlayer ? " browser-player-overview" : ""}`}
+          onClick={
+            browserPlayer && duration
+              ? (event) => {
+                  const rect = event.currentTarget.getBoundingClientRect();
+                  browserPlayer.onSeek(
+                    Math.max(
+                      0,
+                      Math.min(1, (event.clientX - rect.left) / rect.width),
+                    ) * duration,
+                  );
+                }
+              : undefined
+          }
+        >
           <Signal
-            wave={deck?.analysis.preview ?? null}
+            wave={
+              deck?.analysis.preview ??
+              (browserPlayer ? deck?.analysis.detail : null) ??
+              null
+            }
             position={position ?? 0}
             overview
             motion={deck?.motion}
@@ -134,7 +177,10 @@ export function TrackCard({
             duration={position === null ? 0 : (duration ?? 0)}
             settings={settings}
           />
-          {!deck?.analysis.preview && <span>No overview data</span>}
+          {!deck?.analysis.preview &&
+            !(browserPlayer && deck?.analysis.detail) && (
+              <span>No overview data</span>
+            )}
         </div>
       )}
       {settings.phrases && (

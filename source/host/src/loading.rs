@@ -98,6 +98,9 @@ fn selection(body: &Value) -> Result<Selection, String> {
     })
 }
 impl Controller {
+    pub fn busy(&self, target: u8) -> bool {
+        self.pending.contains_key(&target)
+    }
     pub async fn accept(
         &mut self,
         command: Command,

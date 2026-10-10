@@ -24,6 +24,7 @@ export class PlaybackClock {
   private position = 0;
   private frameAt = 0;
   private direction = 0;
+  private beatCorrection = 0;
   private coarseCalibrated = false;
   private phaseOffset = 0;
   private phaseTarget = 0;
@@ -71,10 +72,9 @@ export class PlaybackClock {
       next.playing &&
       !next.direct
     ) {
-      // The host integrates motion speed from a real beat arrival. Correct to
-      // that observation immediately, including known host/browser age, without
-      // applying the status-boundary median/slew used by the coarse fallback.
-      this.position =
+      // Account for observation age, but do not snap steady scrolling to
+      // small timing corrections on every network delivery.
+      const measured =
         next.position +
         (Math.max(
           0,
@@ -82,6 +82,37 @@ export class PlaybackClock {
         ) /
           1000) *
           next.rate;
+      const sameLoop =
+        next.loop?.start === this.sample?.loop?.start &&
+        next.loop?.end === this.sample?.loop?.end;
+      const loopLength = next.loop ? next.loop.end - next.loop.start : 0;
+      const error =
+        loopLength > 0
+          ? ((((measured - current + loopLength / 2) % loopLength) +
+              loopLength) %
+              loopLength) -
+            loopLength / 2
+          : measured - current;
+      const steadyBeat =
+        next.quality === "beat" &&
+        this.sample?.quality === "beat" &&
+        this.sample.key === next.key &&
+        this.sample.playing &&
+        !this.sample.direct &&
+        this.sample.rate === next.rate &&
+        next.rate > 0 &&
+        sameLoop &&
+        effectiveAt - (this.sample.observedAt ?? this.sample.receivedAt) <
+          1000 &&
+        !(
+          next.beatNumber !== undefined &&
+          this.sample.beatNumber !== undefined &&
+          next.beatNumber < this.sample.beatNumber &&
+          !next.loop
+        ) &&
+        Math.abs(error) <= 0.2;
+      this.beatCorrection = steadyBeat ? error : 0;
+      this.position = steadyBeat ? current : measured;
       this.sample = next;
       this.frameAt = effectiveAt;
       this.coarseCalibrated = false;
@@ -91,6 +122,7 @@ export class PlaybackClock {
       this.glide = null;
       return;
     }
+    this.beatCorrection = 0;
     const sameTrack = this.sample?.key === next.key;
     const sameBeat =
       next.beatNumber !== undefined &&
@@ -242,7 +274,15 @@ export class PlaybackClock {
         s.beatOnly && !s.loop ? this.phaseTarget - this.phaseOffset : 0;
       const correction = Math.max(-0.05 * dt, Math.min(0.05 * dt, remaining));
       this.phaseOffset += correction;
-      this.position = Math.max(0, this.position + dt * s.rate + correction);
+      const beatCorrection =
+        s.quality === "beat"
+          ? Math.max(-0.1 * dt, Math.min(0.1 * dt, this.beatCorrection))
+          : 0;
+      this.beatCorrection -= beatCorrection;
+      this.position = Math.max(
+        0,
+        this.position + dt * s.rate + correction + beatCorrection,
+      );
     } else if (!s.playing || s.direct) this.position = s.position;
     this.frameAt = Math.max(this.frameAt, until);
     if (

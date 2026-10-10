@@ -1,3 +1,4 @@
+import { downloadWaveform } from "./waveformDownload";
 import { recordJogSnapshot, syncJogTrace } from "./jogTrace";
 import { useEffect, useState } from "react";
 import type { Analysis, Deck, LivePlayer } from "./model";
@@ -84,7 +85,8 @@ export function liveDeck(
                 player.playState ?? "",
               ),
             rate:
-              player.positionSource === "beat-motion" &&
+              (player.positionSource === "beat-motion" ||
+                player.positionSource === "relative-phase") &&
               player.motionRate != null
                 ? player.motionRate
                 : (player.reverse ? -1 : 1) * (1 + (player.pitch ?? 0) / 100),
@@ -115,16 +117,19 @@ export function useLiveDecks() {
     directPeers: DirectPeer[];
   }>({ enabled: false, error: null, decks: [null, null], directPeers: [] });
   useEffect(() => {
-    let stopped = false,
-      lastMessage = performance.now();
+    let stopped = false;
+    let lastMessage = performance.now();
     const observationTimes = new ObservationTimes();
     const assets = new Map<string, Analysis>();
-    const pending = new Set<string>();
+    const pending = new Map<string, AbortController>();
+    const retryAfter = new Map<string, number>();
+    let latest: Snapshot | undefined;
     const stream = new EventSource("/api/live/events");
-    function accept(snapshot: Snapshot) {
+    function accept(snapshot: Snapshot, fromHost = true) {
+      latest = snapshot;
       syncJogTrace(snapshot.jogCapture);
       recordJogSnapshot(snapshot.decks);
-      lastMessage = performance.now();
+      if (fromHost) lastMessage = performance.now();
       const receivedAt = performance.now();
       const slots = playerSlots(snapshot.decks);
       const players = slots.filter((p): p is LivePlayer => !!p);
@@ -148,28 +153,47 @@ export function useLiveDecks() {
           });
       };
       publish();
+      for (const [key, controller] of pending) {
+        if (!players.some((p) => p.trackKey === key)) {
+          controller.abort();
+          pending.delete(key);
+          retryAfter.delete(key);
+        }
+      }
       for (const player of players) {
         if (
           !player.assetReady ||
           !player.trackKey ||
           assets.has(player.trackKey) ||
-          pending.has(player.trackKey)
+          pending.has(player.trackKey) ||
+          (retryAfter.get(player.trackKey) ?? 0) > performance.now()
         )
           continue;
         const key = player.trackKey;
-        pending.add(key);
-        void fetch(`/api/live/analysis/${player.number}`, {
-          signal: AbortSignal.timeout(5000),
-        })
-          .then(async (response) => {
-            if (!response.ok) return;
-            const result: { key: string; analysis: Analysis } =
-              await response.json();
-            if (!stopped && result.key === key)
-              assets.set(key, result.analysis);
+        const controller = new AbortController();
+        pending.set(key, controller);
+        void downloadWaveform(player.number, key, controller)
+          .then((analysis) => {
+            if (!stopped && analysis) {
+              assets.set(key, analysis);
+              if (latest && performance.now() - lastMessage <= 1500)
+                accept(latest, false);
+            }
           })
-          .catch(() => {})
-          .finally(() => pending.delete(key));
+          .catch((error: unknown) => {
+            if (!stopped && !controller.signal.aborted)
+              console.warn(
+                `Deck ${player.number} waveform download failed`,
+                error,
+              );
+          })
+          .finally(() => {
+            if (pending.get(key) === controller) {
+              pending.delete(key);
+              if (!assets.has(key))
+                retryAfter.set(key, performance.now() + 2000);
+            }
+          });
       }
       // Apply downloaded data on the next fresh status snapshot, never an older one.
       if (assets.size > 12)
@@ -211,6 +235,7 @@ export function useLiveDecks() {
     return () => {
       stopped = true;
       stream.close();
+      for (const controller of pending.values()) controller.abort();
       clearInterval(watchdog);
     };
   }, []);

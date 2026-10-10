@@ -24,9 +24,15 @@ Press **CDJ1** or **CDJ2** to load a stopped player.
 
 A USB connected to the Mac/Pi can also supply music to both players, including supported tracks that need conversion. [Local USB and transcoding](local-usb.md).
 
+## Browser audio preview
+
+In BROWSE, choose **PLAY** in track details or hold a title to open the player. Use the round green play/pause control and click the overview waveform or use the seek slider to move through the track. Close the popup to stop preview playback. Audio comes from the browser device, so a headless Pi can serve tracks to a tablet or computer.
+
+The popup shows artwork, time, BPM, key, genre, My Tags, comments and library color. Exported phrases and saved cues appear when available. Local AIFF/AIFC files receive a temporary WAV playback copy; linked CDJ audio depends on browser codec support. Preview playback does not enter set history.
+
 ## Set History — record and reuse a set
 
-Choose **Start set** before playing and **Finish & save** afterwards. Edit the tracklist, add notes and export text, CSV or PDF. In BROWSE, select **SET HISTORY** to use a past performance as a playlist. [Set history guide](set-history.md).
+OLC captures playback automatically and saves the session after more than five minutes without playback. Use **Split set here** to separate performances or **Finish set** to save immediately. Edit the tracklist, add notes and export text, CSV or PDF. In BROWSE, select **SET HISTORY** to use a past performance as a playlist. [Set history guide](set-history.md).
 
 ![Set history](screenshots/set-history.png)
 

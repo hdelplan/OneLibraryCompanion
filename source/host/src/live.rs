@@ -17,7 +17,9 @@ pub struct LiveState {
     direct_controls: Option<tokio::sync::mpsc::Sender<direct::Control>>,
     direct_peers: Vec<Value>,
     pub enabled: bool,
+    connection: Value,
     pub error: Option<String>,
+    last_disconnect: Value,
     pub decks: Vec<Value>,
     assets: BTreeMap<String, Asset>,
     last_update: Instant,
@@ -31,7 +33,9 @@ impl Default for LiveState {
             direct_controls: None,
             direct_peers: vec![],
             enabled: false,
+            connection: json!({"state":"manual"}),
             error: None,
+            last_disconnect: Value::Null,
             decks: vec![],
             assets: BTreeMap::new(),
             last_update: Instant::now(),
@@ -58,7 +62,7 @@ fn publish(state: &LiveState) {
     crate::jog_trace::snapshot(&state.decks);
     state
         .updates
-        .send_replace(json!({"enabled":state.enabled,"error":state.error,"decks":state.decks,"directPeers":state.direct_peers}));
+        .send_replace(json!({"enabled":state.enabled,"error":state.error,"lastDisconnect":state.last_disconnect,"decks":state.decks,"directPeers":state.direct_peers,"discovery":state.connection}));
 }
 #[derive(Clone)]
 pub(crate) struct Asset {
@@ -66,6 +70,12 @@ pub(crate) struct Asset {
     pub(crate) analysis: Value,
     pub(crate) beats: Vec<f64>,
     pub(crate) warning: Option<String>,
+}
+fn failed_asset(asset: &Asset) -> bool {
+    asset.warning.is_some()
+        && asset.analysis["track"].is_null()
+        && asset.analysis["detail"].is_null()
+        && asset.analysis["preview"].is_null()
 }
 pub type Shared = Arc<Mutex<LiveState>>;
 
@@ -78,13 +88,40 @@ pub fn start(interface: Option<String>, catalogs: crate::library::Shared) -> Sha
     if let Some(name) = interface {
         let state = shared.clone();
         tokio::spawn(async move {
-            if let Err(error) = observe(&name, state.clone(), catalogs.clone()).await {
+            loop {
+                {
+                    let mut live = state.lock().unwrap();
+                    live.connection = json!({"state":"searching","mode":name});
+                    publish(&live);
+                }
+                let result = async {
+                    let (interface, discovery) = crate::auto_discovery::select(&name).await?;
+                    {
+                        let mut live = state.lock().unwrap();
+                        live.error = None;
+                        live.connection = json!({"state":"connected","interface":interface.name,"ip":interface.ip.to_string()});
+                        publish(&live);
+                    }
+                    crate::library::set_interface(&catalogs, interface.name.clone());
+                    observe(interface, discovery, state.clone(), catalogs.clone()).await
+                }.await;
                 crate::library::sync_sources(&catalogs, vec![]);
-                let mut state = state.lock().unwrap();
-                state.loader = None;
-                state.error = Some(error);
-                state.decks.clear();
-                publish(&state);
+                {
+                    let mut live = state.lock().unwrap();
+                    live.loader = None;
+                    live.error = result.err();
+                    if let Some(error) = &live.error {
+                        eprintln!("CDJ discovery session ended: {error}");
+                        prolink::serve::diagnostics::record(format!(
+                            "discovery_session_ended reason={error}"
+                        ));
+                        live.last_disconnect = json!({"message":error,"atUnixSeconds":std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_secs()});
+                    }
+                    live.decks.clear();
+                    live.connection = json!({"state":"searching","mode":name});
+                    publish(&live);
+                }
+                tokio::time::sleep(Duration::from_secs(3)).await;
             }
         });
     }
@@ -121,7 +158,7 @@ pub async fn load(shared: &Shared, body: Value) -> Value {
 }
 pub fn snapshot(shared: &Shared) -> Value {
     let state = shared.lock().unwrap();
-    json!({"enabled":state.enabled,"error":state.error,"decks":state.decks,"directPeers":state.direct_peers})
+    json!({"enabled":state.enabled,"error":state.error,"lastDisconnect":state.last_disconnect,"decks":state.decks,"directPeers":state.direct_peers,"discovery":state.connection})
 }
 pub fn analysis(shared: &Shared, number: u8) -> Option<Value> {
     let state = shared.lock().unwrap();
@@ -152,16 +189,26 @@ pub fn artwork(shared: &Shared, number: u8, key: &str) -> Option<(&'static str, 
         .clone()
 }
 
+/// Waveform buffers are copied once per track identity, never per status packet.
+fn cache_asset(
+    assets: &mut BTreeMap<String, Asset>,
+    key: &str,
+    fetch: impl FnOnce() -> Option<Asset>,
+) {
+    if !assets.contains_key(key)
+        && let Some(asset) = fetch()
+    {
+        assets.insert(key.to_owned(), asset);
+    }
+}
+
 async fn observe(
-    name: &str,
+    interface: Interface,
+    discovery: Discovery,
     shared: Shared,
     catalogs: crate::library::Shared,
 ) -> Result<(), String> {
     let observation_epoch = Instant::now();
-    let interface = Interface::named(name).map_err(|e| e.to_string())?;
-    let discovery = Discovery::start(interface.clone())
-        .await
-        .map_err(|e| e.to_string())?;
     tokio::time::sleep(Duration::from_secs(3)).await;
     let observer = VirtualCdj::observe(
         &discovery,
@@ -178,9 +225,13 @@ async fn observe(
     let (loader, mut commands) = crate::loading::channel();
     shared.lock().unwrap().loader = Some(loader);
     let mut loading = crate::loading::Controller::default();
+    let mut local = crate::discovered_local::Session::default();
+    let mut status_packets = monitor.status_packets();
+    let mut announcements = discovery.announcements();
     let mut identities: BTreeMap<u8, (String, u64)> = BTreeMap::new();
     let mut current_cues: BTreeMap<String, f64> = BTreeMap::new();
     let mut loop_regions: BTreeMap<u8, crate::loop_region::LoopRegion> = BTreeMap::new();
+    let mut relative_phase = crate::relative_phase::RelativePhase::default();
     let mut beat_positions: BTreeMap<u8, crate::beat_position::BeatPosition> = BTreeMap::new();
     let mut bar_positions: BTreeMap<u8, crate::bar_position::BarPosition> = BTreeMap::new();
     let session = std::time::SystemTime::now()
@@ -190,9 +241,50 @@ async fn observe(
     let mut requests: BTreeMap<String, Instant> = BTreeMap::new();
     let mut events = monitor.subscribe();
     let mut clock = tokio::time::interval(Duration::from_millis(250));
+    let mut last_peer = Instant::now();
+    let mut network_check = Instant::now();
     loop {
-        let command = tokio::select! { _ = clock.tick() => None, _ = events.recv() => None, command = commands.recv() => command };
+        let command = tokio::select! {
+            _ = clock.tick() => None,
+            _ = events.recv() => None,
+            announcement = announcements.recv() => {
+                match announcement {
+                    Ok(announcement) => local.announcement(&announcement, interface.ip),
+                    Err(tokio::sync::broadcast::error::RecvError::Lagged(_)) => return Err("Discovery tap fell behind; reconnecting".into()),
+                    Err(tokio::sync::broadcast::error::RecvError::Closed) => return Err("Discovery receiver closed".into()),
+                }
+                continue
+            },
+            packet = status_packets.recv() => {
+                match packet {
+                    Ok((from,bytes)) => local.respond(from, &bytes, &discovery, &monitor)?,
+                    Err(tokio::sync::broadcast::error::RecvError::Lagged(_)) => return Err("Local USB status tap fell behind; reconnecting".into()),
+                    Err(tokio::sync::broadcast::error::RecvError::Closed) => return Err("Status receiver closed".into()),
+                }
+                // Serving requests must drain promptly; UI work uses monitor events/the clock.
+                continue
+            },
+            command = commands.recv() => command
+        };
         let devices = discovery.devices();
+        if devices
+            .iter()
+            .any(|d| !d.offline && d.number.get() <= 6 && interface.contains(d.ip))
+        {
+            last_peer = Instant::now();
+        }
+        if network_check.elapsed() >= Duration::from_secs(3) {
+            network_check = Instant::now();
+            if !Interface::list()
+                .map_err(|e| e.to_string())?
+                .contains(&interface)
+            {
+                return Err("CDJ network changed. Searching again.".into());
+            }
+        }
+        if last_peer.elapsed() >= Duration::from_secs(20) {
+            return Err("CDJs disconnected. Searching again.".into());
+        }
         let mut mounted = Vec::new();
         for device in devices.iter().filter(|d| d.number.get() <= 6 && !d.offline) {
             if let Some(observation) = monitor.player(device.number).and_then(|p| p.status)
@@ -214,16 +306,34 @@ async fn observe(
         }
         crate::library::sync_sources(&catalogs, mounted);
         loading.tick(&discovery, &monitor, &catalogs);
+        local
+            .tick(&discovery, &monitor, &catalogs, observer.number().get())
+            .await?;
         if let Some(command) = command {
-            loading
-                .accept(
-                    command,
-                    &discovery,
-                    &monitor,
-                    &catalogs,
-                    observer.number().get(),
-                )
-                .await;
+            let target = command.body["target"]
+                .as_u64()
+                .and_then(|n| u8::try_from(n).ok())
+                .unwrap_or(0);
+            if local.busy(target) || loading.busy(target) {
+                let _ = command.reply.send(
+                    json!({"outcome":"error","message":"A load to this CDJ is already pending"}),
+                );
+            } else if command.body["source"]
+                .as_str()
+                .is_some_and(|s| s.starts_with("local-usb:"))
+            {
+                local.accept(command, &discovery, &monitor, &catalogs);
+            } else {
+                loading
+                    .accept(
+                        command,
+                        &discovery,
+                        &monitor,
+                        &catalogs,
+                        observer.number().get(),
+                    )
+                    .await;
+            }
         }
         let mut decks = Vec::new();
         for device in devices.iter().filter(|d| d.number.get() <= 6) {
@@ -244,6 +354,13 @@ async fn observe(
                 entry.1 += 1;
             }
             let key = track.map(|_| format!("{session}:{number}:{}:{identity}", entry.1));
+            if let (Some(key), Some(track)) = (&key, track)
+                && track.source_player.get() == crate::local_serving::NUMBER
+            {
+                cache_asset(&mut shared.lock().unwrap().assets, key, || {
+                    local.asset(track.id)
+                });
+            }
             let peer = track
                 .and_then(|t| {
                     devices
@@ -363,7 +480,7 @@ async fn observe(
                 current_cues.retain(|k, _| key.as_ref() == Some(k));
             }
             let current_cue = key.as_ref().and_then(|k| current_cues.get(k)).copied();
-            let ready = asset.is_some();
+            let ready = asset.is_some_and(|asset| !failed_asset(asset));
             if status.is_some_and(|s| s.play_state.0 == 4 && s.is_playing)
                 && let (Some(value), Some(region)) = (position, &loop_region)
                 && let (Some(start), Some(end)) = (region["start"].as_f64(), region["end"].as_f64())
@@ -381,7 +498,7 @@ async fn observe(
                 "playing":status.is_some_and(|s|s.is_playing),
                 "loadProtected":status.is_some_and(|s|s.is_playing || matches!(s.play_state.0, 3 | 4 | 7 | 8 | 9 | 18)),
                 "manualMotion":tracked.is_none() && status.is_some_and(|s|s.position_requires_direct_updates()),
-                "positionAgeMs":tracked.map(|p|p.at).or_else(||fine_position.and_then(|_|bar_positions.get(&number)?.observed_at())).map(|at|at.elapsed().as_secs_f64()*1000.0),"motionRate":tracked.map(|p|p.rate),"beatAnchorNumber":tracked.map(|p|p.beat_number),"beatCorrectionMs":tracked.map(|p|p.correction_seconds*1000.0),"beatArrivalResidualMs":tracked.map(|p|p.arrival_residual_seconds*1000.0),
+                "positionAgeMs":tracked.map(|p|p.at).or_else(||fine_position.and_then(|_|bar_positions.get(&number)?.observed_at())).map(|at|at.elapsed().as_secs_f64()*1000.0),"motionRate":tracked.map(|p|p.rate),"beatAnchorNumber":tracked.map(|p|p.beat_number),"rawBeatPosition":tracked.map(|p|p.raw_seconds),"beatAgeMs":tracked.map(|p|p.beat_at.elapsed().as_secs_f64()*1000.0),"beatObservationId":tracked.map(|p|format!("{}",p.beat_at.duration_since(observation_epoch).as_nanos())),"beatCorrectionMs":tracked.map(|p|p.correction_seconds*1000.0),"beatArrivalResidualMs":tracked.map(|p|p.arrival_residual_seconds*1000.0),
                 "statusAgeMs":observed.map(|s|s.received_at.elapsed().as_secs_f64()*1000.0),
                 "observationId":observed.map(|s|format!("{session}:{}:{}",s.received_at.duration_since(observation_epoch).as_nanos(),tracked.map_or(0,|p|p.at.duration_since(observation_epoch).as_nanos()))),
                 "observationTimeMs":observed.map(|s|s.received_at.duration_since(observation_epoch).as_secs_f64()*1000.0),
@@ -391,9 +508,14 @@ async fn observe(
                 "playState":status.map(play_state_label),
                 "bpm":status.and_then(|s|s.effective_bpm()),"pitch":status.and_then(|s|s.pitch).map(|p|(p.multiplier()-1.0)*100.0),
                 "master":status.map(|s|s.is_tempo_master),"sync":status.map(|s|s.is_synced),
-                "trackId":track.map(|t|t.id),"qualifyingPlayback":status.is_some_and(qualifies_for_set),
+                "sourcePlayer":track.map(|t|t.source_player.get()),"sourceSlot":track.map(|t|if t.slot == Slot::USB {"usb"} else {"other"}),"trackId":track.map(|t|t.id),"qualifyingPlayback":status.is_some_and(qualifies_for_set),
                 "trackKey":key,"assetReady":ready,"position":position,"warning":warning,
-                "sourceLabel":track.map(|t|format!("CDJ{} {}",t.source_player,t.slot.to_string().to_uppercase()))}));
+                "sourceLabel":track.map(|t| {
+                    let label = (t.source_player.get() == crate::local_serving::NUMBER && t.slot == Slot::USB)
+                        .then(|| local.source_label(t.id)).flatten();
+                    label.map(str::to_owned).unwrap_or_else(||
+                        format!("CDJ{} {}",t.source_player,t.slot.to_string().to_uppercase()))
+                })}));
             if !ready
                 && let (Some(key), Some(track), Some(peer)) = (key, track, peer)
                 && requests
@@ -422,7 +544,7 @@ async fn observe(
                             artwork: None,
                             analysis: json!({"detail":null,"preview":null,"track":null}),
                             beats: vec![],
-                            warning: Some("USB read timed out; reload the track to retry".into()),
+                            warning: Some("USB read timed out; retrying automatically".into()),
                         },
                     };
                     shared.lock().unwrap().assets.insert(key, asset);
@@ -438,6 +560,7 @@ async fn observe(
         }
         requests.retain(|key, _| decks.iter().any(|d| d["trackKey"].as_str() == Some(key)));
         state.last_update = Instant::now();
+        relative_phase.refine(&mut decks, &state.assets, Instant::now());
         state.decks = decks;
         publish(&state);
         let _keep_alive = &observer;
@@ -704,6 +827,55 @@ fn align_beat(
 
 #[cfg(test)]
 mod transport_tests {
+    #[test]
+    fn failed_analysis_remains_retryable_but_metadata_only_tracks_are_ready() {
+        let mut asset = super::Asset {
+            artwork: None,
+            analysis: serde_json::json!({"track":null,"detail":null,"preview":null}),
+            beats: vec![],
+            warning: Some("Read failed".into()),
+        };
+        assert!(super::failed_asset(&asset));
+        asset.analysis["track"] = serde_json::json!({"title":"No waveform available"});
+        assert!(!super::failed_asset(&asset));
+    }
+    #[test]
+    fn repeated_loaded_status_does_not_copy_cached_waveforms() {
+        let mut assets = std::collections::BTreeMap::new();
+        let mut copies = 0;
+        for _ in 0..1024 {
+            super::cache_asset(&mut assets, "session:1:track", || {
+                copies += 1;
+                Some(super::Asset {
+                    artwork: None,
+                    analysis: serde_json::json!({"detail":vec![1u8; 256 * 1024]}),
+                    beats: vec![0.0, 0.5],
+                    warning: None,
+                })
+            });
+        }
+        assert_eq!(copies, 1);
+        assert_eq!(
+            assets["session:1:track"].analysis["detail"]
+                .as_array()
+                .unwrap()
+                .len(),
+            256 * 1024
+        );
+        // A new identity fetches fresh metadata; a missing asset can be retried later.
+        super::cache_asset(&mut assets, "session:2:track", || None);
+        assert!(!assets.contains_key("session:2:track"));
+        super::cache_asset(&mut assets, "session:2:track", || Some(assets_clone()));
+        assert!(assets.contains_key("session:2:track"));
+    }
+    fn assets_clone() -> super::Asset {
+        super::Asset {
+            artwork: None,
+            analysis: serde_json::Value::Null,
+            beats: vec![],
+            warning: None,
+        }
+    }
     #[test]
     fn independent_packet_arrival_does_not_reset_previous_beat() {
         assert_eq!(super::align_beat(3, 0.01, 4, 1, true), (4, 0.01));

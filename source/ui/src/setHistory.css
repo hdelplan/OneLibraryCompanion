@@ -7,6 +7,7 @@
 }
 .set-toolbar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 12px;
   padding: 18px 22px;
@@ -532,4 +533,22 @@
   background: #c82e38;
   color: white;
   border-color: #c82e38;
+}
+
+.set-split-control {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  width: 190px;
+  flex-shrink: 0;
+}
+.set-split-control small {
+  color: #8fa0ae;
+  font-size: 10px;
+  line-height: 1.4;
+  text-align: center;
+}
+.set-split-welcome {
+  margin: 12px auto;
 }

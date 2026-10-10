@@ -850,6 +850,7 @@ pub struct Monitor {
     events: broadcast::Sender<MonitorEvent>,
     watches_status: bool,
     status_sender: Option<Arc<UdpSocket>>,
+    status_packets: broadcast::Sender<(SocketAddr, Arc<Vec<u8>>)>,
     tasks: Vec<JoinHandle<()>>,
 }
 
@@ -932,6 +933,7 @@ impl Monitor {
             events,
             watches_status,
             status_sender: None,
+            status_packets: broadcast::channel(256).0,
             tasks: Vec::new(),
         }
     }
@@ -940,6 +942,12 @@ impl Monitor {
     /// The monitor remains its sole receiver. Unavailable when using a shared tap.
     pub fn status_sender(&self) -> Option<Arc<UdpSocket>> {
         self.status_sender.clone()
+    }
+
+    /// Bounded tap of the existing status receiver, including the source endpoint.
+    /// Consumers must never receive directly from `status_sender`.
+    pub fn status_packets(&self) -> broadcast::Receiver<(SocketAddr, Arc<Vec<u8>>)> {
+        self.status_packets.subscribe()
     }
 
     /// The interface being listened on.
@@ -1037,13 +1045,24 @@ impl Monitor {
     fn spawn_status(&self, socket: Arc<UdpSocket>, ours: DeviceNumber) -> JoinHandle<()> {
         let players = Arc::clone(&self.players);
         let events = self.events.clone();
+        let packets = self.status_packets.clone();
         tokio::spawn(async move {
             let mut buffer = vec![0u8; MAX_DATAGRAM];
             loop {
-                let Some(datagram) = receive(&socket, &mut buffer, "status").await else {
-                    return;
+                let (len, from) = match socket.recv_from(&mut buffer).await {
+                    Ok(received) => received,
+                    Err(error) => {
+                        warn!(%error, "status socket closed");
+                        return;
+                    }
                 };
+                if !from.is_ipv4() {
+                    continue;
+                }
+                let datagram = buffer[..len].to_vec();
+                record_diagnostic_datagram("status", from, &datagram);
                 observe_status_datagram(&players, &events, &datagram, ours);
+                let _ = packets.send((from, Arc::new(datagram)));
             }
         })
     }
@@ -1196,6 +1215,50 @@ fn with_table_mut<T>(table: &Mutex<PlayerTable>, write: impl FnOnce(&mut PlayerT
 mod tests {
     use super::*;
     use prolink_proto::beat::{Pitch, Timings};
+
+    #[tokio::test]
+    async fn status_tap_preserves_endpoint_and_does_not_consume_monitor_packets() {
+        let interface = Interface {
+            name: "test".into(),
+            index: 1,
+            ip: [127, 0, 0, 1].into(),
+            netmask: [255, 0, 0, 0].into(),
+            mac: prolink_proto::MacAddress([1, 2, 3, 4, 5, 6]),
+        };
+        let mut monitor = Monitor::empty(interface, true);
+        let socket = Arc::new(UdpSocket::bind("127.0.0.1:0").await.unwrap());
+        let peer = UdpSocket::bind("127.0.0.1:0").await.unwrap();
+        let mut tap = monitor.status_packets();
+        let mut second = monitor.status_packets();
+        monitor
+            .tasks
+            .push(monitor.spawn_status(socket.clone(), device(15)));
+        let raw = status_from(1, 5, true, 182).into_bytes();
+        peer.send_to(&raw, socket.local_addr().unwrap())
+            .await
+            .unwrap();
+        let (from, received) = tokio::time::timeout(Duration::from_secs(1), tap.recv())
+            .await
+            .unwrap()
+            .unwrap();
+        assert_eq!(from, peer.local_addr().unwrap());
+        assert_eq!(*received, raw);
+        assert_eq!(*second.recv().await.unwrap().1, raw);
+        assert!(monitor.player(device(1)).and_then(|p| p.status).is_some());
+        // Non-status requests must reach the serving tap as well.
+        peer.send_to(b"media-request", socket.local_addr().unwrap())
+            .await
+            .unwrap();
+        assert_eq!(
+            tokio::time::timeout(Duration::from_secs(1), tap.recv())
+                .await
+                .unwrap()
+                .unwrap()
+                .1
+                .as_slice(),
+            b"media-request"
+        );
+    }
 
     #[test]
     fn cue_audition_advances_with_playing_flag_clear_then_stops_on_release() {

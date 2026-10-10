@@ -67,6 +67,10 @@ with tempfile.TemporaryDirectory(prefix='olc-release-smoke-') as directory:
             request('/api/sets', {'action': 'metadata', 'id': identifier, 'title': 'OLC release smoke'})
             request('/api/sets', {'action': 'finish', 'id': identifier})
             assert request('/api/sets')['sets'][0]['title'] == 'OLC release smoke'
+            assert request('/api/live')['discovery']['state'] == 'manual'
+            assert request('/api/app', {'interface': 'auto'})['restartRequired'] is True
+            assert json.loads((Path(directory) / 'desktop.json').read_text())['interface'] == 'auto'
+            # Restore manual mode before restart: this smoke test stays isolated from CDJs.
             assert request('/api/app', {'interface': None})['restartRequired'] is True
             # A second instance must exit, rather than sharing a port/CDJ session.
             duplicate = subprocess.Popen([str(args.binary.resolve())], env=env, stdout=log, stderr=log)

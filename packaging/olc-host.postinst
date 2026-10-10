@@ -3,6 +3,6 @@ set -eu
 
 if [ "$1" = configure ]; then
     # CDJs discover local audio through UDP port 111. Keep the service running
-    # as the user's account, with only the capability needed to bind low ports.
-    /usr/sbin/setcap cap_net_bind_service=ep /usr/lib/onelibrarycompanion/olc-host
+    # as the user's account, with capabilities for low ports and CDJ interface binding.
+    /usr/sbin/setcap cap_net_bind_service,cap_net_raw=ep /usr/lib/onelibrarycompanion/olc-host
 fi

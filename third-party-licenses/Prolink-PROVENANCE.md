@@ -16,6 +16,7 @@ The Rekordbox reader, protocol, networking and capture crates are included. The 
 - Provide a bounded background packet recorder without adding protocol transmissions.
 - Add a bounded GPL-3.0-only `exportExt.pdb` My Tags reader for definitions, assignments, category order and track joins. Validate page bounds and parent references while retaining incomplete optional assignments.
 - Decode the 13-bit playlist slot count and respect presence masks for deleted rows.
+- Add a bounded status-packet tap preserving sender endpoints for local serving, while the monitor remains the sole receiver.
 - Expose a clone of the existing status socket for explicit, checked load requests. The monitor remains the sole receiver; shared-tap monitors provide no sender.
 
 - Seed parsed analysis and artwork into served media while original audio stays in the disk-backed virtual filesystem.

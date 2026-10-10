@@ -11,6 +11,8 @@ use std::{
 pub struct Position {
     /// Position at `at`, not at publication time.
     pub seconds: f64,
+    /// Unfiltered beat anchor integrated through every observed motion-rate change.
+    pub raw_seconds: f64,
     pub rate: f64,
     pub at: Instant,
     pub beat_at: Instant,
@@ -171,9 +173,12 @@ impl BeatPosition {
         if let Some(p) = self.position.as_mut()
             && at > p.at
         {
-            p.seconds += at.duration_since(p.at).as_secs_f64() * p.rate;
+            let elapsed_motion = at.duration_since(p.at).as_secs_f64() * p.rate;
+            p.seconds += elapsed_motion;
+            p.raw_seconds += elapsed_motion;
             if let Some(region) = self.loop_range {
                 p.seconds = region.wrap(p.seconds);
+                p.raw_seconds = region.wrap(p.raw_seconds);
             }
             p.at = at;
             p.rate = rate.unwrap_or(p.rate);
@@ -314,6 +319,7 @@ impl BeatPosition {
         // window of motion-compensated observations and use its least-delayed
         // evidence, not every arrival as an exact phase measurement. Rate
         // changes are still applied on each status; no jog-speed smoothing.
+        let raw_seconds = seconds;
         let (seconds, correction, residual) = if let Some(previous) = self.position {
             let predicted = previous.seconds
                 + at.saturating_duration_since(previous.at).as_secs_f64() * previous.rate;
@@ -361,6 +367,7 @@ impl BeatPosition {
         self.beat_period = period;
         self.position = Some(Position {
             seconds,
+            raw_seconds,
             rate,
             at,
             beat_at: at,
@@ -458,6 +465,7 @@ mod tests {
             assert!((p.seconds - 5.1).abs() < 1e-8);
             let p = run(400, status(11, 3, master, 1.1), Some((beat(3), 200))).unwrap();
             assert!((p.seconds - 5.21).abs() < 1e-6);
+            assert!((p.raw_seconds - 5.21).abs() < 1e-6);
             let p = run(700, status(11, 3, !master, 1.), Some((beat(4), 700))).unwrap();
             // A late pulse does not pull a valid speed-integrated position back.
             assert!(p.seconds > 5.5 && p.seconds < 5.55);

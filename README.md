@@ -4,6 +4,17 @@ Give your old CDJs a makeover! OneLibraryCompanion (OLC) reads Rekordbox One Lib
 
 OLC runs on Mac or Raspberry Pi, alongside your players. You keep playback, cueing and mixing on the CDJs. You can use an iPad as the display or any other tablet by connecting to your Mac or RPi via the local network.
 
+## What's new in 0.3.0
+
+- **Automatic CDJ discovery:** find players on the local network and reconnect when the connection changes.
+- **Browser audio preview:** listen to library tracks on your browser device, with artwork, waveforms and seeking.
+- **Automatic set capture:** record performances automatically, split or join sessions, and keep reusable tracklists.
+- **Headless Pi controls:** restart OLC, shut down the host and safely unmount USBs from MENU.
+- **Connection reliability:** more stable local USB loading and automatic retries for failed analysis reads.
+- Other various performance and reliability improvements.
+
+[Detailed 0.3.0 release notes](docs/release-notes.md).
+
 ## Key features
 
 - **Follow both decks:** live three-band waveforms, track overviews, BPM, pitch, key, master and sync status.
@@ -31,7 +42,7 @@ For music attached to the Mac/Pi, both players can use different tracks from the
 
 ## Set history — keep and share your tracklist
 
-Choose **Start set** before playing. OLC adds tracks after more than 45 seconds of continuous playback; choose **Finish & save** at the end. Name the set, add notes, edit its order and share a text, CSV or PDF tracklist. Reopen a saved set inside BROWSE to find those tracks in your connected library.
+OLC captures your tracklist automatically while you play. Edit and share saved sets, or reopen them in BROWSE as playlists. [Set history guide](docs/set-history.md).
 
 ![Set history with a saved performance tracklist](docs/screenshots/set-history.png)
 
@@ -45,10 +56,27 @@ Choose **Start set** before playing. OLC adds tracks after more than 45 seconds 
 - **Raspberry Pi 4 / 5:** Raspberry Pi OS Bookworm or later, 64-bit.
 
 1. Install OLC and connect the computer and CDJs to the same network.
-2. Set up the player connection in MENU and select a library in BROWSE. Local USB loading currently requires **Manual IP connections**; Mac also requires the included **Local USB Support** installation.
+2. Set up the player connection in MENU and select a library in BROWSE. Local USB loading supports automatic discovery or **Manual IP connections**, with player number 4 free for OLC; Mac also requires the included **Local USB Support** installation.
 3. Keep OLC running and the USB attached while playing. To use OLC from a tablet or any web browser, open the network address shown in MENU in your browser. No login or pairing is needed.
 
-The interface uses a fixed 1280 × 800 layout scaled to the display. Downloads require access to this private repository.
+### Headless Raspberry Pi
+
+1. Set up a Pi 4 or 5 with **64-bit Raspberry Pi OS Lite Bookworm or later**, network access and SSH. Set its hostname to **OLC** to use the address below.
+2. Download the **0.3.0 ARM64 host package** from Releases. In its download folder, run these commands over SSH as the ordinary account that will run OLC:
+
+   ```sh
+   sudo apt install ./onelibrarycompanion-host_0.3.0_arm64.deb
+   sudo loginctl enable-linger "$(id -un)"
+   systemctl --user enable --now olc-host.service
+   hostname -I
+   ```
+
+3. On another device on the same network, open **[http://OLC.local:8787](http://OLC.local:8787)**. If you chose another hostname, use that name followed by `.local:8787`. If the hostname does not resolve, use the Pi’s LAN IP printed by `hostname -I`, followed by `:8787`. Configure CDJ connections in MENU and choose your library in BROWSE.
+4. If using a local music USB, configure it to mount at boot at a stable path readable by that account. Reboot and confirm OLC and the library are available before logging in over SSH.
+
+Use either the desktop app or the headless service on a Pi. [Full headless setup, USB mounting and troubleshooting](docs/distribution.md#raspberry-pi-headless).
+
+The interface uses a fixed 1280 × 800 layout scaled to the display. Downloads are available from the public Releases page.
 
 ## Know before a set - a few limitations
 

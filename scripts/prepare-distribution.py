@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Make an allowlisted source snapshot for review before a private GitHub push."""
+"""Make an allowlisted source snapshot for review before a GitHub publication."""
 import argparse
 import hashlib
 from pathlib import Path
@@ -8,7 +8,7 @@ import shutil
 ROOT = Path(__file__).resolve().parent.parent
 FILES = ['Cargo.toml', 'Cargo.lock', 'LICENSE', 'THIRD_PARTY_NOTICES.md', 'README.md', '.gitignore', 'AGENTS.md']
 TREES = ['source/core', 'source/host', 'source/ui', 'source/desktop', 'vendor/prolink', 'third-party-licenses', 'packaging', '.github']
-SCRIPTS = ['bootstrap-mac.sh', 'build-linux.sh', 'build-macos.sh', 'build-pi-cross.sh', 'check-app.sh', 'check-distribution.py', 'check-docs.py', 'collect-third-party-notices.py', 'package-linux.py', 'package-mac-networking.sh', 'position_signals.py', 'prepare-distribution.py', 'setup.sh', 'smoke-host.py', 'test_position_signals.py', 'test-mac-networking.py', 'trace-bar-position.py']
+SCRIPTS = ['bootstrap-mac.sh', 'build-linux.sh', 'build-macos.sh', 'build-pi-cross.sh', 'check-app.sh', 'check-distribution.py', 'check-docs.py', 'collect-third-party-notices.py', 'package-linux.py', 'package-mac-networking.sh', 'position_signals.py', 'prepare-distribution.py', 'setup.sh', 'smoke-host.py', 'test_position_signals.py', 'test-mac-networking.py', 'tests/test_usb_unmount.py', 'trace-bar-position.py']
 DOCS = ['distribution.md', 'release-notes.md', 'architecture.md', 'configuration.md', 'set-history.md', 'development.md', 'hardware-testing.md', 'compatibility.md', 'local-usb.md', 'screenshots.md']
 OMITTED = {'vendor/prolink/Cargo.lock'}
 OVERRIDES = ROOT / '.local/distribution-overrides'
@@ -63,7 +63,7 @@ def prepare(destination):
         manifest.append(f'{hashlib.sha256(target.read_bytes()).hexdigest()}  {relative.as_posix()}')
     (destination / 'SOURCE-MANIFEST.sha256').write_text('\n'.join(manifest) + '\n')
     print(f'Prepared {len(manifest)} source files at {destination}')
-    print('Review the manifest and private repository visibility before pushing.')
+    print('Review the manifest and repository visibility before publishing.')
 
 
 if __name__ == '__main__':

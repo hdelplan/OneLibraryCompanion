@@ -1,6 +1,6 @@
-//! Bounded direct-source analysis reads, independent of player transport.
+//! Bounded library analysis reads, independent of player transport.
 use crate::library::{self, Location, Query, Shared};
-use prolink::{Slot, consume::nfs::NfsClient};
+use prolink::consume::nfs::NfsClient;
 use serde_json::{Value, json};
 use std::{
     path::{Component, Path},
@@ -28,11 +28,8 @@ pub async fn get(shared: &Shared, id: &str, track_id: u32, query: &Query) -> Res
         .try_acquire()
         .map_err(|_| "Another waveform preview is still loading; try again shortly")?;
     let (generation, catalog) = library::catalog(shared, id, query)?;
-    let (location, _) =
+    let (location, interface) =
         library::artwork_location(shared, id, generation).ok_or("USB selection changed")?;
-    let Location::Direct(ip) = location else {
-        return Err("Preview is currently available for manual-IP sources".into());
-    };
     let track = catalog
         .library
         .tracks
@@ -40,57 +37,87 @@ pub async fn get(shared: &Shared, id: &str, track_id: u32, query: &Query) -> Res
         .ok_or("Track not in this catalog")?
         .clone();
     let path = analysis_path(&track.analyze_path)?;
-    let (bytes, beats, cues) =
+    let (bytes, dat, ext) = if let Location::Local(database) = &location {
+        let root = database
+            .parent()
+            .and_then(Path::parent)
+            .and_then(Path::parent)
+            .ok_or("Invalid export root")?
+            .canonicalize()
+            .map_err(|e| e.to_string())?;
+        let read = |path: &str| -> Option<Vec<u8>> {
+            let file = root
+                .join(path.trim_start_matches('/'))
+                .canonicalize()
+                .ok()?;
+            if !file.starts_with(&root) || file.metadata().ok()?.len() > 16 * 1024 * 1024 {
+                return None;
+            }
+            std::fs::read(file).ok()
+        };
+        (
+            read(&path),
+            read(&track.analyze_path),
+            read(
+                &Path::new(&track.analyze_path)
+                    .with_extension("EXT")
+                    .to_string_lossy(),
+            ),
+        )
+    } else {
+        let (ip, slot, interface) = library::connection(&location, interface)?;
         tokio::time::timeout(Duration::from_secs(35), async {
-            let mut client = NfsClient::connect(ip, None)
+            let mut client = NfsClient::connect(ip, interface.as_ref())
                 .await
                 .map_err(|e| e.to_string())?;
-            let mount = client
-                .mount_slot(Slot::USB)
-                .await
-                .map_err(|e| e.to_string())?;
-            let file = client
-                .open(&mount, &path)
-                .await
-                .map_err(|e| format!("Native three-band waveform (.2EX) unavailable: {e}"))?;
-            if file.size() > 16 * 1024 * 1024 {
-                return Err("Analysis exceeds 16 MiB limit".into());
+            let mount = client.mount_slot(slot).await.map_err(|e| e.to_string())?;
+            let mut files = Vec::new();
+            for path in [
+                &path,
+                &track.analyze_path,
+                &Path::new(&track.analyze_path)
+                    .with_extension("EXT")
+                    .to_string_lossy()
+                    .into_owned(),
+            ] {
+                let bytes = if let Ok(file) = client.open(&mount, path).await {
+                    if file.size() <= 16 * 1024 * 1024 {
+                        client.read_file(&file).await.ok()
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                };
+                files.push(bytes);
             }
-            let result = client.read_file(&file).await.map_err(|e| e.to_string());
-            let mut beats = vec![];
-            let mut cues = vec![];
-            if let Ok(file) = client.open(&mount, &track.analyze_path).await
-                && file.size() <= 16 * 1024 * 1024
-                && let Ok(bytes) = client.read_file(&file).await
-                && let Ok(anlz) = prolink_rekordbox::AnlzFile::parse(&bytes)
-            {
-                crate::cues::collect(&anlz, &mut cues);
-                if let Some(grid) = anlz.beat_grid() {
-                    beats = grid
-                .beats
-                .iter()
-                .map(|b| json!({"time": f64::from(b.time) / 1000.0, "beatInBar": b.beat_number}))
-                .collect();
-                }
-            }
+
             let _ = client.unmount(&mount).await;
-            result.map(|bytes| (bytes, beats, cues))
+            Ok::<_, String>((files.remove(0), files.remove(0), files.remove(0)))
         })
         .await
-        .map_err(|_| "Waveform read timed out; check the connection and refresh the USB")??;
+        .map_err(|_| "Waveform read timed out; check the connection and refresh the USB")??
+    };
     let mut value = tokio::task::spawn_blocking(move || {
-        let decoded = pioneer_companion_core::decode(&bytes)?;
-        serde_json::to_value(decoded).map_err(|e| e.to_string())
+        Ok::<_, String>(
+            bytes
+                .as_deref()
+                .and_then(|bytes| pioneer_companion_core::decode(bytes).ok())
+                .and_then(|decoded| serde_json::to_value(decoded).ok())
+                .unwrap_or_else(|| json!({"detail":null,"preview":null})),
+        )
     })
     .await
     .map_err(|e| e.to_string())??;
     if library::artwork_location(shared, id, generation).is_none() {
         return Err("USB selection changed during the read; choose the track again".into());
     }
-    if !beats.is_empty() {
-        value["beats"] = json!(beats);
-    }
-    value["cues"] = json!(cues);
+    annotations(
+        &mut value,
+        dat.as_deref(),
+        ext.as_deref(),
+        f64::from(track.duration),
+    );
     value["track"] = catalog.track_metadata(&track);
     if !track.artwork_path.is_empty() {
         value["artworkUrl"] = json!(format!(
@@ -99,6 +126,34 @@ pub async fn get(shared: &Shared, id: &str, track_id: u32, query: &Query) -> Res
         ));
     }
     Ok(value)
+}
+
+fn annotations(value: &mut Value, dat: Option<&[u8]>, ext: Option<&[u8]>, duration: f64) {
+    let parse = |bytes| prolink_rekordbox::AnlzFile::parse(bytes).ok();
+    let dat = dat.and_then(parse);
+    let ext = ext.and_then(parse);
+    let mut cues = vec![];
+    let mut beats = vec![];
+    let mut marks = vec![];
+    if let Some(dat) = &dat {
+        crate::cues::collect(dat, &mut cues);
+        if let Some(grid) = dat.beat_grid() {
+            for beat in &grid.beats {
+                let time = f64::from(beat.time) / 1000.0;
+                beats.push(time);
+                marks.push(json!({"time":time,"beatInBar":beat.beat_number}));
+            }
+        }
+    }
+    if let Some(ext) = &ext {
+        crate::cues::collect(ext, &mut cues);
+    }
+    value["beats"] = json!(marks);
+    value["cues"] = json!(cues);
+    if let Some(structure) = ext.as_ref().and_then(|ext| ext.song_structure()) {
+        value["phrases"] = json!(crate::phrases::segments(structure, &beats, duration));
+        value["phraseMood"] = json!(crate::phrases::mood_label(structure.mood));
+    }
 }
 
 #[cfg(test)]

@@ -228,3 +228,24 @@ test("both decks use motion speed and position age without changing tempo displa
     assert.equal(deck.live!.pitch, -3);
   }
 });
+
+test("relative phase positions retain measured motion speed and timestamp", () => {
+  const deck = liveDeck(
+    {
+      ...player,
+      master: false,
+      positionSource: "relative-phase",
+      positionQuality: "beat",
+      motionRate: 0.94,
+      pitch: -3,
+      positionAgeMs: 20,
+      manualMotion: false,
+    },
+    analysis,
+    200,
+  )!;
+  assert.equal(deck.motion!.rate, 0.94);
+  assert.equal(deck.motion!.observedAt, 180);
+  assert.equal(deck.motion!.beatOnly, false);
+  assert.equal(deck.motion!.direct, false);
+});
