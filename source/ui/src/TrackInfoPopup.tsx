@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { Deck } from "./model";
 
 export function TrackInfoPopup({
@@ -10,6 +10,17 @@ export function TrackInfoPopup({
 }) {
   const track = deck?.analysis.track;
   const [failedArtwork, setFailedArtwork] = useState(false);
+  const panel = useRef<HTMLElement>(null);
+  useLayoutEffect(() => {
+    const fit = () => {
+      if (!panel.current) return;
+      const top = panel.current.getBoundingClientRect().top;
+      panel.current.style.maxHeight = `${Math.max(0, window.innerHeight - top - 12)}px`;
+    };
+    fit();
+    window.addEventListener("resize", fit);
+    return () => window.removeEventListener("resize", fit);
+  }, []);
   useEffect(() => {
     const dismiss = () => onClose();
     const key = (event: KeyboardEvent) => {
@@ -77,19 +88,13 @@ export function TrackInfoPopup({
     ],
     ["Color", track?.color],
     ["Album", track?.album],
-    [
-      "MyTag",
-      track?.myTags == null
-        ? "Unavailable"
-        : track.myTags.map((tag) => tag.name).join(" · ") || "None",
-      "wide",
-    ],
     ["Comment", track?.comment, "wide"],
   ];
   return (
     <>
       <div className="track-info-dismiss" onClick={onClose} />
       <section
+        ref={panel}
         className="track-info-popup"
         role="dialog"
         aria-modal="true"
@@ -114,6 +119,24 @@ export function TrackInfoPopup({
             </small>
             <h2>{track?.title || "Unknown title"}</h2>
             <p>{track?.artist || "Unknown artist"}</p>
+          </div>
+        </div>
+        <div className="track-info-mytags">
+          <small>MyTag</small>
+          <div className="track-info-tag-list">
+            {track?.myTags?.length ? (
+              track.myTags.map((tag, index) => (
+                <span
+                  className="track-info-tag"
+                  key={`${tag.category ?? ""}:${tag.name}:${index}`}
+                  title={tag.category || undefined}
+                >
+                  {tag.name}
+                </span>
+              ))
+            ) : (
+              <span>{track?.myTags == null ? "Unavailable" : "None"}</span>
+            )}
           </div>
         </div>
         <dl className="track-info-fields">

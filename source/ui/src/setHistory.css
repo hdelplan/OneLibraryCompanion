@@ -1,5 +1,5 @@
 .set-screen {
-  height: 758px;
+  height: calc(100% - 42px);
   display: flex;
   flex-direction: column;
   background: #111519;

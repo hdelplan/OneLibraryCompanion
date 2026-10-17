@@ -1,4 +1,5 @@
 import { LibraryPlayer } from "./LibraryPlayer";
+import { recordBugError } from "./BugReport";
 import {
   type SetHistoryState,
   setDate,
@@ -43,9 +44,14 @@ async function request<T>(
   signal?: AbortSignal,
   method = "GET",
 ): Promise<T> {
-  const response = await fetch(path, { signal, method });
-  if (!response.ok) throw new Error(await response.text());
-  return response.json() as Promise<T>;
+  try {
+    const response = await fetch(path, { signal, method });
+    if (!response.ok) throw new Error(await response.text());
+    return (await response.json()) as T;
+  } catch (error) {
+    if (!signal?.aborted) recordBugError(`${method} ${path}: ${String(error)}`);
+    throw error;
+  }
 }
 function filterLabel(
   key: string,
@@ -204,6 +210,7 @@ function LibraryView({
   const [phraseMood, setPhraseMood] = useState("Unavailable");
   const [selected, setSelected] = useState<LibraryTrack | null>(null);
   const [error, setError] = useState("");
+  const [sourcePollError, setSourcePollError] = useState("");
   const [loading, setLoading] = useState(false);
   const [presets, setPresets] = useState(readPresets);
   const [presetName, setPresetName] = useState("");
@@ -292,6 +299,7 @@ function LibraryView({
           controller.signal,
         );
         if (controller.signal.aborted) return;
+        setSourcePollError("");
         const added = newlyAvailableLocalSource(
           previousSources.current,
           result.sources,
@@ -300,7 +308,12 @@ function LibraryView({
         setSources(result.sources);
         setSourceId((id) => added ?? selectedLibrarySource(id, result.sources));
       } catch (e) {
-        if (!controller.signal.aborted) setError(String(e));
+        if (!controller.signal.aborted)
+          setSourcePollError(
+            e instanceof TypeError
+              ? "Could not update library sources. Retrying…"
+              : String(e),
+          );
       }
       if (!controller.signal.aborted)
         timer = setTimeout(() => void poll(), 1500);
@@ -748,9 +761,9 @@ function LibraryView({
               </div>
             )}
           </div>
-          {(error || source?.error) && (
+          {(error || source?.error || sourcePollError) && (
             <p role="alert" className="library-error">
-              {error || source?.error}
+              {error || source?.error || sourcePollError}
             </p>
           )}
           <div

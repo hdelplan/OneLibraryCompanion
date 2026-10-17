@@ -9,7 +9,11 @@ on:
       release_tag:
         description: Version tag matching source/host/Cargo.toml
         type: string
-        default: v0.3.0
+        default: v0.4.0
+  pull_request:
+    paths:
+      - source/host/Cargo.toml
+      - .github/workflows/release.yml
   push:
     tags: ['v*']
 permissions:

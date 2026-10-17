@@ -1,4 +1,6 @@
+import { resolutions, parseResolution } from "./display";
 import { renderPerformanceReport } from "./renderPerformance";
+import { BugReport } from "./BugReport";
 import { useState } from "react";
 import { LocalUsb } from "./LocalUsb";
 import { TranscodingSettings } from "./Transcoding";
@@ -59,6 +61,70 @@ export function Configuration({
         </section>
       )}
       <div className="settings-grid">
+        <section className="settings-panel display-settings">
+          <h2>Display</h2>
+          <label>
+            Screen resolution
+            <select
+              aria-label="Screen resolution"
+              value={settings.resolution}
+              onChange={(e) =>
+                change("resolution", parseResolution(e.target.value))
+              }
+            >
+              <option value="auto">Automatic — fit current screen</option>
+              {Object.entries(resolutions).map(([key, [width, height]]) => (
+                <option key={key} value={key}>
+                  {width} × {height}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Extra-wide layout
+            <select
+              aria-label="Extra-wide layout"
+              value={settings.wideLayout}
+              onChange={(e) =>
+                change(
+                  "wideLayout",
+                  e.target.value === "stacked" ? "stacked" : "side-by-side",
+                )
+              }
+            >
+              <option value="side-by-side">Side by side</option>
+              <option value="stacked">Stacked</option>
+            </select>
+          </label>
+          <label>
+            Waveform comparison
+            <select
+              aria-label="Waveform comparison"
+              value={settings.phaseDisplay}
+              onChange={(e) =>
+                change(
+                  "phaseDisplay",
+                  e.target.value === "waveform" ? "waveform" : "phase",
+                )
+              }
+            >
+              <option value="phase">Beat phase</option>
+              <option value="waveform">Reference waveform</option>
+            </select>
+          </label>
+          <p>
+            Side by side applies to extra-wide screens such as 1920 × 720. Tap
+            the comparison header above either main waveform to switch modes.
+          </p>
+          <p>
+            Automatic follows the available window or fullscreen size. Presets
+            keep their proportions and fit inside the window.
+          </p>
+          <p>
+            Available size: {window.innerWidth} × {window.innerHeight}
+          </p>
+        </section>
+        <BugReport />
         <section className="settings-panel">
           <h2>Local USB</h2>
           <LocalUsb />

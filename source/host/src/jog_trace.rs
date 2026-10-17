@@ -6,6 +6,7 @@ use std::{
 };
 #[derive(Default)]
 struct Trace {
+    duration_seconds: u64,
     start: Option<Instant>,
     session: String,
     samples: Vec<Value>,
@@ -20,15 +21,24 @@ struct Trace {
 }
 static TRACE: LazyLock<Mutex<Trace>> = LazyLock::new(|| Mutex::new(Trace::default()));
 fn active(t: &Trace) -> bool {
-    t.start
-        .is_some_and(|s| s.elapsed() < Duration::from_secs(45))
-        && t.samples.len() < 12000
+    t.start.is_some_and(|s| {
+        s.elapsed()
+            < Duration::from_secs(if t.duration_seconds == 0 {
+                45
+            } else {
+                t.duration_seconds
+            })
+    }) && t.samples.len() < 12000
         && t.raw_bytes < 8 * 1024 * 1024
 }
 pub fn command(start: bool) -> Value {
+    command_for(start, 45)
+}
+pub fn command_for(start: bool, seconds: u64) -> Value {
     let mut t = TRACE.lock().unwrap();
     if start {
         *t = Trace {
+            duration_seconds: seconds.clamp(1, 60),
             start: Some(Instant::now()),
             session: std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
@@ -45,11 +55,11 @@ pub fn command(start: bool) -> Value {
         );
         t.start = None;
     }
-    json!({"active":active(&t),"session":t.session,"limitSeconds":45})
+    json!({"active":active(&t),"session":t.session,"limitSeconds":t.duration_seconds,"remainingMs":t.duration_seconds*1000})
 }
 pub fn state() -> Value {
     let t = TRACE.lock().unwrap();
-    json!({"active":active(&t),"session":t.session,"profile":t.experiment["profile"],"message":t.experiment["message"],"players":t.experiment["players"],"syncTap":t.experiment["syncTap"],"remainingMs":t.start.map(|s|45000u128.saturating_sub(s.elapsed().as_millis())).unwrap_or(0)})
+    json!({"active":active(&t),"session":t.session,"profile":t.experiment["profile"],"message":t.experiment["message"],"players":t.experiment["players"],"syncTap":t.experiment["syncTap"],"remainingMs":t.start.map(|s|u128::from(t.duration_seconds*1000).saturating_sub(s.elapsed().as_millis())).unwrap_or(0)})
 }
 pub fn bridge_active() -> bool {
     let t = TRACE.lock().unwrap();
@@ -274,6 +284,14 @@ mod tests {
     use super::*;
     #[test]
     fn capture_requires_opt_in_and_deduplicates_observations() {
+        command_for(true, 60);
+        {
+            let mut t = TRACE.lock().unwrap();
+            t.start = Some(Instant::now() - Duration::from_secs(46));
+            assert!(active(&t));
+            t.start = Some(Instant::now() - Duration::from_secs(61));
+            assert!(!active(&t));
+        }
         command(true);
         let d = json!({"number":1,"observationId":"a","position":1.0});
         snapshot(std::slice::from_ref(&d));

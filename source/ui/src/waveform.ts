@@ -128,7 +128,11 @@ export function draw(
 ) {
   const width = canvas.clientWidth,
     height = canvas.clientHeight,
-    dpr = window.devicePixelRatio || 1;
+    dpr =
+      (window.devicePixelRatio || 1) *
+      (canvas.clientWidth > 0
+        ? canvas.getBoundingClientRect().width / canvas.clientWidth
+        : 1);
   if (canvas.width !== Math.round(width * dpr))
     canvas.width = Math.round(width * dpr);
   if (canvas.height !== Math.round(height * dpr))

@@ -4,16 +4,15 @@ Give your old CDJs a makeover! OneLibraryCompanion (OLC) reads Rekordbox One Lib
 
 OLC runs on Mac or Raspberry Pi, alongside your players. You keep playback, cueing and mixing on the CDJs. You can use an iPad as the display or any other tablet by connecting to your Mac or RPi via the local network.
 
-## What's new in 0.3.0
+## What's new in 0.4.0
 
-- **Automatic CDJ discovery:** find players on the local network and reconnect when the connection changes.
-- **Browser audio preview:** listen to library tracks on your browser device, with artwork, waveforms and seeking.
-- **Automatic set capture:** record performances automatically, split or join sessions, and keep reusable tracklists.
-- **Headless Pi controls:** restart OLC, shut down the host and safely unmount USBs from MENU.
-- **Connection reliability:** more stable local USB loading and automatic retries for failed analysis reads.
-- Other various performance and reliability improvements.
+- **Flexible display sizing:** automatic window fitting and five resolution presets.
+- **Extra-wide CDJ STATUS:** side-by-side decks with switchable beat phase or reference waveform comparisons.
+- **Clearer track information:** My Tag chips near the top, full metadata and a scrollable panel that fits the screen.
+- **Sharper scaled waveforms:** rendering follows the display scale and window resizing.
+- **Browse recovery:** temporary library-source connection errors clear after a successful retry.
 
-[Detailed 0.3.0 release notes](docs/release-notes.md).
+[Detailed 0.4.0 release notes](docs/release-notes.md).
 
 ## Key features
 
@@ -62,10 +61,10 @@ OLC captures your tracklist automatically while you play. Edit and share saved s
 ### Headless Raspberry Pi
 
 1. Set up a Pi 4 or 5 with **64-bit Raspberry Pi OS Lite Bookworm or later**, network access and SSH. Set its hostname to **OLC** to use the address below.
-2. Download the **0.3.0 ARM64 host package** from Releases. In its download folder, run these commands over SSH as the ordinary account that will run OLC:
+2. Download the **0.4.0 ARM64 host package** from Releases. In its download folder, run these commands over SSH as the ordinary account that will run OLC:
 
    ```sh
-   sudo apt install ./onelibrarycompanion-host_0.3.0_arm64.deb
+   sudo apt install ./onelibrarycompanion-host_0.4.0_arm64.deb
    sudo loginctl enable-linger "$(id -un)"
    systemctl --user enable --now olc-host.service
    hostname -I
