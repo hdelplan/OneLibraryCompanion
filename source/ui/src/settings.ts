@@ -1,8 +1,12 @@
+import { parseResolution, type Resolution } from "./display";
 import {
   defaultLibraryFilters,
   parseLibraryFilters,
 } from "./libraryPreferences";
 export type Settings = {
+  resolution: Resolution;
+  wideLayout: "side-by-side" | "stacked";
+  phaseDisplay: "phase" | "waveform";
   libraryFilters: string[];
   libraryBpmRange: { min: number; max: number };
   jogSmoothing: number;
@@ -16,6 +20,9 @@ export type Settings = {
   details: boolean;
 };
 export const defaults: Settings = {
+  resolution: "auto",
+  wideLayout: "side-by-side",
+  phaseDisplay: "phase",
   libraryFilters: [...defaultLibraryFilters],
   libraryBpmRange: { min: 115, max: 130 },
   jogSmoothing: 0,
@@ -35,6 +42,9 @@ export function parseSettings(raw: string | null): Settings {
     if (!v || typeof v !== "object") return { ...defaults };
     const s = v as Record<string, unknown>;
     return {
+      resolution: parseResolution(s.resolution),
+      wideLayout: s.wideLayout === "stacked" ? "stacked" : "side-by-side",
+      phaseDisplay: s.phaseDisplay === "waveform" ? "waveform" : "phase",
       libraryFilters: parseLibraryFilters(s.libraryFilters),
       libraryBpmRange: parseBpmRange(s.libraryBpmRange),
       jogSmoothing:

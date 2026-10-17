@@ -20,6 +20,10 @@ When running the packaged Pi/Linux user service, MENU offers **Restart OLC** and
 
 ## Display
 
+**Screen resolution** defaults to Automatic, which follows the available window or fullscreen space. Presets include 1280 × 800, 1920 × 720, 1920 × 1080, 1280 × 720 and 1024 × 768. Presets keep their aspect ratio and scale to fit. Wider proportions provide wider waveforms and library rows.
+
+Extra-wide screens (aspect ratio at least 2.3:1, including 1920 × 720) default to **Side by side**, with CDJ 1 on the left and CDJ 2 on the right. Choose **Stacked** to retain vertically stacked waveforms. **Waveform comparison** selects a CDJ-3000-style beat phase meter or the other player’s compact reference waveform above each main waveform. Tap either comparison header to switch modes. The meter uses orange and cyan-blue horizontal rails, white beat ticks and red downbeats. Comparisons show unavailable when either live deck lacks fresh, reliable playback timing or is being moved manually. Compact reference waveforms have no phrase strip; the regular whole-track overview and phrase display remain below the track details.
+
 Adjust waveform zoom, playhead position and color, motion smoothing and band emphasis. Choose elapsed or remaining time, and show or hide track overviews, phrase sections and extra details.
 
 The CDJ STATUS zoom buttons and two-finger pinch change the visible window. Tapping a track's time switches elapsed/remaining time. **Restore defaults** resets display and filter preferences without deleting music or set history.
@@ -29,6 +33,10 @@ The CDJ STATUS zoom buttons and two-finger pinch change the visible window. Tapp
 Choose **Show waveform performance** to inspect the last scrolling waveform measurements before opening MENU. Frame and drawing timings measure the display device; position jumps measure deviations from predicted playback and can include seeks or loop wraps. No report is uploaded automatically.
 
 Waveform transfers use lossless packing when the host supports it and tolerate slow connections while data continues arriving. Failed downloads retry; changing tracks cancels the previous download. Small timing corrections are smoothed, including circular corrections within known loops. Relative phase refinement applies only to eligible normal forward non-master playback; it does not establish precise scratching or loop accuracy.
+
+## Track information
+
+Tap the **i** button on a deck waveform to open track information. My Tags appear as separate chips near the top, with category tooltips. Long metadata wraps without a two-line limit, and the panel scrolls within the available screen height.
 
 ## Library filters and track size
 

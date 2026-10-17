@@ -142,12 +142,15 @@ export function Signal({
       }
       frame = requestAnimationFrame(render);
     };
-    const observer = new ResizeObserver(() => {
+    const invalidateSize = () => {
       dirty = true;
-    });
+    };
+    addEventListener("resize", invalidateSize);
+    const observer = new ResizeObserver(invalidateSize);
     observer.observe(canvas);
     frame = requestAnimationFrame(render);
     return () => {
+      removeEventListener("resize", invalidateSize);
       observer.disconnect();
       cancelAnimationFrame(frame);
     };

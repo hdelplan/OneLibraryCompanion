@@ -1,11 +1,22 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
+  syncJogTrace,
   startJogTrace,
   recordJogFrame,
   recordJogSnapshot,
   stopJogTrace,
 } from "./jogTrace";
+test("bug report records beyond 45 seconds and stops at one minute", (t) => {
+  let now = 1000;
+  t.mock.method(performance, "now", () => now);
+  syncJogTrace({ active: true, session: "minute-test", remainingMs: 60000 });
+  now += 46000;
+  recordJogSnapshot([{ number: 1, position: 46 }]);
+  now += 15000;
+  recordJogSnapshot([{ number: 1, position: 61 }]);
+  assert.equal(stopJogTrace().snapshots.length, 1);
+});
 test("capture uses its own monotonic clock even with an offset animation timestamp", () => {
   startJogTrace();
   recordJogSnapshot([{ number: 1 }]);

@@ -1,3 +1,4 @@
+import { DeckComparison } from "./DeckComparison";
 import { SyncStatus } from "./SyncStatus";
 import { useState } from "react";
 import { TrackInfoPopup } from "./TrackInfoPopup";
@@ -11,15 +12,19 @@ export function StatusDisplay({
   settings,
   onToggleTime,
   onZoom,
+  wide = false,
+  onToggleComparison,
 }: {
   decks: [Deck, Deck];
+  wide?: boolean;
+  onToggleComparison?: () => void;
   settings: Settings;
   onToggleTime: () => void;
   onZoom: (window: number) => void;
 }) {
   const [infoDeck, setInfoDeck] = useState<number | null>(null);
   return (
-    <>
+    <div className={wide ? "status-display side-by-side" : "status-display"}>
       <div className="waveforms">
         {decks.map((deck, i) => {
           const track = deck?.analysis.track;
@@ -75,74 +80,84 @@ export function StatusDisplay({
                 </div>
               </aside>
               <div className="signal">
-                <button
-                  className="track-info-button"
-                  aria-label={`Track information for deck ${deck?.live?.number ?? i + 1}`}
-                  disabled={!track}
-                  onClick={() => setInfoDeck(i)}
-                >
-                  i
-                </button>
-                <Signal
-                  wave={
-                    deck?.source === "live" && deck.position === null
-                      ? null
-                      : (deck?.analysis.detail ?? null)
-                  }
-                  position={deck?.position ?? 0}
-                  settings={settings}
-                  beats={deck?.analysis.beats}
-                  onZoom={onZoom}
-                  motion={deck?.motion}
-                  cues={[
-                    ...(deck?.analysis.cues ?? []),
-                    ...(deck?.live?.currentCue != null
-                      ? [
-                          {
-                            time: deck.live.currentCue,
-                            hot: 0,
-                            label: "CUE",
-                            color: "#ffffff",
-                          },
-                        ]
-                      : []),
-                  ]}
-                  loop={
-                    deck?.live?.connection === "connected"
-                      ? deck.live.loop
-                      : null
-                  }
-                />
-                <CueCountdown deck={deck} smoothMs={settings.jogSmoothing} />
-                {!deck && (
-                  <div className="empty">
-                    <strong>Waiting for CDJ {i + 1}</strong>
-                    <span>
-                      Choose an offline preview in{" "}
-                      {__OLC_EXPERIMENTS__ ? "TEST" : "MENU"}
-                    </span>
-                  </div>
+                {wide && onToggleComparison && (
+                  <DeckComparison
+                    decks={decks}
+                    index={i}
+                    settings={settings}
+                    onToggle={onToggleComparison}
+                  />
                 )}
-                {deck?.live &&
-                  (!deck.analysis.detail || deck.position === null) && (
+                <div className="main-signal">
+                  <button
+                    className="track-info-button"
+                    aria-label={`Track information for deck ${deck?.live?.number ?? i + 1}`}
+                    disabled={!track}
+                    onClick={() => setInfoDeck(i)}
+                  >
+                    i
+                  </button>
+                  <Signal
+                    wave={
+                      deck?.source === "live" && deck.position === null
+                        ? null
+                        : (deck?.analysis.detail ?? null)
+                    }
+                    position={deck?.position ?? 0}
+                    settings={settings}
+                    beats={deck?.analysis.beats}
+                    onZoom={onZoom}
+                    motion={deck?.motion}
+                    cues={[
+                      ...(deck?.analysis.cues ?? []),
+                      ...(deck?.live?.currentCue != null
+                        ? [
+                            {
+                              time: deck.live.currentCue,
+                              hot: 0,
+                              label: "CUE",
+                              color: "#ffffff",
+                            },
+                          ]
+                        : []),
+                    ]}
+                    loop={
+                      deck?.live?.connection === "connected"
+                        ? deck.live.loop
+                        : null
+                    }
+                  />
+                  <CueCountdown deck={deck} smoothMs={settings.jogSmoothing} />
+                  {!deck && (
                     <div className="empty">
-                      <strong>
-                        {deck.live.connection !== "connected"
-                          ? deck.live.connection
-                          : deck.live.trackKey
-                            ? "Track analysis"
-                            : "No track loaded"}
-                      </strong>
+                      <strong>Waiting for CDJ {i + 1}</strong>
                       <span>
-                        {deck.live.warning ??
-                          (deck.live.trackKey
-                            ? deck.live.assetReady
-                              ? "Position unavailable"
-                              : "Reading USB analysis…"
-                            : "Load a track on the CDJ")}
+                        Choose an offline preview in{" "}
+                        {__OLC_EXPERIMENTS__ ? "TEST" : "MENU"}
                       </span>
                     </div>
                   )}
+                  {deck?.live &&
+                    (!deck.analysis.detail || deck.position === null) && (
+                      <div className="empty">
+                        <strong>
+                          {deck.live.connection !== "connected"
+                            ? deck.live.connection
+                            : deck.live.trackKey
+                              ? "Track analysis"
+                              : "No track loaded"}
+                        </strong>
+                        <span>
+                          {deck.live.warning ??
+                            (deck.live.trackKey
+                              ? deck.live.assetReady
+                                ? "Position unavailable"
+                                : "Reading USB analysis…"
+                              : "Load a track on the CDJ")}
+                        </span>
+                      </div>
+                    )}
+                </div>
               </div>
             </section>
           );
@@ -165,6 +180,6 @@ export function StatusDisplay({
           />
         ))}
       </div>
-    </>
+    </div>
   );
 }

@@ -38,7 +38,7 @@ export function syncJogTrace(state?: {
     hostSession = state.session;
     until =
       performance.now() +
-      Math.min(45000, Math.max(0, state.remainingMs ?? 45000));
+      Math.min(60000, Math.max(0, state.remainingMs ?? 45000));
   } else if (!state.active && state.session === hostSession) {
     until = 0;
     archiveCueTrace();

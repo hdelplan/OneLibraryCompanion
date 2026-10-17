@@ -1,4 +1,5 @@
 import { downloadWaveform } from "./waveformDownload";
+import { recordBugError } from "./BugReport";
 import { recordJogSnapshot, syncJogTrace } from "./jogTrace";
 import { useEffect, useState } from "react";
 import type { Analysis, Deck, LivePlayer } from "./model";
@@ -181,11 +182,15 @@ export function useLiveDecks() {
             }
           })
           .catch((error: unknown) => {
-            if (!stopped && !controller.signal.aborted)
+            if (!stopped && !controller.signal.aborted) {
+              recordBugError(
+                `Deck ${player.number} waveform download failed: ${String(error)}`,
+              );
               console.warn(
                 `Deck ${player.number} waveform download failed`,
                 error,
               );
+            }
           })
           .finally(() => {
             if (pending.get(key) === controller) {
@@ -201,6 +206,7 @@ export function useLiveDecks() {
           if (!players.some((p) => p.trackKey === key)) assets.delete(key);
     }
     function disconnected() {
+      recordBugError("Live event stream disconnected");
       if (!stopped)
         setState((prev) => ({
           ...prev,

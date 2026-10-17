@@ -15,10 +15,10 @@ Closing the window keeps OLC running. **Quit OLC** stops it. **Open at Login** i
 
 ## Raspberry Pi Desktop
 
-Use a **Pi 4 or 5 with Raspberry Pi OS Bookworm or later, 64-bit**. Download both ARM64 `.deb` packages from the same release into one folder. For version 0.3.0, run this command in that folder:
+Use a **Pi 4 or 5 with Raspberry Pi OS Bookworm or later, 64-bit**. Download both ARM64 `.deb` packages from the same release into one folder. For version 0.4.0, run this command in that folder:
 
 ```sh
-sudo apt install ./onelibrarycompanion-host_0.3.0_arm64.deb ./onelibrarycompanion_0.3.0_arm64.deb
+sudo apt install ./onelibrarycompanion-host_0.4.0_arm64.deb ./onelibrarycompanion_0.4.0_arm64.deb
 ```
 
 Open OneLibraryCompanion from the applications menu. It has its own desktop window, with full-screen and login-startup options. A compatible touchscreen is supported; use the system's on-screen keyboard for typing. Mount the music USB through the operating system before selecting it in OLC.
@@ -43,7 +43,7 @@ To use a Pi without a monitor or a logged-in user, use 64-bit Raspberry Pi OS Li
 Log in once over SSH as the ordinary Pi account that will run OLC. Quit any running OLC desktop app and disable its login-startup option before switching to the service. Download the host `.deb` from the release, then run the following in its folder (replace the version in the filename with your downloaded version):
 
 ```sh
-sudo apt install ./onelibrarycompanion-host_0.3.0_arm64.deb
+sudo apt install ./onelibrarycompanion-host_0.4.0_arm64.deb
 sudo loginctl enable-linger "$(id -un)"
 systemctl --user enable --now olc-host.service
 loginctl show-user "$(id -un)" --property=Linger

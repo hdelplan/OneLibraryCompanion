@@ -1,3 +1,4 @@
+import { displayLayout } from "./display";
 import { currentlyPlayingTrackKeys } from "./libraryLoading";
 import {
   lazy,
@@ -50,7 +51,10 @@ function App() {
   const [librarySourceRequest, setLibrarySourceRequest] = useState<{
     id: string;
   } | null>(null);
-  const [scale, setScale] = useState(1),
+  const [viewport, setViewport] = useState(() => ({
+      width: innerWidth,
+      height: innerHeight,
+    })),
     [decks, setDecks] = useState<[Deck, Deck]>([null, null]);
   const [previewDeck, setPreviewDeck] = useState(0),
     [busy, setBusy] = useState(false),
@@ -58,7 +62,7 @@ function App() {
     [saveError, setSaveError] = useState(false);
   useEffect(() => {
     const resize = () =>
-      setScale(Math.min(innerWidth / 1280, innerHeight / 800));
+      setViewport({ width: innerWidth, height: innerHeight });
     resize();
     addEventListener("resize", resize);
     return () => removeEventListener("resize", resize);
@@ -131,9 +135,17 @@ function App() {
   const showLive = live.enabled && !offlinePreview;
   const shownDecks = showLive ? live.decks : decks;
 
+  const { width, height, scale } = displayLayout(
+    settings.resolution,
+    viewport.width,
+    viewport.height,
+  );
   return (
-    <main style={{ width: 1280 * scale, height: 800 * scale }}>
-      <div className="screen" style={{ transform: `scale(${scale})` }}>
+    <main style={{ width: width * scale, height: height * scale }}>
+      <div
+        className="screen"
+        style={{ width, height, transform: `scale(${scale})` }}
+      >
         <nav className={page === "library" ? "browse-nav" : undefined}>
           <span className="brand" title="OneLibraryCompanion">
             OneLibraryCompanion
@@ -293,6 +305,15 @@ function App() {
         ) : (
           <>
             <StatusDisplay
+              wide={
+                width / height >= 2.3 && settings.wideLayout === "side-by-side"
+              }
+              onToggleComparison={() =>
+                change(
+                  "phaseDisplay",
+                  settings.phaseDisplay === "phase" ? "waveform" : "phase",
+                )
+              }
               decks={shownDecks}
               settings={settings}
               onToggleTime={() =>

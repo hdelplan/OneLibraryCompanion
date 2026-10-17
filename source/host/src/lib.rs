@@ -7,6 +7,7 @@ mod auto_discovery;
 mod bar_position;
 pub mod beat_position;
 mod bridge_probe;
+mod bug_report;
 mod cdj_usb_load;
 mod cue_diagnostics;
 mod cue_window;
@@ -150,7 +151,9 @@ async fn jog_command(State(app): State<Arc<App>>, Json(body): Json<Value>) -> Ap
             "Stop the current capture before starting another capture".into(),
         ));
     }
-    if body["start"] == true && body["bridge"] == true {
+    if body["start"] == true && body["bugReport"] == true {
+        bug_report::start().map(Json)
+    } else if body["start"] == true && body["bridge"] == true {
         live::direct::start_bridge(&app.live)
             .await
             .map_err(|e| (StatusCode::CONFLICT, e))?;
@@ -168,6 +171,15 @@ async fn jog_command(State(app): State<Arc<App>>, Json(body): Json<Value>) -> Ap
     } else {
         Ok(Json(jog_trace::command(body["start"] == true)))
     }
+}
+async fn bug_command(state: State<Arc<App>>) -> ApiResult {
+    if !bug_report::enabled() {
+        return Err((
+            StatusCode::NOT_FOUND,
+            "Bug reports are not enabled on this host".into(),
+        ));
+    }
+    jog_command(state, Json(json!({"start":true,"bugReport":true}))).await
 }
 async fn direct_live_connect(State(app): State<Arc<App>>, Json(body): Json<Value>) -> ApiResult {
     if cue_diagnostics::active() {
@@ -403,11 +415,15 @@ fn app_router(
     data_dir: PathBuf,
 ) -> Router {
     transcoding::init(&data_dir);
+    bug_report::init();
     let library = library::with_local_path(interface.clone(), library_path);
     local_media::start(library.clone());
     let live = live::start(interface, library.clone());
     let history = set_history::start(data_dir, live.clone());
-    let router = Router::new();
+    let router = Router::new()
+        .route("/api/bug-report", get(bug_report::status).post(bug_command))
+        .route("/api/bug-report/browser", post(bug_report::browser))
+        .route("/api/bug-report/latest", get(bug_report::latest));
     let router = if EXPERIMENTS {
         router
             .route(
