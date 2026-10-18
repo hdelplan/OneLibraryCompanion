@@ -39,7 +39,12 @@ third-party/
 docs/setup/
 docs/research/initial-tree.txt
 
-# Platform-local caches and alternate build assets
-dist-*/
+# Platform-local caches and separate iPad assets
+dist-ipad/
 __pycache__/
 com.apple.DeveloperTools/
+
+# Generated review artifacts and alternate UI builds
+output/
+tmp/
+dist-experiments/

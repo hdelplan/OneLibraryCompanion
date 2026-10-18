@@ -1364,3 +1364,291 @@
   margin-left: 0;
   min-width: 110px;
 }
+
+/* Keep the configured filter row at one line, including USB tag categories.
+   Additional filters use a measured popover, never a second track-space row. */
+.library-screen .library-filters {
+  position: relative;
+  flex-wrap: nowrap;
+  flex-shrink: 0;
+  column-gap: 8px;
+}
+.library-filter-controls {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+.library-filter-slot {
+  flex: 0 0 auto;
+  width: max-content;
+}
+.library-filter-slot > label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 10px;
+  color: #9aa8b7;
+}
+.library-filter-slot > .library-facet > summary {
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.library-screen .library-density {
+  margin-left: 0;
+}
+.library-filter-overflow {
+  position: relative;
+  flex-shrink: 0;
+}
+.library-filter-overflow-button {
+  width: 98px;
+  height: 27.2px;
+  padding: 0 8px;
+  font-size: 11px;
+  white-space: nowrap;
+  border: 1px solid #454d54;
+  background: #20262b;
+  color: #eee;
+}
+.library-filter-overflow-button[hidden] {
+  display: none;
+}
+.library-filter-overflow-button[aria-expanded="true"] {
+  background: #17323d;
+  border-color: #3e91a6;
+  color: #b8edff;
+}
+.library-filter-overflow-button span {
+  margin-left: 4px;
+}
+.library-filter-overflow-panel {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px 8px;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  z-index: 30;
+  width: max-content;
+  max-width: 380px;
+  padding: 15px;
+  background: #20262b;
+  border: 1px solid #454d54;
+  border-radius: 6px;
+  visibility: hidden;
+  pointer-events: none;
+}
+.library-filter-overflow-panel[data-open="true"] {
+  visibility: visible;
+  pointer-events: auto;
+}
+.library-filter-slot .library-options {
+  left: 0;
+  right: auto;
+  z-index: 40;
+}
+
+/* Balanced standard controls followed by compact, clearly personal My Tags.
+   Groups size to their content instead of stretching the tag buttons. */
+.library-filter-controls {
+  gap: 10px;
+}
+.library-filter-section {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: flex-end;
+  gap: 4px;
+  min-width: 0;
+}
+.library-filter-section .library-filter-slot > label,
+.library-filter-section .library-bpm label {
+  gap: 3px;
+  font-size: 9px;
+}
+.library-filter-section .library-bpm {
+  gap: 4px;
+}
+.library-filter-section .library-bpm select {
+  width: 54px;
+}
+.library-filter-section select,
+.library-filter-section .library-facet > summary {
+  font-size: 11px;
+  padding: 4.6px 18px 4.6px 7px;
+  background-position: right 6px center;
+}
+.library-filter-slot[data-filter="rating"] > label > select {
+  width: 82px;
+}
+.library-filter-slot[data-filter="genre"],
+.library-filter-slot[data-filter="key"],
+.library-filter-slot[data-filter="color"] {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.library-standard-filter-label {
+  font-size: 9px;
+  color: #9aa8b7;
+  line-height: normal;
+}
+.library-filter-slot[data-filter="genre"] > .library-facet > summary {
+  min-width: 55px;
+}
+.library-filter-slot[data-filter="key"] > .library-facet > summary {
+  min-width: 41px;
+}
+.library-filter-slot[data-filter="color"] > .library-facet > summary {
+  min-width: 51px;
+}
+.library-personal-filters {
+  position: relative;
+  padding-top: 15px;
+  padding-left: 9px;
+  border-left: 1px solid #35505b;
+}
+.library-personal-helper {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  position: absolute;
+  top: 0;
+  left: 9px;
+  white-space: nowrap;
+  height: 12px;
+  color: #8bc9dd;
+}
+.library-personal-helper svg {
+  width: 9px;
+  height: 9px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.2;
+}
+.library-personal-helper strong {
+  font-size: 8px;
+  letter-spacing: 0.8px;
+  font-weight: 500;
+}
+.library-personal-helper span {
+  font-size: 8px;
+  color: #929592;
+  margin-left: 3px;
+}
+.library-personal-helper[data-compact="true"] span {
+  display: none;
+}
+.library-screen .library-personal-filters .library-facet > summary {
+  background-color: #18333d;
+  border-color: #37616d;
+  color: #b8edff;
+}
+.library-screen .library-density {
+  position: relative;
+  width: 68px;
+  gap: 2px;
+}
+.library-density-label {
+  position: absolute;
+  bottom: calc(100% + 3px);
+  right: 0;
+  font-size: 8px;
+  letter-spacing: 0;
+  white-space: nowrap;
+  color: #929592;
+}
+.library-screen .library-density button {
+  width: 21px;
+  border-radius: 3px;
+}
+.library-screen .library-density button[data-density="small"] {
+  font-size: 10px;
+}
+.library-screen .library-density button[data-density="medium"] {
+  font-size: 12px;
+}
+.library-screen .library-density button[data-density="large"] {
+  font-size: 14px;
+}
+.library-filter-overflow-panel .library-filter-section {
+  flex-wrap: wrap;
+  max-width: 100%;
+}
+
+/* Show custom tags directly when the available row width allows it. */
+.library-other-tags {
+  position: relative;
+}
+.library-other-tags[data-inline="false"] .library-other-direct,
+.library-other-tags[data-inline="true"] .library-other-compact {
+  position: fixed;
+  top: 0;
+  left: 0;
+  visibility: hidden;
+  pointer-events: none;
+  width: max-content;
+}
+.library-inline-tags {
+  display: flex;
+  position: relative;
+  gap: 4px;
+  align-items: center;
+  width: max-content;
+}
+.library-screen .library-inline-tags button,
+.library-screen .library-inline-tags select {
+  background: #18333d;
+  border: 1px solid #37616d;
+  color: #b8edff;
+  border-radius: 3px;
+  font-size: 10px;
+  line-height: 16px;
+  padding: 4px 5px;
+  min-height: 0;
+}
+.library-screen .library-inline-tags button {
+  padding-inline: 3px;
+  height: 26px;
+}
+.library-screen .library-inline-tags button[aria-pressed="true"] {
+  background: #286078;
+  border-color: #77c8e5;
+  color: #fff;
+}
+.library-screen .library-inline-tags select {
+  position: absolute;
+  right: 0;
+  top: -14px;
+  height: 12px;
+  width: 43px;
+  padding: 0 10px 0 3px;
+  font-size: 8px;
+  line-height: 10px;
+}
+
+.filter-config-groups {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+.filter-config-group {
+  border: 1px solid #343f46;
+  border-radius: 5px;
+  padding: 16px;
+}
+.filter-config-group h3 {
+  margin-top: 0;
+}
+.filter-config-group .filter-config-list {
+  margin: 12px 0;
+}
+@media (max-width: 850px) {
+  .filter-config-groups {
+    grid-template-columns: 1fr;
+  }
+}

@@ -253,6 +253,7 @@ function App() {
           onPreview={previewLibrary}
           onLoaded={showLoadedTrack}
           active={page === "library"}
+          metadataActive={page === "config"}
           filterOrder={settings.libraryFilters}
           bpmRange={settings.libraryBpmRange}
           onCategories={setLibraryCategories}

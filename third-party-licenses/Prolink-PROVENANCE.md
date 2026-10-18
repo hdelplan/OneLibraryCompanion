@@ -38,3 +38,8 @@ Review an explicit upstream commit when updating this subset, retain notices, an
 - Supply available USB capacity/settings and filesystem audio timestamps, and keep a bounded serving event log without recording audio payloads.
 
 The host supplies converted PCM only for eligible unsupported local audio; the protocol library serves the supplied files and exported analysis.
+
+Diagnostics retain bounded serving events and per-player/file read summaries,
+including maximum read latency, slow-read counts and failure counters. They
+record no audio payloads and do not alter network responses. The vendored
+workspace has a separate lockfile for reproducible protocol regression checks.

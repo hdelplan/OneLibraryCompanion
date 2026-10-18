@@ -1,3 +1,4 @@
+import { groupLibraryFilters } from "./libraryPreferences";
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
@@ -237,5 +238,64 @@ test("playing titles follow either deck immediately and stop for paused or stale
   };
   assert.deepEqual(currentlyPlayingTrackKeys([switched]), [
     playedTrackKey(switched.analysis.track),
+  ]);
+});
+
+test("personal filters stay distinct from standard Genre and Color", () => {
+  const grouped = groupLibraryFilters(
+    ["rating", "bpm", "color", "key", "tag:*", "genre"],
+    ["Genre", "Venue", "Situation", "Other tags"],
+  );
+  assert.deepEqual(grouped.standard, [
+    "rating",
+    "bpm",
+    "color",
+    "key",
+    "genre",
+  ]);
+  assert.deepEqual(grouped.personalized, [
+    "tag:Genre",
+    "tag:Venue",
+    "tag:Situation",
+    "tag:Other%20tags",
+  ]);
+  const subset = groupLibraryFilters(
+    ["color", "tag:Genre", "artist"],
+    ["Genre"],
+  );
+  assert.deepEqual(subset.standard, ["color", "artist"]);
+  assert.deepEqual(subset.personalized, ["tag:Genre"]);
+  assert.deepEqual(groupLibraryFilters(["tag:*"], []).personalized, ["mytags"]);
+});
+
+test("Color is last by default but follows configured metadata order", () => {
+  const initial = groupLibraryFilters(defaultLibraryFilters, [
+    "Genre",
+    "Venue",
+  ]);
+  assert.equal(initial.standard.at(-1), "color");
+  const moved = moveFilter(initial.standard, "color", -1);
+  assert.deepEqual(
+    groupLibraryFilters([...moved, "tag:*"], ["Genre", "Venue"]).standard,
+    moved,
+  );
+  assert.deepEqual(
+    groupLibraryFilters(
+      ["color", "rating", "tag:Venue", "tag:Genre"],
+      ["Genre", "Venue"],
+    ),
+    { standard: ["color", "rating"], personalized: ["tag:Venue", "tag:Genre"] },
+  );
+});
+
+test("only the old default filter order upgrades to the new default", () => {
+  assert.deepEqual(
+    parseLibraryFilters(["rating", "bpm", "color", "key", "tag:*", "genre"]),
+    defaultLibraryFilters,
+  );
+  assert.deepEqual(parseLibraryFilters(["color", "rating", "tag:Venue"]), [
+    "color",
+    "rating",
+    "tag:Venue",
   ]);
 });

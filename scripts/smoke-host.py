@@ -62,6 +62,22 @@ with tempfile.TemporaryDirectory(prefix='olc-release-smoke-') as directory:
                         assert error.code in (404, 405), (path, error.code)
             assert request('/api/app')['authentication'] == 'none'
             assert isinstance(request('/api/library/sources'), dict)
+            profile = request('/api/cdj-configurations', {'action': 'create', 'name': 'Release smoke profile'})
+            profile_id = profile['id']
+            assert any(p['id'] == profile_id for p in request('/api/cdj-configurations')['profiles'])
+            assert isinstance(request(f'/api/cdj-configurations/{profile_id}/export'), dict)
+            failed_load = request('/api/live/load', {'source': 'local-usb:smoke', 'generation': 1, 'trackId': 42, 'target': 1})
+            assert failed_load['outcome'] == 'error'
+            deadline = time.monotonic() + 3
+            reports = []
+            while not reports and time.monotonic() < deadline:
+                reports = list((Path(directory) / 'load-incidents').glob('load-*.json'))
+                if not reports:
+                    time.sleep(0.02)
+            assert reports, 'Failed load did not save an incident'
+            incident = json.loads(reports[0].read_text())
+            assert incident['request']['trackId'] == 42 and incident['result']['outcome'] == 'error'
+            assert any('load_request' in event[1] for event in incident['serving'])
             saved = request('/api/sets', {'action': 'start'})
             identifier = saved['activeId']
             request('/api/sets', {'action': 'metadata', 'id': identifier, 'title': 'OLC release smoke'})
@@ -84,10 +100,11 @@ with tempfile.TemporaryDirectory(prefix='olc-release-smoke-') as directory:
             child = start()
             assert request('/api/sets')['sets'][0]['title'] == 'OLC release smoke'
             assert request('/api/app')['interface'] is None
+            assert any(p['id'] == profile_id for p in request('/api/cdj-configurations')['profiles'])
             child.terminate()
             assert child.wait(timeout=5) == 0
         finally:
             if child and child.poll() is None:
                 child.kill()
                 child.wait()
-print('Release smoke passed: production routes, shared history, persistence, duplicate rejection and graceful SSE shutdown.')
+print('Release smoke passed: production routes, profiles, automatic load incidents, history persistence, duplicate rejection and graceful SSE shutdown.')

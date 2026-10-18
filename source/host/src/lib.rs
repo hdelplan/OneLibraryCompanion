@@ -8,6 +8,8 @@ mod bar_position;
 pub mod beat_position;
 mod bridge_probe;
 mod bug_report;
+mod cdj_config;
+mod cdj_settings_command;
 mod cdj_usb_load;
 mod cue_diagnostics;
 mod cue_window;
@@ -24,6 +26,7 @@ mod library_audio;
 mod library_mood;
 mod library_preview;
 mod live;
+mod load_diagnostics;
 mod loading;
 mod local_media;
 mod local_serving;
@@ -59,13 +62,17 @@ struct App {
     live: live::Shared,
     library: library::Shared,
     history: set_history::Shared,
+    configurations: cdj_config::Shared,
+    diagnostics: load_diagnostics::Recorder,
 }
 async fn load_track(State(app): State<Arc<App>>, Json(body): Json<Value>) -> Json<Value> {
     let started = std::time::Instant::now();
     let id = body["conversionJob"].as_str().unwrap_or("").to_owned();
-    let mut result = live::load(&app.live, body).await;
+    let diagnostic = app.diagnostics.begin(&body);
+    let mut result = live::load(&app.live, body.clone()).await;
     result["elapsedSeconds"] = json!(started.elapsed().as_secs_f64());
     result["conversion"] = transcoding::load_finished(&id, &result);
+    diagnostic.finish(&result);
     Json(result)
 }
 async fn library_artwork(
@@ -419,6 +426,8 @@ fn app_router(
     let library = library::with_local_path(interface.clone(), library_path);
     local_media::start(library.clone());
     let live = live::start(interface, library.clone());
+    let diagnostics = load_diagnostics::Recorder::start(&data_dir, live.clone());
+    let configurations = cdj_config::start(&data_dir, live.clone());
     let history = set_history::start(data_dir, live.clone());
     let router = Router::new()
         .route("/api/bug-report", get(bug_report::status).post(bug_command))
@@ -468,6 +477,12 @@ fn app_router(
         router
     };
     router
+        .route("/api/cdj-configurations",get(configuration_list).post(configuration_command))
+        .route("/api/cdj-configurations/import-file",post(configuration_import_file))
+        .route("/api/cdj-configurations/import-player",post(configuration_import_player))
+        .route("/api/cdj-configurations/import-profile",post(configuration_import_profile))
+        .route("/api/cdj-configurations/push",post(configuration_push))
+        .route("/api/cdj-configurations/{id}/export",get(configuration_export))
         .route("/api/transcoding", get(||async {Json(transcoding::snapshot())}).post(transcoding_settings))
         .route("/api/transcoding/benchmark", post(transcoding_benchmark))
         .route("/api/transcoding/cancel", post(transcoding_cancel))
@@ -528,7 +543,76 @@ fn app_router(
             live,
             library,
             history,
+            configurations,
+            diagnostics,
         }))
+}
+
+async fn configuration_list(State(app): State<Arc<App>>) -> Json<Value> {
+    let mut value = app.configurations.lock().unwrap().snapshot();
+    value["players"] = live::snapshot(&app.live)["decks"].clone();
+    Json(value)
+}
+async fn configuration_command(State(app): State<Arc<App>>, Json(body): Json<Value>) -> ApiResult {
+    app.configurations
+        .lock()
+        .unwrap()
+        .command(&body)
+        .map(Json)
+        .map_err(|e| (StatusCode::BAD_REQUEST, e))
+}
+async fn configuration_import_file(
+    State(app): State<Arc<App>>,
+    Query(query): Query<std::collections::HashMap<String, String>>,
+    bytes: Bytes,
+) -> ApiResult {
+    app.configurations
+        .lock()
+        .unwrap()
+        .import_dat(
+            query
+                .get("name")
+                .map(String::as_str)
+                .unwrap_or("Imported settings"),
+            &bytes,
+            "Imported MYSETTING.DAT".into(),
+        )
+        .map(Json)
+        .map_err(|e| (StatusCode::BAD_REQUEST, e))
+}
+async fn configuration_import_profile(
+    State(app): State<Arc<App>>,
+    Json(body): Json<Value>,
+) -> ApiResult {
+    app.configurations
+        .lock()
+        .unwrap()
+        .import_json(&body)
+        .map(Json)
+        .map_err(|e| (StatusCode::BAD_REQUEST, e))
+}
+async fn configuration_import_player(
+    State(app): State<Arc<App>>,
+    Json(body): Json<Value>,
+) -> ApiResult {
+    cdj_config::import_player(&app.configurations, &app.live, &body)
+        .await
+        .map(Json)
+        .map_err(|e| (StatusCode::BAD_REQUEST, e))
+}
+async fn configuration_push(State(app): State<Arc<App>>, Json(body): Json<Value>) -> ApiResult {
+    cdj_config::push(&app.configurations, &app.live, &body, false)
+        .await
+        .map(Json)
+        .map_err(|e| (StatusCode::BAD_REQUEST, e))
+}
+async fn configuration_export(State(app): State<Arc<App>>, Path(id): Path<String>) -> ApiResult {
+    app.configurations
+        .lock()
+        .unwrap()
+        .export_json(&id)
+        .map(Json)
+        .map_err(|e| (StatusCode::NOT_FOUND, e))
 }
 
 pub async fn run_desktop() -> Result<(), Box<dyn std::error::Error>> {

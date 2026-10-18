@@ -105,7 +105,7 @@ export function playerTimeLabel(
     : `${minutes}M${sec}S${fraction}F`;
 }
 
-export function parseBpmRange(value: unknown): { min: number; max: number } {
+function parseBpmRange(value: unknown): { min: number; max: number } {
   if (value && typeof value === "object") {
     const v = value as Record<string, unknown>;
     if (

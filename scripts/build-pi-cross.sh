@@ -2,6 +2,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 node_bin="${NODE:-node}"
+"$node_bin" scripts/check-node.cjs
 # Install cargo-zigbuild and Zig explicitly; this script does not change toolchains.
 "$node_bin" source/ui/node_modules/typescript/bin/tsc --project source/ui/tsconfig.json --noEmit
 (cd source/ui && "$node_bin" node_modules/vite/bin/vite.js build)

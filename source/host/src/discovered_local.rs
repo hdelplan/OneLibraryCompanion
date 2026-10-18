@@ -98,6 +98,21 @@ fn target(
     ))
 }
 impl Session {
+    /// Reuse a source already announced to this peer; never claim one for settings.
+    pub fn configuration_sender(
+        &self,
+        ip: Ipv4Addr,
+        observer: u8,
+    ) -> (u8, prolink_proto::DeviceName) {
+        if self.server.as_ref().is_some_and(|server| server.ready(ip)) && !self.conflicted {
+            (
+                local_serving::NUMBER,
+                prolink_proto::DeviceName::new("CDJ-2000nexus"),
+            )
+        } else {
+            (observer, prolink_proto::DeviceName::default())
+        }
+    }
     pub fn announcement(
         &mut self,
         announcement: &prolink::discovery::Announcement,

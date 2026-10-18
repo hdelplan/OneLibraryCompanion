@@ -14,8 +14,8 @@ Do not rely on OLC’s waveform for precise cue positioning in this state; use t
 | --- | --- | --- |
 | Apple Silicon Mac | macOS 13+, ARM64 | Application startup, native window and host smoke checks exercised on a development Mac; minimum-OS coverage incomplete |
 | Intel Mac | macOS 13+, x86-64 | Native CI build and host smoke checks; physical Intel/minimum-OS coverage incomplete |
-| Raspberry Pi 4 / 5 | Raspberry Pi OS Bookworm 64-bit; Desktop for native UI, Lite for host-only use | ARM64 Bookworm build and host smoke checks; physical Pi runtime and touchscreen operation are unverified |
-| LAN clients | A current Safari, Chrome, Firefox or Edge browser | Fixed 1280 × 800 layout scales to fit; browser/device coverage incomplete |
+| Raspberry Pi 4 / 5 | Raspberry Pi OS Bookworm 64-bit; Desktop for native UI, Lite for host-only use | ARM64 Bookworm build, headless runtime, local USB loading, browser/kiosk operation and CDJ-2000nexus sessions exercised on one Pi; broader hardware coverage incomplete |
+| LAN clients | A current Safari, Chrome, Firefox or Edge browser | Automatic sizing and resolution presets; browser/device coverage incomplete |
 
 A successful build does not certify USB discovery, network operation, touch performance or sustained playback on every device. The release workflow runs application checks and host smoke tests before publishing installers; its logs are available in [GitHub Actions](https://github.com/hdelplan/OneLibraryCompanion/actions).
 
@@ -32,6 +32,11 @@ Linked CDJ libraries read legacy Rekordbox exports. Host-attached libraries read
 Built-in transcoding prepares eligible unsupported local audio as 16-/24-bit PCM WAV or AIFF at 44.1/48 kHz. Conversion destinations are CDJ-2000, CDJ-2000nexus, CDJ-2000NXS2 and CDJ-3000. Unsupported decoders and unknown destination models remain unavailable for conversion. Linked CDJ USBs are not transcoded. Compatible files are served unchanged.
 
 Loading requires fresh telemetry and a stopped target. Playing, looping, busy, stale and disconnected states block requests. A load confirmation reflects the player's reported selection, not proof of audible playback. There is no automatic retry or remote play command.
+
+CDJ configuration push is enabled for the original CDJ-2000nexus. Native push and
+reconnect application have hardware evidence for brightness; the integrated
+workflow and remaining settings need acceptance testing. Other player models
+are not enabled for settings push.
 
 ## Network, storage and history
 

@@ -13,10 +13,10 @@ export const builtInFilters = [
 export const defaultLibraryFilters = [
   "rating",
   "bpm",
-  "color",
-  "key",
-  "tag:*",
   "genre",
+  "key",
+  "color",
+  "tag:*",
 ];
 export function categoryKey(name: string) {
   return `tag:${encodeURIComponent(name)}`;
@@ -30,6 +30,12 @@ export function categoryName(key: string) {
 }
 export function parseLibraryFilters(value: unknown): string[] {
   if (!Array.isArray(value)) return [...defaultLibraryFilters];
+  // Upgrade the former untouched default, while preserving customized orders.
+  if (
+    JSON.stringify(value) ===
+    JSON.stringify(["rating", "bpm", "color", "key", "tag:*", "genre"])
+  )
+    return [...defaultLibraryFilters];
   return [
     ...new Set(
       value.filter(
@@ -68,4 +74,15 @@ export function nextColumnSort(current: Record<string, string>, field: string) {
     direction:
       current.sort === field && current.direction !== "desc" ? "desc" : "asc",
   };
+}
+
+// Separate built-in metadata from personal My Tag categories, including names
+// such as Genre that exist in both systems. Never change their query keys.
+export function groupLibraryFilters(order: string[], categories: string[]) {
+  const expanded = displayedFilters(order, categories);
+  const personalized = expanded.filter(
+    (key) => key === "mytags" || key.startsWith("tag:"),
+  );
+  const standard = expanded.filter((key) => !personalized.includes(key));
+  return { standard, personalized };
 }

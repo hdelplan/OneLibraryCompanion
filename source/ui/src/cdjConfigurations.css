@@ -1,0 +1,155 @@
+.cdj-configurations {
+  grid-column: 1 / -1;
+}
+.cdj-configurations summary {
+  cursor: pointer;
+  padding: 12px 0;
+  font-weight: 650;
+}
+.cdj-config-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 10px;
+  margin: 12px 0;
+}
+.cdj-config-toolbar label {
+  min-width: 160px;
+}
+.cdj-config-workspace {
+  display: grid;
+  grid-template-columns: minmax(170px, 240px) minmax(0, 1fr);
+  gap: 24px;
+  margin: 20px 0;
+}
+.cdj-config-workspace aside button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  margin: 8px 0;
+  overflow-wrap: anywhere;
+}
+.cdj-config-workspace aside button.selected {
+  border-color: #48bcd4;
+  background: #193b46;
+}
+.cdj-config-editor label,
+.cdj-config-automatic > label {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.cdj-config-editor input,
+.cdj-config-editor select,
+.cdj-config-editor textarea,
+.cdj-config-automatic select {
+  width: 100%;
+  min-width: 0;
+  font: inherit;
+}
+.cdj-config-editor textarea {
+  background: #10151c;
+  color: #e7edf4;
+  border: 1px solid #445362;
+  border-radius: 7px;
+  padding: 10px;
+}
+.cdj-config-editor fieldset {
+  border: 1px solid #3c4652;
+  border-radius: 8px;
+  margin: 16px 0;
+  padding: 12px;
+  min-width: 0;
+}
+.cdj-config-editor legend {
+  padding: 0 6px;
+}
+.cdj-config-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 16px;
+}
+.cdj-config-origin {
+  font-size: 0.85em;
+  opacity: 0.75;
+}
+.cdj-config-player {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid #34404b;
+}
+.cdj-config-player > div {
+  display: grid;
+  gap: 5px;
+}
+.cdj-config-player span,
+.cdj-config-player small {
+  font-size: 0.85em;
+  opacity: 0.8;
+}
+.cdj-config-connections,
+.cdj-config-automatic,
+.cdj-config-log {
+  border-top: 1px solid #3c4652;
+  padding-top: 12px;
+  margin-top: 24px;
+}
+.cdj-config-automatic > label {
+  max-width: 520px;
+}
+.cdj-config-automatic .cdj-config-check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.cdj-config-check input {
+  width: 20px;
+  height: 20px;
+}
+.cdj-config-error {
+  color: #ffb49a !important;
+}
+.cdj-config-notice {
+  color: #80dbc0 !important;
+}
+.cdj-config-log p {
+  font-size: 0.85em;
+  overflow-wrap: anywhere;
+}
+.cdj-config-upload {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid #445362;
+  padding: 9px 14px;
+  background: #242b32;
+  cursor: pointer;
+}
+.cdj-config-upload input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+.cdj-config-upload:focus-within {
+  outline: 2px solid #48bcd4;
+}
+@media (max-width: 760px) {
+  .cdj-config-workspace {
+    grid-template-columns: 1fr;
+  }
+  .cdj-config-workspace aside button {
+    width: auto;
+    display: inline-block;
+    margin-right: 8px;
+  }
+  .cdj-config-fields {
+    grid-template-columns: 1fr;
+  }
+}

@@ -76,7 +76,15 @@ pub async fn configure(
     number: u8,
     ip: Option<Ipv4Addr>,
 ) -> Result<(), String> {
-    configure_at(shared, catalogs, number, ip, 50000).await
+    configure_at(
+        shared,
+        catalogs,
+        number,
+        ip,
+        50000,
+        [50000, 50002, 50001, 50004],
+    )
+    .await
 }
 async fn configure_at(
     shared: &Shared,
@@ -84,6 +92,7 @@ async fn configure_at(
     number: u8,
     ip: Option<Ipv4Addr>,
     discovery_port: u16,
+    listen_ports: [u16; 4],
 ) -> Result<(), String> {
     if !(1..=2).contains(&number) {
         return Err("Choose CDJ 1 or CDJ 2; match its physical player number".into());
@@ -103,6 +112,7 @@ async fn configure_at(
             state.direct_task = Some(tokio::spawn(async move {
                 let result = observe_direct(
                     discovery_port,
+                    listen_ports,
                     shared.clone(),
                     catalogs.clone(),
                     commands,
@@ -399,21 +409,22 @@ fn record_diagnostic(
 
 async fn observe_direct(
     discovery_port: u16,
+    listen_ports: [u16; 4],
     shared: Shared,
     catalogs: crate::library::Shared,
     mut commands: crate::loading::Receiver,
     mut controls: mpsc::Receiver<Control>,
 ) -> Result<(), String> {
-    let discovery = UdpSocket::bind((Ipv4Addr::UNSPECIFIED, 50000))
+    let discovery = UdpSocket::bind((Ipv4Addr::UNSPECIFIED, listen_ports[0]))
         .await
         .map_err(|e| format!("Cannot open discovery port: {e}"))?;
-    let socket = UdpSocket::bind((Ipv4Addr::UNSPECIFIED, 50002))
+    let socket = UdpSocket::bind((Ipv4Addr::UNSPECIFIED, listen_ports[1]))
         .await
         .map_err(|e| format!("Cannot open status port: {e}"))?;
     // Diagnostic receivers only: failure must not break the working unicast
     // connection. Binding does not establish iOS broadcast permission/delivery.
-    let (mut beat_socket, mut beat_state) = diagnostic_socket(50001).await;
-    let (mut extra_socket, mut extra_state) = diagnostic_socket(50004).await;
+    let (mut beat_socket, mut beat_state) = diagnostic_socket(listen_ports[2]).await;
+    let (mut extra_socket, mut extra_state) = diagnostic_socket(listen_ports[3]).await;
     let mut beat_buffer = [0u8; 4096];
     let mut extra_buffer = [0u8; 4096];
     let mut peers = BTreeMap::<u8, Peer>::new();
@@ -581,6 +592,24 @@ async fn observe_direct(
                 }
             }
             Some(command) = commands.recv() => {
+                if crate::cdj_config::is_command(&command.body) {
+                    if command.reply.is_closed(){continue;}
+                    let result=(||->Result<Value,String>{
+                        if bridge.is_some() || crate::jog_trace::guided_active() || crate::cue_window::occupied(){return Err("Stop diagnostics before pushing settings".into());}
+                        let number=command.body["target"].as_u64().and_then(|v|u8::try_from(v).ok()).ok_or("Select a player")?;
+                        let peer=peers.get(&number).ok_or("Player is not connected")?;
+                        if peer.pending.is_some() || local_busy.contains(&number){return Err("Wait for the track load to finish".into());}
+                        let s=peer.fresh().ok_or("Waiting for fresh player status")?;
+                        let store=shared.lock().unwrap().configurations.clone().ok_or("Configuration storage unavailable")?;
+                        let use_source=local_server.as_ref().is_some_and(|server|server.ready(peer.ip));
+                        let sender=if use_source{crate::local_serving::NUMBER}else{15};
+                        let name=prolink_proto::DeviceName::new(if use_source{"CDJ-2000nexus"}else{"OLC"});
+                        let bytes=crate::cdj_config::encode(&store,&command.body,crate::cdj_config::PlayerEvidence{identity:&format!("ip:{}",peer.ip),ip:&peer.ip.to_string(),model:&s.name().as_str(),number,age:peer.observed.as_ref().unwrap().1.elapsed(),playing:s.flags().is_none_or(|f|f.is_playing()),play_state:s.play_state().unwrap_or(255),track_loaded:s.track_id()>0},sender,name)?;
+                        socket.try_send_to(&bytes,(peer.ip,50002).into()).map_err(|e|e.to_string())?;
+                        Ok(crate::cdj_config::sent(&command.body,sender))
+                    })().unwrap_or_else(|message|json!({"outcome":"error","message":message,"target":command.body["target"],"automatic":command.body["automatic"]}));
+                    let _=command.reply.send(result);continue;
+                }
                 if command.body["source"].as_str().is_some_and(|s|s.starts_with("local-usb:")) {
                     let validation = (|| {
                         if bridge.is_some() || crate::jog_trace::guided_active() {return Err("Stop diagnostic captures before loading a local track".to_owned());}
@@ -1093,7 +1122,11 @@ fn render_peer(
         });
     let playing = decoded.is_playing;
     let play_state = play_state_label(decoded);
-    json!({"number":number,"name":s.name().as_str(),"ip":peer.ip.to_string(),"connection":if at.elapsed()<Duration::from_secs(1) {"connected"} else {"stale"},"statusAgeMs":at.elapsed().as_secs_f64()*1000.0,"observationId":format!("{session}:{}:{}:{}",peer.epoch,at.duration_since(peer.started).as_nanos(),tracked.map_or(0,|p|p.at.duration_since(peer.started).as_nanos())),"positionAgeMs":tracked.map(|p|p.at).or_else(||fine_position.and_then(|_|peer.bar.observed_at())).map(|at|at.elapsed().as_secs_f64()*1000.0),"motionRate":tracked.map(|p|p.rate),"beatAnchorNumber":tracked.map(|p|p.beat_number),"rawBeatPosition":tracked.map(|p|p.raw_seconds),"beatAgeMs":tracked.map(|p|p.beat_at.elapsed().as_secs_f64()*1000.0),"beatObservationId":tracked.map(|p|format!("{}",p.beat_at.duration_since(peer.started).as_nanos())),"beatCorrectionMs":tracked.map(|p|p.correction_seconds*1000.0),"beatArrivalResidualMs":tracked.map(|p|p.arrival_residual_seconds*1000.0),"observationTimeMs":at.duration_since(peer.started).as_secs_f64()*1000.0,"packetCounter":s.packet_counter(),"playState":play_state,"playing":playing,"loadProtected":validate_load(s,at.elapsed()).is_err(),"loadBlockedReason":validate_load(s,at.elapsed()).err(),"bpm":s.effective_bpm(),"pitch":s.pitch().map(|p|(p.multiplier()-1.0)*100.0),"master":s.flags().map(|f|f.is_tempo_master()),"sync":s.flags().map(|f|f.is_synced()),"sourcePlayer":s.source_player().map(|n|n.get()),"sourceSlot":if s.source_slot() == Slot::USB {"usb"} else {"other"},"trackId":s.track_id(),"trackKey":key,"assetReady":asset.is_some(),"beatNumber":s.beat_number(),"loop":peer.current_loop,"currentCue":if decoded.play_state.0 == 6 {fine_position.map(|p|p.seconds).or(saved_cue)} else {None},"position":position,"positionSource":if tracked.is_some() {"beat-motion"} else if fine_position.is_some() {"bar-phase"} else if saved_cue.is_some() {"saved-cue-estimate"} else {"status-beat-estimate"},"positionQuality":if tracked.is_some() {"beat"} else {fine_position.map_or(if position.is_some() {"coarse"} else {"unavailable"},|p|p.quality())},"manualMotion":tracked.is_none() && decoded.position_requires_direct_updates(),"reverse":decoded.reverse,"sourceLabel":if s.source_player().map(|n|n.get())==Some(crate::local_serving::NUMBER) {"Local USB"} else {"Direct IP · USB"},"qualifyingPlayback":at.elapsed() < Duration::from_secs(2) && qualifies_for_set(decoded),"warning":asset.and_then(|a|a.warning.clone()).unwrap_or_else(||if tracked.is_some() {"Direct IP: beat and motion-speed tracking; loop boundaries estimated".into()} else {"Direct IP: status-based position; waiting for fresh forward beat events".into()})})
+    let mut result = json!({"number":number,"name":s.name().as_str(),"ip":peer.ip.to_string(),"connection":if at.elapsed()<Duration::from_secs(1) {"connected"} else {"stale"},"statusAgeMs":at.elapsed().as_secs_f64()*1000.0,"observationId":format!("{session}:{}:{}:{}",peer.epoch,at.duration_since(peer.started).as_nanos(),tracked.map_or(0,|p|p.at.duration_since(peer.started).as_nanos())),"positionAgeMs":tracked.map(|p|p.at).or_else(||fine_position.and_then(|_|peer.bar.observed_at())).map(|at|at.elapsed().as_secs_f64()*1000.0),"motionRate":tracked.map(|p|p.rate),"beatAnchorNumber":tracked.map(|p|p.beat_number),"rawBeatPosition":tracked.map(|p|p.raw_seconds),"beatAgeMs":tracked.map(|p|p.beat_at.elapsed().as_secs_f64()*1000.0),"beatObservationId":tracked.map(|p|format!("{}",p.beat_at.duration_since(peer.started).as_nanos())),"beatCorrectionMs":tracked.map(|p|p.correction_seconds*1000.0),"beatArrivalResidualMs":tracked.map(|p|p.arrival_residual_seconds*1000.0),"observationTimeMs":at.duration_since(peer.started).as_secs_f64()*1000.0,"packetCounter":s.packet_counter(),"playState":play_state,"playing":playing,"loadProtected":validate_load(s,at.elapsed()).is_err(),"loadBlockedReason":validate_load(s,at.elapsed()).err(),"bpm":s.effective_bpm(),"pitch":s.pitch().map(|p|(p.multiplier()-1.0)*100.0),"master":s.flags().map(|f|f.is_tempo_master()),"sync":s.flags().map(|f|f.is_synced()),"sourcePlayer":s.source_player().map(|n|n.get()),"sourceSlot":if s.source_slot() == Slot::USB {"usb"} else {"other"},"trackId":s.track_id(),"trackKey":key,"assetReady":asset.is_some(),"beatNumber":s.beat_number(),"loop":peer.current_loop,"currentCue":if decoded.play_state.0 == 6 {fine_position.map(|p|p.seconds).or(saved_cue)} else {None},"position":position,"positionSource":if tracked.is_some() {"beat-motion"} else if fine_position.is_some() {"bar-phase"} else if saved_cue.is_some() {"saved-cue-estimate"} else {"status-beat-estimate"},"positionQuality":if tracked.is_some() {"beat"} else {fine_position.map_or(if position.is_some() {"coarse"} else {"unavailable"},|p|p.quality())},"manualMotion":tracked.is_none() && decoded.position_requires_direct_updates(),"reverse":decoded.reverse,"sourceLabel":if s.source_player().map(|n|n.get())==Some(crate::local_serving::NUMBER) {"Local USB"} else {"Direct IP · USB"},"qualifyingPlayback":at.elapsed() < Duration::from_secs(2) && qualifies_for_set(decoded),"warning":asset.and_then(|a|a.warning.clone()).unwrap_or_else(||if tracked.is_some() {"Direct IP: beat and motion-speed tracking; loop boundaries estimated".into()} else {"Direct IP: status-based position; waiting for fresh forward beat events".into()})});
+    result["configurationIdentity"] = json!(format!("ip:{}", peer.ip));
+    result["configurationUsb"] = json!(s.usb_state().has_media());
+    result["configurationSd"] = json!(s.sd_state().has_media());
+    result
 }
 
 #[cfg(test)]
@@ -1479,6 +1512,10 @@ mod tests {
     }
     #[tokio::test]
     async fn unicast_accepts_ephemeral_source_ports_and_disables_load_after_loss() {
+        let status_reservation = UdpSocket::bind("127.0.0.1:0").await.unwrap();
+        let status_port = status_reservation.local_addr().unwrap().port();
+        drop(status_reservation);
+        let listen_ports = [0, status_port, 0, 0];
         let peer = UdpSocket::bind("127.0.0.1:0").await.unwrap();
         let replies = UdpSocket::bind("127.0.0.1:0").await.unwrap();
         let shared = Arc::new(Mutex::new(LiveState::default()));
@@ -1489,6 +1526,7 @@ mod tests {
             1,
             Some(Ipv4Addr::LOCALHOST),
             peer.local_addr().unwrap().port(),
+            listen_ports,
         )
         .await
         .unwrap();
@@ -1500,7 +1538,7 @@ mod tests {
             .unwrap();
         let packet = status(3, true, status::MediaState::LOADED);
         replies
-            .send_to(packet.as_bytes(), (from.ip(), 50002))
+            .send_to(packet.as_bytes(), (from.ip(), status_port))
             .await
             .unwrap();
         tokio::time::timeout(Duration::from_secs(2), async {
@@ -1518,7 +1556,7 @@ mod tests {
         replies
             .send_to(
                 status(7, false, status::MediaState::LOADED).as_bytes(),
-                (from.ip(), 50002),
+                (from.ip(), status_port),
             )
             .await
             .unwrap();
@@ -1545,7 +1583,8 @@ mod tests {
                 &catalogs,
                 2,
                 Some(Ipv4Addr::LOCALHOST),
-                peer.local_addr().unwrap().port()
+                peer.local_addr().unwrap().port(),
+                listen_ports
             )
             .await
             .is_err()
@@ -1556,6 +1595,7 @@ mod tests {
             2,
             Some(Ipv4Addr::new(127, 0, 0, 2)),
             peer.local_addr().unwrap().port(),
+            listen_ports,
         )
         .await
         .unwrap();
@@ -1582,6 +1622,7 @@ mod tests {
             1,
             None,
             peer.local_addr().unwrap().port(),
+            listen_ports,
         )
         .await
         .unwrap();
@@ -1593,6 +1634,7 @@ mod tests {
             2,
             None,
             peer.local_addr().unwrap().port(),
+            listen_ports,
         )
         .await
         .unwrap();

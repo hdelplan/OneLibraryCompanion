@@ -30,6 +30,7 @@ import {
   type TrackPage,
 } from "./libraryModel";
 import "./library.css";
+import "./studio.css";
 import { LibraryFilterBar } from "./LibraryFilterBar";
 import { nextColumnSort } from "./libraryPreferences";
 import type { Analysis, LivePlayer } from "./model";
@@ -112,6 +113,7 @@ function LibraryView({
   activeKey,
   playingTrackKeys,
   active,
+  metadataActive,
   filterOrder,
   bpmRange,
   onCategories,
@@ -125,6 +127,7 @@ function LibraryView({
   activeKey: string | null;
   playingTrackKeys: string[];
   active: boolean;
+  metadataActive: boolean;
   filterOrder: string[];
   bpmRange: { min: number; max: number };
   onCategories: (names: string[]) => void;
@@ -286,10 +289,10 @@ function LibraryView({
     }
   }
   useEffect(() => {
-    if (info?.tagsAvailable) onCategories(info.categories.map((c) => c.name));
+    onCategories(info?.tagsAvailable ? info.categories.map((c) => c.name) : []);
   }, [info, onCategories]);
   useEffect(() => {
-    if (!active) return;
+    if (!active && !metadataActive) return;
     const controller = new AbortController();
     let timer: ReturnType<typeof setTimeout>;
     async function poll() {
@@ -323,7 +326,7 @@ function LibraryView({
       controller.abort();
       clearTimeout(timer);
     };
-  }, [active, revision]);
+  }, [active, metadataActive, revision]);
   useEffect(() => {
     setFilters((f) => ({
       ...Object.fromEntries(
@@ -590,6 +593,15 @@ function LibraryView({
       )}
       <div className="library-body">
         <aside className="library-sidebar">
+          <div className="studio-collection-heading">
+            <small>{source?.label || "YOUR MUSIC"}</small>
+            <h2>
+              The
+              <br />
+              collection.
+            </h2>
+            <p>Ready for your next set.</p>
+          </div>
           <div className="library-section-title">COLLECTION</div>
           <button
             className={!showSetHistory && !filters.playlist ? "chosen" : ""}
@@ -1182,6 +1194,7 @@ export const Library = memo(
   (a, b) =>
     a.toolbarTarget === b.toolbarTarget &&
     a.active === b.active &&
+    a.metadataActive === b.metadataActive &&
     a.activeKey === b.activeKey &&
     a.playingTrackKeys.length === b.playingTrackKeys.length &&
     a.playingTrackKeys.every((key, i) => key === b.playingTrackKeys[i]) &&

@@ -27,8 +27,18 @@ export default defineConfig(({ mode }) => ({
     },
   ],
   define: {
-    __OLC_EXPERIMENTS__: JSON.stringify(mode === "experiments"),
+    __OLC_EXPERIMENTS__: JSON.stringify(
+      mode === "ipad" || mode === "experiments",
+    ),
   },
-  build: { target: "safari16", outDir: "dist" },
+  build: {
+    target: "safari16",
+    outDir:
+      mode === "ipad"
+        ? "dist-ipad"
+        : mode === "experiments"
+          ? "dist-experiments"
+          : "dist",
+  },
   server: { proxy: { "/api": "http://127.0.0.1:8787" } },
 }));
