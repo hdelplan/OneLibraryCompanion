@@ -10,6 +10,10 @@ on:
         description: Version tag matching source/host/Cargo.toml
         type: string
         default: v0.5.0
+      refresh:
+        description: Refresh existing release assets without an announcement
+        type: boolean
+        default: false
   pull_request:
     paths:
       - source/host/Cargo.toml
@@ -113,9 +117,17 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ inputs.release_tag || github.ref_name }}
           PUBLISH: ${{ inputs.publish }}
+          REFRESH: ${{ inputs.refresh }}
         shell: bash
         run: |
           set -euo pipefail
+          if [[ "$REFRESH" == true ]]; then
+            test "$PUBLISH" = true
+            gh release view "$RELEASE_TAG" >/dev/null
+            gh release upload "$RELEASE_TAG" artifacts/* --clobber
+            gh api --method PATCH "repos/$GITHUB_REPOSITORY/git/refs/tags/$RELEASE_TAG" -f sha="$GITHUB_SHA" -F force=true
+            exit 0
+          fi
           gh release create "$RELEASE_TAG" artifacts/* --draft --prerelease --target "$GITHUB_SHA" --title "OneLibraryCompanion $RELEASE_TAG — preview" --notes-file docs/release-notes.md
           if [[ "$PUBLISH" == true ]]; then
             gh release edit "$RELEASE_TAG" --draft=false --prerelease

@@ -329,7 +329,7 @@ export function Configuration({
     },
     {
       id: "host",
-      label: "Host & network",
+      label: "Host, local USB & Network",
       description: "Manage this host and its network connections.",
       available: !!desktopTools,
       content: desktopTools,
