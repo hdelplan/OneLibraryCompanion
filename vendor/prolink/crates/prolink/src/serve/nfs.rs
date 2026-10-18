@@ -343,6 +343,9 @@ fn listen(
             let Ok(permit) = Arc::clone(&limit).try_acquire_owned() else {
                 // Dropping is a legitimate answer on UDP: the caller resends.
                 // Queueing would trade a retransmit for unbounded memory.
+                super::diagnostics::failure(format!(
+                    "nfs_overload_drop service={service:?} peer={from}"
+                ));
                 debug!(?service, %from, "at {MAX_IN_FLIGHT} calls in flight; dropping one");
                 continue;
             };
@@ -363,7 +366,7 @@ fn listen(
                     Ok(Some(reply)) => {
                         if let Err(error) = socket.send_to(&reply, SocketAddr::V4(from)).await {
                             warn!(%error, %from, "reply not sent");
-                            super::diagnostics::record(format!(
+                            super::diagnostics::failure(format!(
                                 "nfs_send_error peer={from} error={error}"
                             ));
                         }

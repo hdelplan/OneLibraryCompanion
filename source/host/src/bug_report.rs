@@ -3,64 +3,67 @@ use axum::{Json, http::StatusCode};
 use serde_json::{Value, json};
 use std::{
     path::PathBuf,
-    sync::{LazyLock, Mutex},
+    sync::{LazyLock, Mutex, Once},
     time::Duration,
 };
 type Result<T> = std::result::Result<T, (StatusCode, String)>;
+static CLEANUP: Once = Once::new();
 static SAVED: LazyLock<Mutex<Value>> = LazyLock::new(|| Mutex::new(Value::Null));
 pub fn init() {
     let Ok(dir) = directory() else {
         return;
     };
-    std::thread::spawn(move || {
-        let mut restored = false;
-        loop {
-            if let Ok(entries) = std::fs::read_dir(&dir) {
-                let mut reports: Vec<_> = entries
-                    .flatten()
-                    .filter_map(|entry| {
-                        let name = entry.file_name();
-                        let name = name.to_str()?;
-                        if !name.starts_with("bug-") || !name.ends_with(".json") {
-                            return None;
-                        }
-                        let metadata = entry.metadata().ok()?;
-                        if !metadata.is_file() {
-                            return None;
-                        }
-                        Some((metadata.modified().ok()?, entry.path()))
-                    })
-                    .collect();
-                reports.sort_by_key(|(time, _)| *time);
-                {
-                    let mut saved = SAVED.lock().unwrap();
-                    if !restored
-                        && saved.is_null()
-                        && let Some((time, path)) = reports.last()
-                        && time
-                            .elapsed()
-                            .is_ok_and(|age| age <= Duration::from_secs(86400))
-                        && let Ok(bytes) = std::fs::read(path)
-                        && let Ok(value) = serde_json::from_slice(&bytes)
+    CLEANUP.call_once(|| {
+        std::thread::spawn(move || {
+            let mut restored = false;
+            loop {
+                if let Ok(entries) = std::fs::read_dir(&dir) {
+                    let mut reports: Vec<_> = entries
+                        .flatten()
+                        .filter_map(|entry| {
+                            let name = entry.file_name();
+                            let name = name.to_str()?;
+                            if !name.starts_with("bug-") || !name.ends_with(".json") {
+                                return None;
+                            }
+                            let metadata = entry.metadata().ok()?;
+                            if !metadata.is_file() {
+                                return None;
+                            }
+                            Some((metadata.modified().ok()?, entry.path()))
+                        })
+                        .collect();
+                    reports.sort_by_key(|(time, _)| *time);
                     {
-                        *saved = value;
+                        let mut saved = SAVED.lock().unwrap();
+                        if !restored
+                            && saved.is_null()
+                            && let Some((time, path)) = reports.last()
+                            && time
+                                .elapsed()
+                                .is_ok_and(|age| age <= Duration::from_secs(86400))
+                            && let Ok(bytes) = std::fs::read(path)
+                            && let Ok(value) = serde_json::from_slice(&bytes)
+                        {
+                            *saved = value;
+                        }
+                        restored = true;
                     }
-                    restored = true;
-                }
-                let excess = reports.len().saturating_sub(20);
-                for (index, (time, path)) in reports.into_iter().enumerate() {
-                    if (index < excess
-                        || time
-                            .elapsed()
-                            .is_ok_and(|age| age > Duration::from_secs(86400)))
-                        && let Err(error) = std::fs::remove_file(path)
-                    {
-                        eprintln!("Bug report cleanup: {error}");
+                    let excess = reports.len().saturating_sub(20);
+                    for (index, (time, path)) in reports.into_iter().enumerate() {
+                        if (index < excess
+                            || time
+                                .elapsed()
+                                .is_ok_and(|age| age > Duration::from_secs(86400)))
+                            && let Err(error) = std::fs::remove_file(path)
+                        {
+                            eprintln!("Bug report cleanup: {error}");
+                        }
                     }
                 }
+                std::thread::sleep(Duration::from_secs(3600));
             }
-            std::thread::sleep(Duration::from_secs(3600));
-        }
+        });
     });
 }
 fn directory() -> Result<PathBuf> {

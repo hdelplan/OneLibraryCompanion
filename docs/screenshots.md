@@ -1,6 +1,6 @@
 # Using OLC
 
-Use **CDJ STATUS / BROWSE** to switch screens; its font matches the other navigation buttons. BROWSE remembers the list position when you return.
+Use **CDJ STATUS / BROWSE** to switch screens. BROWSE remembers the list position when you return.
 
 Follow the mix, choose your next track and keep a record of the set. Playback and cueing stay on your CDJs.
 
@@ -16,7 +16,7 @@ Fine waveform tracking is limited on a paused non-master player. Use the CDJ's d
 
 ## Library — choose the next track
 
-In BROWSE, choose a USB and playlist, then search or combine filters. Save useful filter combinations, use key highlighting to find compatible selections and check played-track marks before repeating a track. Currently playing track titles are bright green on either deck; previously played titles use softer green independently of set recording. Conversion-capable load buttons remain white.
+In BROWSE, choose a USB and playlist, then search or combine filters. Save useful filter combinations, use key highlighting to find compatible selections and check played-track marks before repeating a track. Currently playing track titles are bright green on either deck; previously played titles use softer green independently of set recording.
 
 Press **CDJ1** or **CDJ2** to load a stopped player.
 

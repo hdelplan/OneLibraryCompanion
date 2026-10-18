@@ -1,16 +1,52 @@
 # Hardware verification
 
-Run these checks with a supported Mac or Raspberry Pi host, representative exports and two CDJs on the same LAN. Record OS, player models/firmware, connection mode and results with the release being evaluated.
+Use two CDJs and a supported Mac or Raspberry Pi host on the same LAN. Record
+OS, player models/firmware, connection mode and results for the release tested.
+Build success does not establish hardware coverage; see [compatibility](compatibility.md).
 
-1. Install, launch, close/reopen and quit the native app. Check optional login startup and that only one host owns the session. Connect a LAN browser at the same time.
-2. Connect players by manual IP and by automatic discovery. Compare playback state, BPM, pitch, master/sync, metadata and artwork with the physical players.
-3. Check three-band waveforms, beat/cue markers, next-cue countdown, phrases and timing while playing, pausing, seeking and looping. Account for estimated position on older players.
-4. Browse linked USBs and up to three host-attached OneLibrary drives. Check playlists, My Tags, filters, presets, sorting and touch row sizes. Unplug/reconnect idle drives and replace exports; stale selections must not be loaded.
-5. In manual-IP mode, load original MP3, WAV and AIFF files from a local USB onto a stopped deck. Compare audible playback and speed with native USB playback. Check cold-start discovery, LINK prompts, cue positions and the visible load result. Load different tracks from the same USB to both decks and verify the first remains playable. Confirm a second local library requires stopping playback and restarting the connection session.
-6. Verify loading is blocked for playing, looping, busy or stale targets and for formats without an available conversion path. For eligible unsupported files, check conversion progress, cache reuse, cancellation and WAV/AIFF output. Verify compatible audio remains unchanged and check hot A/B/C and memory cues, including coincident positions. An unknown result must not resend a command automatically.
-7. Record, finish, edit, restore, reopen and export sets. Check the strict playback-duration threshold, interrupted-session recovery, imports and past-set browsing against available/missing tracks.
-8. Disconnect/reconnect players and network links. Confirm stale state clears and that recovery does not attach old assets to a new track.
-9. On Pi, check USB permissions, full screen, touchscreen gestures, on-screen keyboard, display rotation and sustained rendering/serving performance. Exercise Desktop and headless modes separately.
+## Startup and connection
 
-Current coverage is described in [compatibility](compatibility.md). Build success alone is not a hardware pass.
+- Install, launch, close/reopen and quit the desktop app. Check full screen,
+  optional login startup and a simultaneous LAN browser.
+- Test automatic discovery and Manual IP connections. Confirm that only one host
+  owns the session. Compare player numbers, metadata, BPM, pitch and master/sync
+  with the physical players. Check unplug/reconnect and stale-state handling.
+- On Pi, exercise Desktop and headless operation separately, including boot
+  without login, mounted USB availability, touch gestures and text entry.
 
+## Browse and playback
+
+- Browse linked USBs and up to three host-attached OneLibrary drives. Check
+  playlists, My Tags, search, filter presets, sorting and row sizes. Replace an
+  idle export and verify stale selections cannot load.
+- Load original MP3, WAV and AIFF tracks onto stopped decks using both connection
+  modes. Check cold-start LINK discovery, audible playback, seeking, loops and
+  hot/memory cues, including coincident positions. Load different tracks on both
+  decks and verify the first remains playable.
+- Verify playing, looping, busy, disconnected and stale targets reject loads.
+  An uncertain result must not resend the command. Stop both decks before
+  switching the local library or restarting the serving session.
+- Test eligible unsupported audio, conversion progress, cancellation, cache reuse
+  and WAV/AIFF outputs. Compare playback with the original; compatible files
+  should remain unchanged.
+- Check waveform detail, overview, beats, phrases and cue countdowns during play,
+  pause, seek and loops. Account for paused non-master tracking limits.
+- Preview local and linked tracks through the browser. Check play/pause, seeking,
+  closing the popup and changing source; previews must not enter set history.
+
+## Profiles, history and diagnostics
+
+- Import saved My Settings, edit/duplicate profiles and transfer their JSON.
+  Push to a stopped supported player and visually confirm settings. Verify
+  playing/stale players reject commands and automatic rules apply once per
+  connection with no automatic retry of skipped attempts.
+- Capture, split, finish, join, edit, restore and export sets. Check duration/idle
+  thresholds, restart recovery, imports and missing tracks in past-set playlists.
+- In an isolated test, cause a load failure and verify a private incident report
+  is saved with recent player states and serving evidence. Check bounded report
+  retention and the optional one-minute browser report separately.
+- On headless Pi, test guarded restart, shutdown and USB unmount with players
+  disconnected. A busy volume must not be forcibly unmounted.
+
+Finish with a sustained two-deck session while browsing, previewing and using a
+remote screen. Keep failures and raw captures outside public source snapshots.

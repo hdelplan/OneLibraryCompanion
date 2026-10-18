@@ -31,7 +31,7 @@ Every library request includes its source generation. Media removal/replacement 
 
 `POST /api/live/load` accepts `{source, generation, trackId, target}`, with target 1 or 2. The host resolves the source and rejects stale/missing tracks, disconnected targets and protected playback states. It sends at most one load command. Confirmation checks the player's reported source/track identity; timeout or disconnection yields an unknown result without retrying.
 
-For a host-attached USB, `local_serving.rs` prepares the original file and exported metadata/analysis off the observation loop. The manual-IP session announces virtual source 4 through its existing discovery/status sockets; NFS/dbserver provide file and metadata access. The target must query the source before a load can proceed. Fresh stopped status and source identity are checked again before sending.
+For a host-attached USB, `local_serving.rs` prepares the original file and exported metadata/analysis off the observation loop. The discovery or manual-IP session announces virtual source 4 through its existing discovery/status sockets; NFS/dbserver provide file and metadata access. The target must query the source before a load can proceed. Fresh stopped status and source identity are checked again before sending.
 
 One local USB library is selected for each serving session. Requested tracks retain the USB database's original track IDs, and compatible audio retains its original exported path. Converted audio uses a separate cache path with the same track ID. Their files remain available while another track is selected. Source paths are confined to the USB root, and file/analysis sizes are bounded. Compatible originals are served unchanged; known incompatible local tracks are decoded and resampled into a host-owned PCM cache before loading. The serving session retains each converted file for as long as it is needed. NFS returns full hardware-sized audio reads within the UDP payload limit, with a dedicated send buffer. OLC does not send a remote play command.
 
@@ -57,3 +57,14 @@ The library subpaths in the table are relative to `/api/library/{id}`. The route
 `set_history.rs` owns qualification and archive changes. Normal playback/active looping must continue for more than 45 seconds; a pause, track change or observation gap resets the timer. Metadata is copied into recorded events. Edited order is separate from original events so restoration does not depend on the source USB.
 
 History writes use a temporary file, flush, rename and directory flush. Unsupported or corrupt stores are preserved and block writes. Browser display settings and filter presets use local storage; host settings, history and retained artwork use the application data directory. No operation writes history or metadata back to a USB.
+
+## Profiles and diagnostics
+
+`cdj_config.rs` stores versioned CDJ configuration profiles and automatic
+connection rules on the host. The owning observation session validates the
+player and stopped state before sending a native settings command.
+
+`load_diagnostics.rs` captures bounded player history and serving evidence for
+failed loads. Reports use a bounded background writer in the application data
+directory. The optional browser Bug report adds a one-minute display/timing
+capture on explicitly configured hosts. Neither recorder stores music payloads.

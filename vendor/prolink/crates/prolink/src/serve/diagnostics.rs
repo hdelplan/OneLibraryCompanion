@@ -5,6 +5,16 @@ use std::{
     sync::{LazyLock, Mutex},
     time::Instant,
 };
+static FAILURES: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+/// Monotonic count of observed serving failures.
+pub fn failure_count() -> u64 {
+    FAILURES.load(std::sync::atomic::Ordering::Relaxed)
+}
+/// Record a serving failure and signal diagnostic consumers.
+pub fn failure(message: String) {
+    record(message);
+    FAILURES.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+}
 const LIMIT: usize = 512;
 static LOG: LazyLock<Mutex<(Instant, VecDeque<(u64, String)>)>> =
     LazyLock::new(|| Mutex::new((Instant::now(), VecDeque::new())));
@@ -21,6 +31,8 @@ struct ReadProgress {
     errors: u64,
     highest_end: u64,
     last_offset: u32,
+    max_read_us: u64,
+    slow_reads: u64,
     first_reads: Vec<(u32, u32, Option<usize>)>,
 }
 
@@ -38,6 +50,9 @@ pub fn record_read(peer: &str, path: &str, offset: u32, requested: u32, returned
     progress.requests += 1;
     progress.bytes += returned.unwrap_or(0) as u64;
     progress.errors += u64::from(returned.is_none());
+    if returned.is_none() {
+        FAILURES.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+    }
     if let Some(count) = returned {
         progress.highest_end = progress.highest_end.max(u64::from(offset) + count as u64);
     }
@@ -48,6 +63,15 @@ pub fn record_read(peer: &str, path: &str, offset: u32, requested: u32, returned
     reads.push_back(progress);
     if reads.len() > 64 {
         reads.pop_front();
+    }
+}
+/// Track disk-read latency without adding one event per audio read.
+pub fn read_timing(peer: &str, path: &str, elapsed: std::time::Duration) {
+    let mut reads = READS.lock().unwrap();
+    if let Some(read) = reads.iter_mut().find(|r| r.peer == peer && r.path == path) {
+        let us = elapsed.as_micros().min(u64::MAX as u128) as u64;
+        read.max_read_us = read.max_read_us.max(us);
+        read.slow_reads += u64::from(us >= 100_000);
     }
 }
 /// Append a timestamped event, retaining at most 512 short messages.
@@ -67,8 +91,8 @@ pub fn snapshot() -> Vec<(u64, String)> {
     let now = log.0.elapsed().as_millis() as u64;
     drop(log);
     for read in READS.lock().unwrap().iter() {
-        events.push((now, format!("nfs_read_summary peer={} path={} requests={} bytes={} errors={} highest_end={} last_offset={} first_reads={:?}",
-            read.peer, read.path, read.requests, read.bytes, read.errors, read.highest_end, read.last_offset, read.first_reads)));
+        events.push((now, format!("nfs_read_summary peer={} path={} requests={} bytes={} errors={} highest_end={} last_offset={} max_read_us={} slow_reads={} first_reads={:?}",
+            read.peer, read.path, read.requests, read.bytes, read.errors, read.highest_end, read.last_offset, read.max_read_us, read.slow_reads, read.first_reads)));
     }
     events
 }
@@ -90,11 +114,18 @@ mod tests {
         }
         record_read("test-player-1", "/test-progress.wav", 0, 2048, None);
         record_read("test-player-2", "/test-progress.wav", 0, 2048, Some(44));
+        read_timing(
+            "test-player-1",
+            "/test-progress.wav",
+            std::time::Duration::from_millis(150),
+        );
         let reads = READS.lock().unwrap();
         let first = reads.iter().find(|r| r.peer == "test-player-1").unwrap();
         assert_eq!(first.requests, 21);
         assert_eq!(first.bytes, 40960);
         assert_eq!(first.errors, 1);
+        assert_eq!(first.max_read_us, 150_000);
+        assert_eq!(first.slow_reads, 1);
         assert_eq!(first.highest_end, 40960);
         assert_eq!(first.last_offset, 0);
         assert_eq!(first.first_reads.len(), 16);

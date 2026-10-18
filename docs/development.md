@@ -12,7 +12,7 @@ cargo run --locked -p pioneer-companion-host
 
 Open `http://127.0.0.1:8787`. Set `OLC_BIND=127.0.0.1:8787` for local-only development; the default permits LAN access. Use a separate port and data directory for isolated checks. Only one service should own a physical CDJ network session.
 
-`check-app.sh` checks application Rust formatting, tests, strict Clippy, compilation, UI formatting, TypeScript including unused declarations, UI tests and the production UI build. Tests use synthetic data rather than private music or exports. Socket-based checks need local TCP/UDP permissions.
+`check-app.sh` checks application documentation/publication contracts, Python helper checks, Rust formatting, tests, strict Clippy, compilation, UI formatting, TypeScript including unused declarations, UI tests and the production UI build. Tests use synthetic data rather than private music or exports. Socket-based checks need local TCP/UDP permissions.
 
 Format application packages with `cargo fmt -p pioneer-companion-core -p pioneer-companion-host` and UI sources with `npm --prefix source/ui run format`. Avoid formatting the entire vendored tree. Preserve source provenance and third-party notices.
 
@@ -29,6 +29,10 @@ Format application packages with `cargo fmt -p pioneer-companion-core -p pioneer
 Mac apps are written under `builds/macos-<arch>`; DMGs, ZIPs, Debian packages and checksums go under `builds/releases`. `NODE` can select a compatible Node executable. `OLC_SKIP_DMG=1` skips disk-image creation while retaining the app and ZIP.
 
 The Pi package grants `CAP_NET_BIND_SERVICE` for CDJ portmapper access on UDP 111 and `CAP_NET_RAW` for binding Pro DJ Link sockets to the selected network interface. Its install hook and capability are checked by CI. Mac builds include a Local USB Support installer that pins the hardened host executable signature. `scripts/test-mac-networking.py` checks live-process authentication without installing a system service. After administrator-approved installation, run the packaged `olc-host --check-local-usb-helper` to verify port handoff as an ordinary user.
+
+CI also runs the self-contained protocol, NFS and serving-diagnostic regressions
+using the vendored workspace lockfile. Tests needing the upstream export fixture
+are separate from these release checks.
 
 The GitHub distribution workflow builds both Mac architectures and ARM64 Debian packages, runs application checks and host smoke checks, and packages source and checksums. A version tag creates a draft prerelease. A manual run with **publish** selected publishes the completed prerelease. The chosen tag must match `source/host/Cargo.toml`; retain that version in the Mac bundle and release guide as well.
 
@@ -50,7 +54,7 @@ The cross-build targets glibc 2.36. Packaging verifies ELF architecture and requ
 | Variable | Purpose |
 | --- | --- |
 | `OLC_BIND` | HTTP listen address; default `0.0.0.0:8787`. Desktop launchers require a fixed nonzero port. |
-| `OLC_INTERFACE` | CDJ discovery adapter; overrides the saved setting. Without a selected adapter, use Manual IP connections. |
+| `OLC_INTERFACE` | CDJ discovery adapter; overrides the saved setting. Use `auto` for automatic selection; without a selected adapter, use Manual IP connections. |
 | `OLC_HOST_CONTROLS` | `systemd-user` enables confirmed restart/shutdown controls on Linux; supplied by the packaged headless service. Shutdown requires passwordless permission for `/usr/bin/systemctl poweroff`. |
 | `OLC_DATA` | Persistent writable directory for history, artwork and host settings. |
 | `OLC_UI_ROOT` | Directory containing `index.html` and assets; desktop launchers supply the bundled location. |
@@ -62,9 +66,9 @@ Use absolute paths. The corresponding `PIONEER_COMPANION_*` variables are compat
 
 ## Source snapshots and documentation
 
-`scripts/prepare-distribution.py <new-directory>` creates an allowlisted source snapshot and `SOURCE-MANIFEST.sha256`. It excludes private exports, captures, credentials, dependencies and generated build output. Publication documentation is explicitly selected, including the screenshot gallery. Platform source roots and build scripts are allowlisted. Optional `.local/distribution-overrides` files replace matching allowlisted paths during export; they cannot add files outside that selection. It refuses to overwrite an existing destination.
+`scripts/prepare-distribution.py <new-directory>` creates an allowlisted source snapshot and `SOURCE-MANIFEST.sha256`. It excludes private exports, captures, credentials, dependencies and generated build output. Publication documentation is explicitly selected, including the screenshot gallery. Platform source roots and build scripts are allowlisted. Diagnostic UI builds use `vite build --mode experiments` and write `dist-experiments`, leaving production assets intact. The snapshot copies current source directly; private replacement files are never applied. It refuses to overwrite an existing destination.
 
-Keep shared changes in `source/ui`, `source/host` and the native launchers. Review the snapshot and manifest before publishing. Read the remote branch before updating it so edits made on GitHub are retained. Documentation describes current behaviour: feature explanations belong in README and user guides; implementation contracts belong in architecture. Document only implemented features, current behaviour and known limitations. Do not include future plans, proposed features, roadmaps, development diaries or completed-work checklists.
+Keep application behavior in `source/ui` and `source/host`; native launchers own window and host lifecycle only. Review the snapshot and manifest before publishing. Read the remote branch before updating it so edits made on GitHub are retained. Documentation describes current behaviour: feature explanations belong in README and user guides; implementation contracts belong in architecture. Document only implemented features, current behaviour and known limitations. Do not include future plans, proposed features, roadmaps, development diaries or completed-work checklists.
 
 The root license, source credits and dependency notices must accompany source and binaries. After dependency changes, install the locked dependencies, populate the Cargo cache with `cargo metadata --locked`, then run `python3 scripts/collect-third-party-notices.py`. The collector fails when notices are missing. Review manually maintained source credits when adapting new code or protocol references.
 

@@ -353,13 +353,20 @@ impl Dispatcher {
                 nfs2::Response::Lookup(found).encode()
             }
             nfs2::Request::Read(args) => {
+                let started = std::time::Instant::now();
                 let read = read(&vfs, args);
+                let elapsed = started.elapsed();
                 super::super::diagnostics::record_read(
                     &peer.to_string(),
                     vfs.path_of(args.handle).unwrap_or("unknown"),
                     args.offset,
                     args.count,
                     read.as_ref().map(|(_, data)| data.len()).ok(),
+                );
+                super::super::diagnostics::read_timing(
+                    &peer.to_string(),
+                    vfs.path_of(args.handle).unwrap_or("unknown"),
+                    elapsed,
                 );
                 if args.offset == 0 || read.is_err() {
                     super::super::diagnostics::record(format!(

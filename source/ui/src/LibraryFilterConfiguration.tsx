@@ -2,7 +2,7 @@ import {
   builtInFilters,
   categoryKey,
   categoryName,
-  displayedFilters,
+  groupLibraryFilters,
   moveFilter,
 } from "./libraryPreferences";
 export function LibraryFilterConfiguration({
@@ -18,24 +18,125 @@ export function LibraryFilterConfiguration({
   categories: string[];
   change: (value: string[]) => void;
 }) {
-  const visible = displayedFilters(order, categories);
+  const groups = groupLibraryFilters(order, categories);
+  const visible = [...groups.standard, ...groups.personalized];
   const options = [
     ...builtInFilters,
-    ...categories.map((name) => ({
-      key: categoryKey(name),
-      label: `${name} · My Tag`,
-    })),
+    ...categories.map((name) => ({ key: categoryKey(name), label: name })),
   ];
-  const keys = [
-    ...visible,
-    ...options.map((o) => o.key).filter((key) => !visible.includes(key)),
-  ];
+  function update(
+    group: "standard" | "personalized",
+    next: string[],
+    keepAuto = true,
+  ) {
+    const combined =
+      group === "standard"
+        ? [...next, ...groups.personalized]
+        : [...groups.standard, ...next];
+    change([
+      ...combined,
+      ...(keepAuto && order.includes("tag:*") ? ["tag:*"] : []),
+    ]);
+  }
+  function renderGroup(
+    group: "standard" | "personalized",
+    title: string,
+    description: string,
+  ) {
+    const enabledKeys = groups[group];
+    const available = options.filter((option) =>
+      group === "personalized"
+        ? option.key === "mytags" || option.key.startsWith("tag:")
+        : option.key !== "mytags" && !option.key.startsWith("tag:"),
+    );
+    const keys = [
+      ...enabledKeys,
+      ...available
+        .map((option) => option.key)
+        .filter((key) => !enabledKeys.includes(key)),
+    ];
+    return (
+      <section className="filter-config-group" aria-label={title}>
+        <h3>{title}</h3>
+        <p>{description}</p>
+        <div className="filter-config-list">
+          {keys.map((key) => {
+            const enabled = enabledKeys.includes(key);
+            const name =
+              options.find((option) => option.key === key)?.label ??
+              `${categoryName(key)} (not on current USB)`;
+            return (
+              <div className="filter-config-row" key={key}>
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={enabled}
+                    onChange={(e) =>
+                      update(
+                        group,
+                        e.target.checked
+                          ? [...enabledKeys, key]
+                          : enabledKeys.filter((value) => value !== key),
+                        group === "standard" ||
+                          e.target.checked ||
+                          key === "mytags",
+                      )
+                    }
+                  />
+                  {name}
+                </label>
+                <button
+                  aria-label={`Move ${name} up`}
+                  disabled={!enabled || enabledKeys.indexOf(key) === 0}
+                  onClick={() =>
+                    update(group, moveFilter(enabledKeys, key, -1))
+                  }
+                >
+                  ↑
+                </button>
+                <button
+                  aria-label={`Move ${name} down`}
+                  disabled={
+                    !enabled ||
+                    enabledKeys.indexOf(key) === enabledKeys.length - 1
+                  }
+                  onClick={() => update(group, moveFilter(enabledKeys, key, 1))}
+                >
+                  ↓
+                </button>
+              </div>
+            );
+          })}
+        </div>
+        {group === "personalized" && (
+          <>
+            {categories.length === 0 && (
+              <p>
+                Open a USB library with My Tags to discover its custom
+                categories.
+              </p>
+            )}
+            <label className="filter-auto-tags">
+              <input
+                type="checkbox"
+                checked={order.includes("tag:*")}
+                onChange={(e) =>
+                  change(e.target.checked ? [...visible, "tag:*"] : visible)
+                }
+              />
+              Automatically include all exported My Tag categories
+            </label>
+          </>
+        )}
+      </section>
+    );
+  }
   return (
     <section className="settings-panel library-filter-config">
       <h2>Library filters</h2>
       <p>
-        Choose which filters appear above the track list and move them into your
-        preferred order. Album remains available in track details.
+        Choose which filters appear above the track list and reorder them within
+        each section. Changes apply immediately to Browse.
       </p>
       <div className="library-bpm-config">
         {(["min", "max"] as const).map((key) => (
@@ -61,66 +162,18 @@ export function LibraryFilterConfiguration({
           </label>
         ))}
       </div>
-      {categories.length === 0 && (
-        <p>
-          Open a USB library with My Tags to discover its custom categories,
-          such as Genre, Venue or Situation.
-        </p>
-      )}
-      <div className="filter-config-list">
-        {keys.map((key) => {
-          const enabled = visible.includes(key);
-          return (
-            <div className="filter-config-row" key={key}>
-              <label>
-                <input
-                  type="checkbox"
-                  checked={enabled}
-                  onChange={(e) =>
-                    change(
-                      e.target.checked
-                        ? [...visible, key]
-                        : visible.filter((v) => v !== key),
-                    )
-                  }
-                />
-                {options.find((o) => o.key === key)?.label ??
-                  `${categoryName(key)} · My Tag (not on current USB)`}
-              </label>
-              <button
-                aria-label={`Move ${options.find((o) => o.key === key)?.label ?? categoryName(key)} up`}
-                disabled={!enabled || visible.indexOf(key) === 0}
-                onClick={() => change(moveFilter(visible, key, -1))}
-              >
-                ↑
-              </button>
-              <button
-                aria-label={`Move ${options.find((o) => o.key === key)?.label ?? categoryName(key)} down`}
-                disabled={
-                  !enabled || visible.indexOf(key) === visible.length - 1
-                }
-                onClick={() => change(moveFilter(visible, key, 1))}
-              >
-                ↓
-              </button>
-            </div>
-          );
-        })}
+      <div className="filter-config-groups">
+        {renderGroup(
+          "standard",
+          "Standard metadata",
+          "Choose and reorder track metadata filters. Color starts last by default; move it anywhere within this section.",
+        )}
+        {renderGroup(
+          "personalized",
+          "My Tags",
+          "Choose and reorder your personalized Rekordbox tag categories. These appear together after standard metadata.",
+        )}
       </div>
-      <label className="filter-auto-tags">
-        <input
-          type="checkbox"
-          checked={order.includes("tag:*")}
-          onChange={(e) =>
-            change(
-              e.target.checked
-                ? [...order.filter((key) => !key.startsWith("tag:")), "tag:*"]
-                : visible,
-            )
-          }
-        />
-        Automatically include all exported My Tag categories
-      </label>
       <p>
         Custom category names and values come from the USB. Preferences are
         saved on this device; they do not edit Rekordbox.

@@ -15,10 +15,10 @@ Closing the window keeps OLC running. **Quit OLC** stops it. **Open at Login** i
 
 ## Raspberry Pi Desktop
 
-Use a **Pi 4 or 5 with Raspberry Pi OS Bookworm or later, 64-bit**. Download both ARM64 `.deb` packages from the same release into one folder. For version 0.4.0, run this command in that folder:
+Use a **Pi 4 or 5 with Raspberry Pi OS Bookworm or later, 64-bit**. Download both ARM64 `.deb` packages from the same release into one folder. For version 0.5.0, run this command in that folder:
 
 ```sh
-sudo apt install ./onelibrarycompanion-host_0.4.0_arm64.deb ./onelibrarycompanion_0.4.0_arm64.deb
+sudo apt install ./onelibrarycompanion-host_0.5.0_arm64.deb ./onelibrarycompanion_0.5.0_arm64.deb
 ```
 
 Open OneLibraryCompanion from the applications menu. It has its own desktop window, with full-screen and login-startup options. A compatible touchscreen is supported; use the system's on-screen keyboard for typing. Mount the music USB through the operating system before selecting it in OLC.
@@ -43,7 +43,7 @@ To use a Pi without a monitor or a logged-in user, use 64-bit Raspberry Pi OS Li
 Log in once over SSH as the ordinary Pi account that will run OLC. Quit any running OLC desktop app and disable its login-startup option before switching to the service. Download the host `.deb` from the release, then run the following in its folder (replace the version in the filename with your downloaded version):
 
 ```sh
-sudo apt install ./onelibrarycompanion-host_0.4.0_arm64.deb
+sudo apt install ./onelibrarycompanion-host_0.5.0_arm64.deb
 sudo loginctl enable-linger "$(id -un)"
 systemctl --user enable --now olc-host.service
 loginctl show-user "$(id -un)" --property=Linger
@@ -53,6 +53,11 @@ systemctl --user status olc-host.service --no-pager
 Expect `Linger=yes` and an `active (running)` service. [Systemd lingering](https://www.freedesktop.org/software/systemd/man/252/loginctl.html) starts this account's service manager at boot and keeps it running after logout. Enabling `olc-host.service` makes OLC start with that manager. Run the `systemctl --user` commands as the ordinary account, without `sudo`; only installation and enabling lingering need administrator rights. The packaged service restarts OLC after a failure.
 
 If the Pi's hostname is **OLC**, open [http://OLC.local:8787](http://OLC.local:8787) on another device on the same network. For another hostname, use `http://your-hostname.local:8787`. If the hostname does not resolve, find the Pi's LAN address with `hostname -I` and open that address with port `8787`. Configure your CDJ connections and library in MENU/BROWSE. A router DHCP reservation is useful to keep this address stable. Keep access on your local network.
+
+An iPad can act as the headless Pi's display: open that address in Safari and
+choose **Share → Add to Home Screen** for a full-screen shortcut. The shortcut
+may store its own display preferences separately from the Safari tab. Music and
+USB access stay on the Pi.
 
 Verify unattended startup:
 
@@ -67,6 +72,8 @@ loginctl show-user "$(id -un)" --property=Linger
 systemctl --user is-enabled olc-host.service
 systemctl --user status olc-host.service --no-pager
 journalctl --user -u olc-host.service -b -n 100 --no-pager
+# If the user journal is empty, inspect the system journal:
+sudo journalctl _SYSTEMD_USER_UNIT=olc-host.service -b -n 100 --no-pager
 hostname -I
 ```
 
@@ -115,7 +122,7 @@ Quit OLC before copying the complete application data folder:
 | Mac | `~/Library/Application Support/OneLibraryCompanion` |
 | Pi | `~/.local/share/onelibrarycompanion`, or the configured XDG data location |
 
-This preserves saved sets, artwork and host settings. Display preferences and filter presets are stored separately in each browser or app window. The Mac folder also contains `host.log` for startup troubleshooting.
+This preserves saved sets, artwork, CDJ profiles, host settings and saved load incidents. Display preferences and filter presets are stored separately in each browser or app window. The Mac folder also contains `host.log` for startup troubleshooting.
 
 ## Remove Mac Local USB Support
 
@@ -123,7 +130,7 @@ Stop playback and quit OLC. In Finder, show the application's package contents a
 
 ### Safely removing a USB on the headless Pi
 
-In MENU, use **Unmount USB · volume name**, then confirm. Turn off or disconnect the CDJs first. OLC briefly stops, unmounts the selected external USB volume through UDisks, then starts again. Keep the USB connected until the page says it is safe to remove. A busy volume is never forcibly unmounted; close other applications using it and retry. For USBs with multiple mounted partitions, the button unmounts all of them. USB devices containing system mounts are excluded. The controls appear only on the packaged Linux systemd host; iPad folder access does not provide an OS unmount operation.
+In MENU, use **Unmount USB · volume name**, then confirm. Turn off or disconnect the CDJs first. OLC briefly stops, unmounts the selected external USB volume through UDisks, then starts again. Keep the USB connected until the page says it is safe to remove. A busy volume is never forcibly unmounted; close other applications using it and retry. For USBs with multiple mounted partitions, the button unmounts all of them. USB devices containing system mounts are excluded. The controls appear on the packaged Linux systemd host.
 
 The headless USB helper uses non-interactive sudo so it works without a desktop login. The Pi setup account already has passwordless sudo. For a restricted service account, grant only the required UDisks unmount command with `sudo visudo` (replace `your_pi_user`):
 
@@ -132,12 +139,6 @@ your_pi_user ALL=(root) NOPASSWD: /usr/bin/udisksctl unmount --no-user-interacti
 ```
 
 The packaged helper independently restricts operations to mounted external USB devices with no system mounts; it never forces an unmount.
-
-### iPad Safari display and waveform diagnostics
-
-Open OLC in Safari, reload after a UI update, and use Share → Add to Home Screen. Launch the new Home Screen icon to open OLC without Safari tabs or its address bar. Standalone support uses the iPadOS 17-compatible Apple web-app meta tag; no OS update or service worker is required. A Home Screen web app can keep its own preferences separately from the Safari tab.
-
-For scrolling stutter, reproduce it in CDJ STATUS, then open MENU → Waveforms → Show waveform performance. The report retains the last two scrolling canvases’ measurements before MENU replaced them. Frame median/P95 and drawing cost measure the display device, while position-jump counts measure deviations from steady predicted playback (including seeks or unreported wraps). These figures do not establish the cause alone. No report is uploaded automatically.
 
 ### Updating a Pi while using CDJs
 

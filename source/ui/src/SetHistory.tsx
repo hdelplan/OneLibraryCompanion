@@ -10,6 +10,7 @@ import {
 import { download, emailDraft, exportFile } from "./setHistoryExport";
 import type { LibrarySource } from "./libraryModel";
 import "./setHistory.css";
+import "./studio.css";
 async function request(url: string, body?: unknown) {
   const response = await fetch(
     url,
@@ -68,6 +69,11 @@ function Details({
   );
   return (
     <div className="set-overview">
+      <div className="studio-session-cover">
+        <small>{setDate(set)}</small>
+        <h2 title={set.title}>{set.title}</h2>
+        <span>{sessionLabel}</span>
+      </div>
       <div className="set-heading">
         <span className="library-eyebrow">{sessionLabel}</span>
         <input
@@ -353,7 +359,7 @@ export function SetHistory({ active }: { active: boolean }) {
       <header className="set-toolbar">
         <div>
           <span className="library-eyebrow">YOUR SESSIONS, IN ORDER</span>
-          <h1>SET HISTORY</h1>
+          <h1>Set history</h1>
         </div>
         <span className={`set-recording ${state?.recording ? "on" : ""}`}>
           <i />
@@ -520,257 +526,261 @@ export function SetHistory({ active }: { active: boolean }) {
             </div>
           )}
         </aside>
-        <div className="set-main">
+        <div className={`set-main ${set ? "studio-has-session" : ""}`}>
           {set ? (
             <>
-              <Details
-                key={set.id}
-                set={set}
-                save={command}
-                onDirty={setDetailsDirty}
-                sessionLabel={
-                  set.id === current?.id
-                    ? "CURRENT SESSION"
-                    : set.origin === "sample"
-                      ? "SAMPLE SESSION"
-                      : "SAVED SESSION"
-                }
-              />
-              {set.recovered && (
-                <div className="set-recovery">
-                  This set was interrupted. Capture resumes automatically when
-                  playback returns.{" "}
-                  <button
-                    disabled={busy}
-                    onClick={() =>
-                      void command({ action: "finish", id: set.id })
-                    }
-                  >
-                    Finish & save
-                  </button>
-                </div>
-              )}
-              <div className="set-track-toolbar">
-                {(() => {
-                  const previous = sorted.filter(
-                    (item) =>
-                      item.id !== set.id &&
-                      item.id !== current?.id &&
-                      item.startedAt <= set.startedAt,
-                  )[0];
-                  return previous &&
-                    !["imported", "sample"].includes(set.origin) &&
-                    !["imported", "sample"].includes(previous.origin) ? (
+              <div className="studio-session-dossier">
+                <Details
+                  key={set.id}
+                  set={set}
+                  save={command}
+                  onDirty={setDetailsDirty}
+                  sessionLabel={
+                    set.id === current?.id
+                      ? "CURRENT SESSION"
+                      : set.origin === "sample"
+                        ? "SAMPLE SESSION"
+                        : "SAVED SESSION"
+                  }
+                />
+                {set.recovered && (
+                  <div className="set-recovery">
+                    This set was interrupted. Capture resumes automatically when
+                    playback returns.{" "}
                     <button
                       disabled={busy}
-                      onClick={() => {
-                        if (
-                          window.confirm(
-                            `Join “${previous.title}” and “${set.title}” into one set? Both tracklists will be preserved.`,
-                          )
-                        ) {
-                          void command({
-                            action: "merge",
-                            id: set.id,
-                            previousId: previous.id,
-                          });
-                        }
-                      }}
+                      onClick={() =>
+                        void command({ action: "finish", id: set.id })
+                      }
                     >
-                      Join previous set
+                      Finish & save
                     </button>
-                  ) : null;
-                })()}
-                <span>
-                  TRACKLIST{" "}
-                  <small>
-                    {set.origin === "sample"
-                      ? "Sample tracklist"
-                      : set.origin === "imported"
-                        ? "Original Rekordbox order"
-                        : "Qualifies after more than 45 seconds of continuous playback"}
-                  </small>
-                </span>
-                <button onClick={() => setEdit(!edit)}>
-                  {edit ? "Done editing" : "Edit tracklist"}
-                </button>
-                {edit && (
-                  <button
-                    disabled={busy}
-                    onClick={() =>
-                      void command({ action: "restore", id: set.id })
-                    }
-                  >
-                    Restore original
-                  </button>
-                )}
-              </div>
-              <div className="set-table-wrap">
-                <table className="set-table">
-                  <thead>
-                    <tr>
-                      <th>#</th>
-                      <th>ART</th>
-                      <th>TITLE / ARTIST</th>
-                      <th>KEY</th>
-                      <th>RATING</th>
-                      {edit && <th>EDIT</th>}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {orderedTracks(set).map((event, i) => (
-                      <tr key={event.id}>
-                        <td className="set-sequence">
-                          {String(i + 1).padStart(2, "0")}
-                        </td>
-                        <td>
-                          <Artwork
-                            key={event.track.artwork ?? event.id}
-                            name={event.track.artwork}
-                          />
-                        </td>
-                        <td>
-                          <strong className="set-track-title">
-                            {event.track.title || "Untitled"}
-                          </strong>
-                          <small>
-                            {event.track.artist || "Unknown artist"}
-                          </small>
-                        </td>
-                        <td>
-                          <span className="set-key">
-                            {event.track.key || "—"}
-                          </span>
-                        </td>
-                        <td
-                          className="library-stars"
-                          aria-label={`${event.track.rating} out of 5 stars`}
-                        >
-                          {"★".repeat(event.track.rating)}
-                          <span className="set-unrated">
-                            {"☆".repeat(5 - event.track.rating)}
-                          </span>
-                        </td>
-                        {edit && (
-                          <td className="set-row-actions">
-                            <button
-                              disabled={busy || i === 0}
-                              aria-label={`Move ${event.track.title} up`}
-                              onClick={() =>
-                                void command({
-                                  action: "move",
-                                  id: set.id,
-                                  entry: event.id,
-                                  delta: -1,
-                                })
-                              }
-                            >
-                              ↑
-                            </button>
-                            <button
-                              disabled={busy || i === set.order.length - 1}
-                              aria-label={`Move ${event.track.title} down`}
-                              onClick={() =>
-                                void command({
-                                  action: "move",
-                                  id: set.id,
-                                  entry: event.id,
-                                  delta: 1,
-                                })
-                              }
-                            >
-                              ↓
-                            </button>
-                            <button
-                              disabled={busy}
-                              aria-label={`Remove ${event.track.title}`}
-                              onClick={() =>
-                                void command({
-                                  action: "remove",
-                                  id: set.id,
-                                  entry: event.id,
-                                })
-                              }
-                            >
-                              ×
-                            </button>
-                          </td>
-                        )}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-                {!set.order.length && (
-                  <div className="set-empty">
-                    <h3>
-                      {set.id === current?.id
-                        ? "Waiting for the first track"
-                        : "No tracks in this list"}
-                    </h3>
-                    <p>
-                      {set.id === current?.id
-                        ? "Play a track continuously for more than 45 seconds on a connected CDJ."
-                        : "Use Restore original while editing to recover removed entries."}
-                    </p>
-                    {state?.pending.map((p) => (
-                      <span className="set-timer" key={p.deck}>
-                        CDJ{p.deck} · {p.seconds} / 45 sec
-                      </span>
-                    ))}
                   </div>
                 )}
               </div>
-              <div className="set-export">
-                <span>EXPORT</span>
-                <select
-                  aria-label="Export sets"
-                  value={scope}
-                  onChange={(e) => setScope(e.target.value)}
-                >
-                  <option value="selected">Selected set</option>
-                  <option value="last" disabled={!past.length}>
-                    Last finished set
-                  </option>
-                  <option value="all" disabled={!past.length}>
-                    All past sets ({past.length})
-                  </option>
-                </select>
-                <select
-                  aria-label="Export format"
-                  value={format}
-                  onChange={(e) => setFormat(e.target.value as ExportFormat)}
-                >
-                  <option value="txt">Text (.txt)</option>
-                  <option value="csv">CSV (.csv)</option>
-                  <option value="pdf">PDF (.pdf)</option>
-                </select>
-                <button
-                  disabled={!prepared || exportBusy || busy || detailsDirty}
-                  onClick={() => {
-                    if (prepared) download(prepared);
-                  }}
-                >
-                  ↓ Save file
-                </button>
-                <button
-                  disabled={!prepared || exportBusy || busy || detailsDirty}
-                  onClick={() => void share()}
-                >
-                  Share…
-                </button>
-                <button
-                  disabled={!prepared || exportBusy || busy || detailsDirty}
-                  onClick={() => {
-                    if (prepared) {
-                      emailDraft(prepared, exportSets);
-                      setNotice(
-                        "Export downloaded and email draft requested. For CSV/PDF, attach the downloaded file in your mail app.",
-                      );
-                    }
-                  }}
-                >
-                  Email…
-                </button>
+              <div className="studio-session-tracks">
+                <div className="set-track-toolbar">
+                  {(() => {
+                    const previous = sorted.filter(
+                      (item) =>
+                        item.id !== set.id &&
+                        item.id !== current?.id &&
+                        item.startedAt <= set.startedAt,
+                    )[0];
+                    return previous &&
+                      !["imported", "sample"].includes(set.origin) &&
+                      !["imported", "sample"].includes(previous.origin) ? (
+                      <button
+                        disabled={busy}
+                        onClick={() => {
+                          if (
+                            window.confirm(
+                              `Join “${previous.title}” and “${set.title}” into one set? Both tracklists will be preserved.`,
+                            )
+                          ) {
+                            void command({
+                              action: "merge",
+                              id: set.id,
+                              previousId: previous.id,
+                            });
+                          }
+                        }}
+                      >
+                        Join previous set
+                      </button>
+                    ) : null;
+                  })()}
+                  <span>
+                    TRACKLIST{" "}
+                    <small>
+                      {set.origin === "sample"
+                        ? "Sample tracklist"
+                        : set.origin === "imported"
+                          ? "Original Rekordbox order"
+                          : "Qualifies after more than 45 seconds of continuous playback"}
+                    </small>
+                  </span>
+                  <button onClick={() => setEdit(!edit)}>
+                    {edit ? "Done editing" : "Edit tracklist"}
+                  </button>
+                  {edit && (
+                    <button
+                      disabled={busy}
+                      onClick={() =>
+                        void command({ action: "restore", id: set.id })
+                      }
+                    >
+                      Restore original
+                    </button>
+                  )}
+                </div>
+                <div className="set-table-wrap">
+                  <table className="set-table">
+                    <thead>
+                      <tr>
+                        <th>#</th>
+                        <th>ART</th>
+                        <th>TITLE / ARTIST</th>
+                        <th>KEY</th>
+                        <th>RATING</th>
+                        {edit && <th>EDIT</th>}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {orderedTracks(set).map((event, i) => (
+                        <tr key={event.id}>
+                          <td className="set-sequence">
+                            {String(i + 1).padStart(2, "0")}
+                          </td>
+                          <td>
+                            <Artwork
+                              key={event.track.artwork ?? event.id}
+                              name={event.track.artwork}
+                            />
+                          </td>
+                          <td>
+                            <strong className="set-track-title">
+                              {event.track.title || "Untitled"}
+                            </strong>
+                            <small>
+                              {event.track.artist || "Unknown artist"}
+                            </small>
+                          </td>
+                          <td>
+                            <span className="set-key">
+                              {event.track.key || "—"}
+                            </span>
+                          </td>
+                          <td
+                            className="library-stars"
+                            aria-label={`${event.track.rating} out of 5 stars`}
+                          >
+                            {"★".repeat(event.track.rating)}
+                            <span className="set-unrated">
+                              {"☆".repeat(5 - event.track.rating)}
+                            </span>
+                          </td>
+                          {edit && (
+                            <td className="set-row-actions">
+                              <button
+                                disabled={busy || i === 0}
+                                aria-label={`Move ${event.track.title} up`}
+                                onClick={() =>
+                                  void command({
+                                    action: "move",
+                                    id: set.id,
+                                    entry: event.id,
+                                    delta: -1,
+                                  })
+                                }
+                              >
+                                ↑
+                              </button>
+                              <button
+                                disabled={busy || i === set.order.length - 1}
+                                aria-label={`Move ${event.track.title} down`}
+                                onClick={() =>
+                                  void command({
+                                    action: "move",
+                                    id: set.id,
+                                    entry: event.id,
+                                    delta: 1,
+                                  })
+                                }
+                              >
+                                ↓
+                              </button>
+                              <button
+                                disabled={busy}
+                                aria-label={`Remove ${event.track.title}`}
+                                onClick={() =>
+                                  void command({
+                                    action: "remove",
+                                    id: set.id,
+                                    entry: event.id,
+                                  })
+                                }
+                              >
+                                ×
+                              </button>
+                            </td>
+                          )}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {!set.order.length && (
+                    <div className="set-empty">
+                      <h3>
+                        {set.id === current?.id
+                          ? "Waiting for the first track"
+                          : "No tracks in this list"}
+                      </h3>
+                      <p>
+                        {set.id === current?.id
+                          ? "Play a track continuously for more than 45 seconds on a connected CDJ."
+                          : "Use Restore original while editing to recover removed entries."}
+                      </p>
+                      {state?.pending.map((p) => (
+                        <span className="set-timer" key={p.deck}>
+                          CDJ{p.deck} · {p.seconds} / 45 sec
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <div className="set-export">
+                  <span>EXPORT</span>
+                  <select
+                    aria-label="Export sets"
+                    value={scope}
+                    onChange={(e) => setScope(e.target.value)}
+                  >
+                    <option value="selected">Selected set</option>
+                    <option value="last" disabled={!past.length}>
+                      Last finished set
+                    </option>
+                    <option value="all" disabled={!past.length}>
+                      All past sets ({past.length})
+                    </option>
+                  </select>
+                  <select
+                    aria-label="Export format"
+                    value={format}
+                    onChange={(e) => setFormat(e.target.value as ExportFormat)}
+                  >
+                    <option value="txt">Text (.txt)</option>
+                    <option value="csv">CSV (.csv)</option>
+                    <option value="pdf">PDF (.pdf)</option>
+                  </select>
+                  <button
+                    disabled={!prepared || exportBusy || busy || detailsDirty}
+                    onClick={() => {
+                      if (prepared) download(prepared);
+                    }}
+                  >
+                    ↓ Save file
+                  </button>
+                  <button
+                    disabled={!prepared || exportBusy || busy || detailsDirty}
+                    onClick={() => void share()}
+                  >
+                    Share…
+                  </button>
+                  <button
+                    disabled={!prepared || exportBusy || busy || detailsDirty}
+                    onClick={() => {
+                      if (prepared) {
+                        emailDraft(prepared, exportSets);
+                        setNotice(
+                          "Export downloaded and email draft requested. For CSV/PDF, attach the downloaded file in your mail app.",
+                        );
+                      }
+                    }}
+                  >
+                    Email…
+                  </button>
+                </div>
               </div>
             </>
           ) : (

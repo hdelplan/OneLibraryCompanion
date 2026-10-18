@@ -55,7 +55,7 @@ export async function downloadWaveform(
   }
 }
 
-export function unpackWaveform(analysis: Analysis): Analysis {
+function unpackWaveform(analysis: Analysis): Analysis {
   for (const field of ["detail", "preview"] as const) {
     const wave = analysis[field] as (Wave & { packedColumns?: string }) | null;
     if (!wave || wave.packedColumns === undefined) continue;

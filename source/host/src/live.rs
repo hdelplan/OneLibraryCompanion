@@ -13,6 +13,7 @@ use std::{
 #[path = "direct_live.rs"]
 pub mod direct;
 pub struct LiveState {
+    pub(crate) configurations: Option<crate::cdj_config::Shared>,
     direct_task: Option<tokio::task::JoinHandle<()>>,
     direct_controls: Option<tokio::sync::mpsc::Sender<direct::Control>>,
     direct_peers: Vec<Value>,
@@ -29,6 +30,7 @@ pub struct LiveState {
 impl Default for LiveState {
     fn default() -> Self {
         Self {
+            configurations: None,
             direct_task: None,
             direct_controls: None,
             direct_peers: vec![],
@@ -130,7 +132,10 @@ pub fn start(interface: Option<String>, catalogs: crate::library::Shared) -> Sha
 pub async fn load(shared: &Shared, body: Value) -> Value {
     // A local first load includes file preparation and source discovery before
     // the normal 12-second CDJ confirmation window even starts.
-    let wait = if body["source"]
+    let configuration = crate::cdj_config::is_command(&body);
+    let wait = if configuration {
+        Duration::from_secs(5)
+    } else if body["source"]
         .as_str()
         .is_some_and(|s| s.starts_with("local-usb:"))
     {
@@ -152,7 +157,7 @@ pub async fn load(shared: &Shared, body: Value) -> Value {
     match tokio::time::timeout(wait, receiver).await {
         Ok(Ok(result)) => result,
         _ => {
-            json!({"outcome":"unknown","message":"Load outcome unknown. Check the CDJ before trying again; no automatic retry was sent."})
+            json!({"outcome":"unknown","message":if configuration {"Settings send outcome unknown. Check the CDJ before trying again; no automatic retry was sent."} else {"Load outcome unknown. Check the CDJ before trying again; no automatic retry was sent."}})
         }
     }
 }
@@ -310,6 +315,26 @@ async fn observe(
             .tick(&discovery, &monitor, &catalogs, observer.number().get())
             .await?;
         if let Some(command) = command {
+            if crate::cdj_config::is_command(&command.body) {
+                if command.reply.is_closed() {
+                    continue;
+                }
+                let result = configuration_command(
+                    &shared,
+                    &command,
+                    &discovery,
+                    &monitor,
+                    observer.number().get(),
+                    local.busy(command.body["target"].as_u64().unwrap_or(0) as u8)
+                        || loading.busy(command.body["target"].as_u64().unwrap_or(0) as u8),
+                    &local,
+                )
+                .await;
+                if !command.reply.is_closed() {
+                    let _ = command.reply.send(result);
+                }
+                continue;
+            }
             let target = command.body["target"]
                 .as_u64()
                 .and_then(|n| u8::try_from(n).ok())
@@ -516,6 +541,10 @@ async fn observe(
                     label.map(str::to_owned).unwrap_or_else(||
                         format!("CDJ{} {}",t.source_player,t.slot.to_string().to_uppercase()))
                 })}));
+            let deck = decks.last_mut().unwrap();
+            deck["configurationIdentity"] = json!(format!("mac:{}", device.mac));
+            deck["configurationUsb"] = json!(status.is_some_and(|s| s.usb_present));
+            deck["configurationSd"] = json!(status.is_some_and(|s| s.sd_present));
             if !ready
                 && let (Some(key), Some(track), Some(peer)) = (key, track, peer)
                 && requests
@@ -565,6 +594,75 @@ async fn observe(
         publish(&state);
         let _keep_alive = &observer;
     }
+}
+
+async fn configuration_command(
+    shared: &Shared,
+    command: &crate::loading::Command,
+    discovery: &Discovery,
+    monitor: &Monitor,
+    sender: u8,
+    busy: bool,
+    local: &crate::discovered_local::Session,
+) -> Value {
+    let body = &command.body;
+    let result = async {
+        if busy || crate::cue_window::occupied() || crate::jog_trace::guided_active() {
+            return Err("Wait for track loads and diagnostics to finish".into());
+        }
+        let socket = monitor
+            .status_sender()
+            .ok_or("Settings transport unavailable")?;
+        tokio::time::timeout(Duration::from_millis(100), socket.writable())
+            .await
+            .map_err(|_| "Settings transport busy")?
+            .map_err(|_| "Settings transport unavailable")?;
+        if command.reply.is_closed() {
+            return Err("Settings request cancelled".into());
+        }
+        let number = body["target"]
+            .as_u64()
+            .and_then(|n| u8::try_from(n).ok())
+            .ok_or("Select a player")?;
+        let device = discovery
+            .online()
+            .into_iter()
+            .find(|d| d.number.get() == number)
+            .ok_or("Player is not connected")?;
+        let observed = monitor
+            .player(device.number)
+            .and_then(|p| p.status)
+            .ok_or("Waiting for player status")?;
+        let store = shared
+            .lock()
+            .unwrap()
+            .configurations
+            .clone()
+            .ok_or("Configuration storage unavailable")?;
+        let (sender, name) = local.configuration_sender(device.ip, sender);
+        let bytes = crate::cdj_config::encode(
+            &store,
+            body,
+            crate::cdj_config::PlayerEvidence {
+                identity: &format!("mac:{}", device.mac),
+                ip: &device.ip.to_string(),
+                model: &device.name.as_str(),
+                number,
+                age: observed.age,
+                playing: observed.status.is_playing,
+                play_state: observed.status.play_state.0,
+                track_loaded: observed.status.track.is_some(),
+            },
+            sender,
+            name,
+        )?;
+        socket
+            .try_send_to(&bytes, (device.ip, 50002).into())
+            .map_err(|e| e.to_string())?;
+        Ok::<_, String>(crate::cdj_config::sent(body, sender))
+    }
+    .await;
+    result.unwrap_or_else(|message|json!({"outcome":"error","message":message,"target":body["target"],"automatic":body["automatic"]}))
 }
 
 async fn fetch_asset(

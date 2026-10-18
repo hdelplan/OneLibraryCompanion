@@ -2,7 +2,11 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 NODE="${NODE:-node}"
+"$NODE" scripts/check-node.cjs
 python3 scripts/check-docs.py
+python3 -m unittest discover -s scripts/tests -p test_publication.py
+python3 -m unittest discover -s scripts/tests -p test_usb_unmount.py
+python3 scripts/test_position_signals.py
 # Format application packages only, never local or vendored experiments.
 cargo fmt -p pioneer-companion-core -p pioneer-companion-host -- --check
 cargo test --workspace --locked

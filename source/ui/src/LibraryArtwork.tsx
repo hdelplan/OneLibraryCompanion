@@ -11,7 +11,7 @@ export function LibraryArtwork({
   generation: number | undefined;
   large?: boolean;
 }) {
-  const [failed, setFailed] = useState(false);
+  const [failed, setFailed] = useState("");
   const src = track.savedArtwork
     ? `/api/sets/artwork/${encodeURIComponent(String(track.savedArtwork))}`
     : track.artworkPath && generation !== undefined
@@ -19,13 +19,13 @@ export function LibraryArtwork({
       : "";
   return (
     <div className={`library-artwork ${large ? "large" : ""}`}>
-      {src && !failed ? (
+      {src && failed !== src ? (
         <img
           src={String(src)}
           alt={large ? `Artwork for ${track.title}` : ""}
           loading={large ? "eager" : "lazy"}
           decoding="async"
-          onError={() => setFailed(true)}
+          onError={() => setFailed(src)}
         />
       ) : (
         <span role="img" aria-label="No artwork">

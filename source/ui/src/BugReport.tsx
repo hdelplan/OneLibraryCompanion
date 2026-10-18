@@ -74,7 +74,11 @@ async function capture() {
   localReport = { session: state.session, browser };
 }
 let localReport: unknown = null;
-export function BugReport() {
+export function BugReport({
+  onAvailabilityChange,
+}: {
+  onAvailabilityChange?: (enabled: boolean) => void;
+}) {
   const [enabled, setEnabled] = useState(false);
   const [status, setStatus] = useState(message);
   const [busy, setBusy] = useState(!!pending);
@@ -110,6 +114,9 @@ export function BugReport() {
       clearInterval(timer);
     };
   }, []);
+  useEffect(() => {
+    onAvailabilityChange?.(enabled);
+  }, [enabled, onAvailabilityChange]);
   if (!enabled) return null;
   return (
     <section className="settings-panel">

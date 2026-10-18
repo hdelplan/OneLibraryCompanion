@@ -1,0 +1,609 @@
+/* Shared Studio workspace. Deck/status controls retain their existing styling.
+   Browse row sizing and the 16 / 12 / 8 density presets stay in library.css. */
+.studio-config,
+.set-screen,
+.library-screen {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+  color: #eee;
+  background: #15191c;
+}
+.studio-config button,
+.set-screen button,
+.library-screen button {
+  font-family: inherit;
+}
+.studio-config.config-page {
+  display: grid;
+  grid-template-columns: 246px minmax(0, 1fr);
+  padding: 0;
+  overflow: hidden;
+}
+.config-sidebar {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 26px 18px 20px;
+  background: #101214;
+  border-right: 1px solid #343434;
+}
+.config-sidebar-heading {
+  padding: 0 13px 23px;
+}
+.config-sidebar-heading h1 {
+  font-size: 32px;
+  font-weight: 600;
+  letter-spacing: -1px;
+  margin: 0 0 8px;
+}
+.config-sidebar-heading p,
+.config-sidebar-note {
+  color: #929592;
+  font-size: 11px;
+  line-height: 1.6;
+  margin: 0;
+}
+.config-section-links {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.config-section-links button {
+  min-height: 40px;
+  width: 100%;
+  text-align: left;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  padding: 10px 13px;
+  color: #b5b8ba;
+  font-size: 13px;
+}
+.config-section-links button:hover {
+  background: #202427;
+  color: #eee;
+}
+.config-section-links button[aria-current="page"] {
+  background: #20313a;
+  color: #a0e4ff;
+  border-color: #29404b;
+}
+.config-sidebar-note {
+  margin-top: auto;
+  padding: 24px 13px 0;
+}
+.config-workspace {
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  padding: 27px 36px 22px;
+}
+.studio-config .page-heading {
+  gap: 24px;
+  align-items: start;
+  margin-bottom: 23px;
+}
+.studio-config .page-heading h1 {
+  font-size: 34px;
+  font-weight: 600;
+  letter-spacing: -1.2px;
+  line-height: 1.2;
+  margin: 6px 0 9px;
+}
+.studio-config .page-heading small {
+  font-size: 9px;
+  color: #929592;
+  letter-spacing: 1.5px;
+}
+.studio-config .page-heading p {
+  font-size: 13px;
+  line-height: 1.6;
+  color: #929592;
+  margin: 0;
+}
+.studio-config .page-heading button {
+  flex-shrink: 0;
+  border: 1px solid #343b40;
+  border-radius: 6px;
+  background: #202427;
+  padding: 11px 14px;
+  font-size: 12px;
+}
+.config-panel[hidden] {
+  display: none;
+}
+.studio-config .settings-panel {
+  min-width: 0;
+  background: #202427;
+  border: 1px solid #303639;
+  border-radius: 8px;
+  padding: 22px 24px;
+}
+.studio-config .settings-panel > h2 {
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.3px;
+  margin-bottom: 20px;
+}
+.config-panel-display > .settings-panel > h2,
+.config-panel-waveforms > .settings-panel > h2,
+.config-panel-track > .settings-panel > h2 {
+  display: none;
+}
+.studio-config .settings-panel > label {
+  gap: 24px;
+  min-height: 64px;
+  padding: 12px 0;
+  border-color: #343b40;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.studio-config .settings-panel > label:first-of-type {
+  padding-top: 0;
+}
+.studio-config .settings-panel select {
+  max-width: 100%;
+  border: 1px solid #454d54;
+  border-radius: 5px;
+  background-color: #15191c;
+  padding: 10px 12px;
+  font-size: 12px;
+}
+.studio-config .settings-panel p {
+  font-size: 12px;
+  line-height: 1.7;
+  color: #a1a5a7;
+}
+.studio-config .settings-panel > button {
+  border-radius: 5px;
+  font-size: 12px;
+}
+.studio-config .settings-saved {
+  margin: 17px 0 0;
+  padding: 0;
+  font-size: 11px;
+  line-height: 1.7;
+  color: #929592;
+}
+.studio-comparison-preview {
+  margin: 16px 0 0;
+  width: min(100%, 720px);
+}
+.studio-comparison-preview figcaption {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 12px;
+  margin-bottom: 10px;
+}
+.studio-comparison-preview figcaption span {
+  color: #929592;
+  font-size: 10px;
+}
+.studio-comparison-preview svg {
+  display: block;
+  width: 100%;
+  border: 1px solid #393e42;
+  border-radius: 4px;
+}
+.studio-comparison-preview svg text {
+  font:
+    9px Arial,
+    sans-serif;
+}
+/* The sidebar adds identity without consuming any vertical track space. */
+.library-screen .library-sidebar {
+  width: 246px;
+  background: #15191c;
+  border-right: 0;
+  padding: 23px 18px 14px;
+}
+.studio-collection-heading {
+  padding: 0 12px 23px;
+  margin-bottom: 15px;
+  border-bottom: 1px solid #343434;
+}
+.studio-collection-heading > small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  color: #929592;
+}
+.studio-collection-heading h2 {
+  font-size: 38px;
+  line-height: 1;
+  font-weight: 650;
+  letter-spacing: -1.7px;
+  margin: 15px 0 12px;
+}
+.studio-collection-heading p {
+  font-size: 11px;
+  line-height: 1.6;
+  color: #929592;
+  margin: 0;
+}
+.library-screen .library-sidebar > .library-section-title:first-of-type {
+  display: none;
+}
+.library-screen .library-sidebar > button,
+.library-screen .library-playlists button {
+  border-radius: 5px;
+  min-height: 38px;
+  font-size: 12px;
+  padding: 10px 12px;
+}
+.library-screen .library-sidebar button.chosen {
+  background: #20313a;
+  color: #a0e4ff;
+  border-left: 0;
+}
+.library-screen .library-sidebar > .library-history-toggle {
+  border-color: #343b40;
+  color: #b5b8ba;
+  background: #202427;
+  font-size: 10px;
+}
+.library-screen .library-content {
+  padding-left: 12px;
+  padding-right: 22px;
+}
+.library-screen .library-search input {
+  border-color: #343b40;
+  background: #202427;
+  border-radius: 6px;
+}
+.library-screen .library-search > button {
+  border-color: #343b40;
+  background: #202427;
+  border-radius: 5px;
+}
+.library-screen .library-filters {
+  border-bottom-color: #343b40;
+}
+.library-screen .library-facet > summary,
+.library-screen .library-filters select {
+  border-color: #343b40;
+  border-radius: 4px;
+}
+.library-screen .library-table-wrap {
+  background: #1b2125;
+  border-radius: 7px 7px 0 0;
+}
+.library-screen .library-table th {
+  background: #282f34;
+  color: #a1a5a7;
+}
+.library-screen .library-table td {
+  border-bottom-color: #343b40;
+}
+.library-screen .library-table tr.selected {
+  background: #17374b;
+}
+.library-screen .library-details {
+  background: #15191c;
+  border-top-color: #343b40;
+}
+/* Session dossier and tracklist are independent scroll regions. */
+.set-screen .set-toolbar {
+  min-height: 94px;
+  padding: 18px 26px;
+  gap: 10px;
+  border-bottom: 0;
+}
+.set-screen .set-toolbar h1 {
+  font-size: 32px;
+  font-weight: 600;
+  letter-spacing: -1px;
+  margin-top: 7px;
+}
+.set-screen .set-toolbar button,
+.set-screen .set-export button,
+.set-screen .set-track-toolbar button {
+  border-radius: 5px;
+  background: #202427;
+  border-color: #343b40;
+  font-size: 12px;
+}
+.set-screen .set-toolbar .set-primary {
+  background: #007d96;
+  border-color: #007d96;
+}
+.set-screen .set-sidebar {
+  width: 195px;
+  padding: 16px 16px;
+  border-right: 0;
+  background: #15191c;
+}
+.set-screen .set-sidebar strong {
+  font-size: 13px;
+}
+.set-screen .set-sidebar button > span {
+  color: #929592;
+  font-size: 11px;
+}
+.set-screen .set-sidebar .set-swipe-entry {
+  background: #15191c;
+  border: 1px solid transparent;
+  padding: 15px 12px;
+}
+.set-screen .set-sidebar .set-swipe-entry.chosen {
+  background: #20313a;
+  border-color: #29404b;
+}
+.set-screen .set-main.studio-has-session {
+  display: grid;
+  grid-template-columns: 290px minmax(0, 1fr);
+  gap: 24px;
+  padding: 12px 24px 20px 10px;
+}
+.studio-session-dossier {
+  min-height: 0;
+  min-width: 0;
+  overflow-y: auto;
+  background: #202427;
+  border: 1px solid #303639;
+  border-radius: 8px;
+}
+.set-screen .set-overview {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  padding: 0 21px 22px;
+}
+.studio-session-cover {
+  min-height: 184px;
+  padding: 20px 21px 24px;
+  margin: 0 -21px;
+  border-top: 3px solid #007d96;
+  background: #080808;
+}
+.studio-session-cover > small {
+  display: block;
+  color: #929592;
+  font-size: 9px;
+  letter-spacing: 1px;
+}
+.studio-session-cover h2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  font-size: 36px;
+  line-height: 1.02;
+  font-weight: 650;
+  letter-spacing: -1.4px;
+  margin: 25px 0 18px;
+}
+.studio-session-cover > span {
+  color: #929592;
+  font-size: 9px;
+  letter-spacing: 1.5px;
+}
+.set-screen .set-heading > .library-eyebrow {
+  display: none;
+}
+.set-screen .set-name {
+  font-family: inherit;
+  font-size: 21px;
+  font-weight: 600;
+  letter-spacing: -0.5px;
+  background: transparent;
+  border-color: transparent;
+  border-radius: 4px;
+  margin: 0 0 8px;
+  padding: 6px 0;
+}
+.set-screen .set-name:hover,
+.set-screen .set-name:focus {
+  border-color: #454d54;
+  background: #15191c;
+}
+.set-screen .set-heading p {
+  color: #a1a5a7;
+  font-size: 11px;
+  line-height: 1.7;
+}
+.set-screen .set-count {
+  flex-direction: column;
+  gap: 5px;
+  margin-top: 17px;
+}
+.set-screen .set-count strong {
+  font-size: 28px;
+  font-weight: 400;
+  color: #a0e4ff;
+}
+.set-screen .set-count span {
+  color: #929592;
+}
+.set-screen .set-details {
+  border-top: 1px solid #343b40;
+  padding-top: 20px;
+  gap: 17px;
+}
+.set-screen .set-details label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.set-screen .set-details label > span {
+  padding: 0;
+  color: #929592;
+}
+.set-screen .set-details input,
+.set-screen .set-details textarea {
+  background: #15191c;
+  border-color: #343b40;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 12px;
+}
+.studio-session-tracks {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+}
+.set-screen .set-track-toolbar {
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  padding: 3px 0 15px;
+  border: 0;
+  background: transparent;
+}
+.set-screen .set-track-toolbar > span {
+  font-weight: 600;
+  letter-spacing: -0.3px;
+  font-size: 16px;
+  flex: 1;
+  min-width: 120px;
+}
+.set-screen .set-track-toolbar small {
+  display: block;
+  margin: 7px 0 0;
+  font-size: 10px;
+  font-weight: 400;
+  line-height: 1.5;
+  letter-spacing: 0;
+  color: #929592;
+}
+.set-screen .set-table th {
+  background: #15191c;
+  color: #929592;
+  padding: 12px 6px;
+}
+.set-screen .set-table th:first-child {
+  width: 35px;
+  padding-left: 6px;
+}
+.set-screen .set-table th:nth-child(2) {
+  width: 43px;
+}
+.set-screen .set-table th:nth-child(4) {
+  width: 47px;
+}
+.set-screen .set-table th:nth-child(5) {
+  width: 85px;
+}
+.set-screen .set-table th:nth-child(6) {
+  width: 117px;
+}
+.set-screen .set-table td {
+  padding: 10px 6px;
+  border-color: #343b40;
+  height: 56px;
+}
+.set-screen .set-table td:first-child {
+  padding-left: 6px;
+}
+.set-screen .set-track-title {
+  font-size: 12px;
+  line-height: 1.6;
+}
+.set-screen .set-table td > small {
+  color: #929592;
+  font-size: 10px;
+}
+.set-screen .set-table .library-artwork {
+  width: 29px;
+  height: 29px;
+}
+.set-screen .set-table .library-stars {
+  letter-spacing: 0;
+  font-size: 13px;
+}
+.set-screen .set-row-actions button {
+  padding: 4px 7px;
+  margin-right: 3px;
+}
+.set-screen .set-export {
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 15px 0 0;
+  background: transparent;
+  border-color: #343b40;
+}
+.set-screen .set-export > span {
+  flex-basis: 100%;
+  margin: 0 0 4px;
+  font-size: 9px;
+  color: #929592;
+}
+.set-screen .set-export select,
+.set-screen .set-export button {
+  font-size: 10px;
+  padding: 8px;
+  min-width: 0;
+  border-radius: 4px;
+  background: #202427;
+  border-color: #343b40;
+}
+.set-screen .set-footer {
+  background: #101214;
+  border-color: #343b40;
+}
+/* The logical canvas is at least 1024px wide; compact dossier widths keep
+   editing and export reachable on iPad and on the 1920 x 720 Pi display. */
+@media (max-width: 1050px) {
+  .studio-config.config-page {
+    grid-template-columns: 216px minmax(0, 1fr);
+  }
+  .config-workspace {
+    padding: 24px;
+  }
+  .set-screen .set-main.studio-has-session {
+    grid-template-columns: 235px minmax(0, 1fr);
+    gap: 16px;
+    padding-right: 18px;
+  }
+}
+
+.library-screen .studio-collection-heading + .library-section-title {
+  display: none;
+}
+.studio-config .display-settings {
+  background: transparent;
+  border: 0;
+  padding: 0;
+}
+.studio-settings-group {
+  background: #202427;
+  border: 1px solid #303639;
+  border-radius: 8px;
+  padding: 19px 23px;
+  margin-bottom: 15px;
+}
+.studio-settings-group > h3 {
+  margin: 0 0 13px;
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: #929592;
+}
+.studio-settings-group > label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  min-height: 60px;
+  padding: 12px 0;
+  border-bottom: 1px solid #343b40;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.studio-settings-group > label:last-of-type {
+  border-bottom: 0;
+}
+.studio-config .settings-saved {
+  text-align: left;
+}
+.set-screen .set-export > button:first-of-type {
+  background: #007d96;
+  border-color: #007d96;
+}

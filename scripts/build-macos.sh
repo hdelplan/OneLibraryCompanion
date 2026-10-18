@@ -9,8 +9,11 @@ case "$arch" in
   *) echo 'Usage: scripts/build-macos.sh [arm64|x86_64]' >&2; exit 1 ;;
 esac
 node_bin="${NODE:-node}"
+"$node_bin" scripts/check-node.cjs
 mac_sdk="$(xcrun --sdk macosx --show-sdk-path)"
-swift_cache="$repo_root/target/swift-macos-$arch-cache"
+swift_toolchain=$(xcrun swiftc -version | shasum -a 256 | cut -c 1-12)
+# Do not reuse Clang/Swift modules from a different SDK or compiler.
+swift_cache="$repo_root/target/swift-macos-$arch-$swift_toolchain-$(basename "$mac_sdk")"
 if ! rustup target list --installed | grep -qx "$rust_target"; then
   echo "Install the Rust target first: rustup target add $rust_target" >&2; exit 1
 fi
@@ -22,6 +25,17 @@ stage="$repo_root/builds/macos-$arch"
 # Replace generated artifacts only; never touch development sources or user data.
 mkdir -p "$stage"
 app="$stage/OneLibraryCompanion.app"
+# A build must not inherit removed resources or an older source manifest.
+python3 - "$app" "$stage/dmg" <<'PYRESET'
+from pathlib import Path
+import shutil, sys
+for value in sys.argv[1:]:
+    path = Path(value)
+    if path.is_symlink():
+        path.unlink()
+    elif path.exists():
+        shutil.rmtree(path)
+PYRESET
 mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources"
 xcrun swiftc -parse-as-library -O -sdk "$mac_sdk" -target "$arch-apple-macos13.0" -module-cache-path "$swift_cache" \
   -framework Cocoa -framework WebKit -framework ServiceManagement source/desktop/macos/OLC.swift -o "$app/Contents/MacOS/OLC"

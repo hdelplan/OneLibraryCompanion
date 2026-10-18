@@ -2,7 +2,7 @@ import type { Column, Wave } from "./model";
 import { drawBands } from "./bandGeometry";
 // Native-band scaling follows Beat Link's PWV7 renderer; overlap palette
 // follows the CDJ-3000 band-set codec. See docs/research/latency-and-waveforms-2026-09-30.md.
-export const rx3Colors = { low: "#0055e1", mid: "#ffa600", high: "#ffffff" };
+const rx3Colors = { low: "#0055e1", mid: "#ffa600", high: "#ffffff" };
 const bandColors = [
   "#000000",
   "#0055e1",

@@ -21,5 +21,8 @@ jobs:
       - run: ./scripts/setup.sh
       - run: ./scripts/check-app.sh
       - run: cargo test --workspace --locked --features experiments
-      - run: python3 -m unittest discover -s scripts/tests
-      - run: python3 scripts/check-distribution.py
+      - run: cargo test --manifest-path vendor/prolink/Cargo.toml --locked -p prolink-proto
+      - run: cargo test --manifest-path vendor/prolink/Cargo.toml --locked -p prolink serve::diagnostics --lib
+      - run: cargo test --manifest-path vendor/prolink/Cargo.toml --locked -p prolink serve::nfs --lib
+      - run: cd source/ui && node node_modules/vite/bin/vite.js build --mode experiments
+      - run: python3 scripts/check-distribution.py --experimental-ui source/ui/dist-experiments
