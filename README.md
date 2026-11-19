@@ -8,6 +8,13 @@ same network. Playback, cueing and mixing stay on your CDJs.
 [Installation](docs/distribution.md) · [Using OLC](docs/screenshots.md) ·
 [0.5.0 release notes](docs/release-notes.md)
 
+## Coming in 1.0 beta
+
+- **Smoother waveform scrolling** makes it easier to follow the mix.
+- **More responsive USB tracking and jog following** follows both supported CDJ-2000nexus players, including during loops.
+
+USB tracking supports CDJ-2000nexus firmware 1.30 and 1.44 on Raspberry Pi. Mac USB tracking is in development and has not yet been validated with a player. Connect each player to the host over USB and Pro DJ Link. The beta is being prepared; the current download remains 0.5.0.
+
 ## Features
 
 - **Follow the mix:** live three-band waveforms, track overviews, BPM, pitch,
