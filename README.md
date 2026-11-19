@@ -11,7 +11,7 @@ same network. Playback, cueing and mixing stay on your CDJs.
 ## Coming in 1.0 beta
 
 - **Smoother waveform scrolling** makes it easier to follow the mix.
-- **More responsive USB tracking and jog following** follows both supported CDJ-2000nexus players, including during loops.
+- **Responsive USB tracking and jog following** follows both supported CDJ-2000nexus players, including during loops.
 
 USB tracking supports CDJ-2000nexus firmware 1.30 and 1.44 on Raspberry Pi. Mac USB tracking is in development and has not yet been validated with a player. Connect each player to the host over USB and Pro DJ Link. The beta is being prepared; the current download remains 0.5.0.
 
@@ -70,8 +70,7 @@ A Pi can start without a monitor or desktop login. Follow the
 [Set history](docs/set-history.md) ·
 [CDJ configuration profiles](docs/cdj-configurations.md)
 
-Fine waveform tracking is limited on a paused non-master player; use the CDJ's
-own display and audio for precise cueing. One local USB library is served per
+One local USB library is served per
 connection session. Platform/model coverage and other current limits are listed
 in [compatibility](docs/compatibility.md).
 
